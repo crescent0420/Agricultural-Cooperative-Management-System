@@ -1,0 +1,11 @@
+package com.acms.repository;
+
+import com.acms.entity.District;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface DistrictRepository extends JpaRepository<District, Long> {
+
+    boolean existsByNameIgnoreCase(String name);
+
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
+}
