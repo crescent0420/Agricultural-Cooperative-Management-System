@@ -1,6 +1,6 @@
-
 package com.acms.entity;
 
+import jakarta.persistence.Version;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -50,6 +50,9 @@ public class Farmer {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Version
+    private Long version;
+
     protected Farmer() {
     }
 
@@ -80,6 +83,16 @@ public class Farmer {
         this.phoneNumber = phoneNumber;
     }
 
+    public void changeStatus(FarmerStatus target) {
+        if (!status.canChangeTo(target)) {
+            throw new IllegalStateException(
+                    "Cannot change status from " + status + " to " + target + "."
+            );
+        }
+
+        this.status = target;
+    }
+
     public Long getId() { return id; }
     public String getMembershipNumber() { return membershipNumber; }
     public String getNationalId() { return nationalId; }
@@ -89,4 +102,5 @@ public class Farmer {
     public FarmerStatus getStatus() { return status; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
+    public Long getVersion() { return version; }
 }

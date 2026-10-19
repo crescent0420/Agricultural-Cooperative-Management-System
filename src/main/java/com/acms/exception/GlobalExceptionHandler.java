@@ -1,4 +1,3 @@
-
 package com.acms.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,11 +9,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -66,6 +67,44 @@ public class GlobalExceptionHandler {
         log.warn("Database constraint violation on {}: {}", request.getRequestURI(),
                 ex.getMostSpecificCause().getMessage());
         return build(HttpStatus.CONFLICT, "The request conflicts with existing data.", request, List.of());
+    }
+
+    // 400: a request parameter is not acceptable
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiError> handleBadRequest(
+            BadRequestException ex, HttpServletRequest request) {
+        return build(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                request,
+                List.of()
+        );
+    }
+
+    // 400: a URL or query parameter has the wrong type
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex,
+            HttpServletRequest request) {
+        return build(
+                HttpStatus.BAD_REQUEST,
+                "Parameter '" + ex.getName() + "' has an invalid value.",
+                request,
+                List.of()
+        );
+    }
+
+    // 409: another request changed the record concurrently
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiError> handleOptimisticLock(
+            ObjectOptimisticLockingFailureException ex,
+            HttpServletRequest request) {
+        return build(
+                HttpStatus.CONFLICT,
+                "This record was changed by another request. Reload it and try again.",
+                request,
+                List.of()
+        );
     }
 
     // 403: role, district or ownership check failed
