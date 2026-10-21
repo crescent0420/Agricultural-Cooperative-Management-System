@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -117,7 +118,18 @@ public class GlobalExceptionHandler {
                 List.of());
     }
 
-    // Everything else
+    // 401: login failed or the account cannot authenticate
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthentication(
+            AuthenticationException ex,
+            HttpServletRequest request) {
+        return build(
+                HttpStatus.UNAUTHORIZED,
+                "Invalid username or password.",
+                request,
+                List.of()
+        );
+    }    // Everything else
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAny(Exception ex, HttpServletRequest request) {
         // Spring's own web exceptions (404 for unknown URL, 405 wrong method...) already know their status.

@@ -1,25 +1,70 @@
 package com.acms.config;
 
+import com.acms.security.DatabaseBackedJwtConverter;
+import com.acms.security.SecurityErrorHandlers;
+import com.acms.service.AppUserDetailsService;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
-/**
- * TEMPORARY: allows every request so we can test while building.
- * Replaced in Step 4 with real JWT authentication and role rules.
- */
 @Configuration
+@EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticationProvider(
+            AppUserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider provider =
+                new DaoAuthenticationProvider(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            DaoAuthenticationProvider provider) {
+        return new ProviderManager(provider);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
+            DatabaseBackedJwtConverter jwtConverter,
+            SecurityErrorHandlers errorHandlers) throws Exception {
         http
-            .csrf(AbstractHttpConfigurer::disable)   // CSRF protects browser sessions; our API uses tokens, not cookies
-            .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(errorHandlers.authenticationEntryPoint())
+                .accessDeniedHandler(errorHandlers.accessDeniedHandler())
+            )
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .anyRequest().authenticated()
+            )
+            .oauth2ResourceServer(oauth2 -> oauth2
+                .authenticationEntryPoint(errorHandlers.authenticationEntryPoint())
+                .accessDeniedHandler(errorHandlers.accessDeniedHandler())
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter))
+            );
         return http.build();
     }
 }
