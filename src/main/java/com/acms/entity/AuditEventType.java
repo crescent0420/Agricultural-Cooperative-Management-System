@@ -1,0 +1,13 @@
+
+package com.acms.entity;
+
+public enum AuditEventType {
+    LOGIN_SUCCESS,
+    LOGIN_FAILURE,
+    PASSWORD_CHANGED,
+    PASSWORD_CHANGE_FAILED,
+    USER_CREATED,
+    USER_ROLE_CHANGED,
+    USER_ENABLED,
+    USER_DISABLED
+}
