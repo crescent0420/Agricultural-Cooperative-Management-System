@@ -4,8 +4,10 @@ import com.acms.dto.CropProgrammeRenameRequest;
 import com.acms.dto.CropProgrammeRequest;
 import com.acms.dto.CropProgrammeResponse;
 import com.acms.dto.PrerequisiteRequest;
+import com.acms.entity.AppUser;
 import com.acms.entity.CropProgramme;
 import com.acms.entity.District;
+import com.acms.entity.Role;
 import com.acms.entity.Training;
 import com.acms.exception.ConflictException;
 import com.acms.exception.ResourceNotFoundException;
@@ -14,6 +16,7 @@ import com.acms.repository.DistrictRepository;
 import com.acms.repository.TrainingRepository;
 import java.util.List;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,14 +26,17 @@ public class CropProgrammeService {
     private final CropProgrammeRepository programmeRepository;
     private final DistrictRepository districtRepository;
     private final TrainingRepository trainingRepository;
+    private final FarmerAccessService farmerAccessService;
 
     public CropProgrammeService(
             CropProgrammeRepository programmeRepository,
             DistrictRepository districtRepository,
-            TrainingRepository trainingRepository) {
+            TrainingRepository trainingRepository,
+            FarmerAccessService farmerAccessService) {
         this.programmeRepository = programmeRepository;
         this.districtRepository = districtRepository;
         this.trainingRepository = trainingRepository;
+        this.farmerAccessService = farmerAccessService;
     }
 
     @Transactional
@@ -57,11 +63,33 @@ public class CropProgrammeService {
 
     @Transactional(readOnly = true)
     public List<CropProgrammeResponse> findAll(Long districtId) {
-        Sort sort = Sort.by("name");
+        AppUser currentUser = farmerAccessService.getCurrentUser();
+        Role role = currentUser.getRole();
 
-        List<CropProgramme> programmes = (districtId == null)
-                ? programmeRepository.findAll(sort)
-                : programmeRepository.findByDistrictId(districtId, sort);
+        Sort sort = Sort.by("name");
+        List<CropProgramme> programmes;
+
+        if (role == Role.FIELD_OFFICER
+                || role == Role.DISTRICT_AGRONOMIST) {
+            if (currentUser.getDistrict() == null) {
+                throw new AccessDeniedException(
+                        "You do not have permission to perform this action.");
+            }
+
+            Long assignedDistrictId = currentUser.getDistrict().getId();
+
+            if (districtId != null && !districtId.equals(assignedDistrictId)) {
+                throw new AccessDeniedException(
+                        "You do not have permission to perform this action.");
+            }
+
+            programmes = programmeRepository.findByDistrictId(
+                    assignedDistrictId, sort);
+        } else {
+            programmes = (districtId == null)
+                    ? programmeRepository.findAll(sort)
+                    : programmeRepository.findByDistrictId(districtId, sort);
+        }
 
         return programmes.stream()
                 .map(CropProgrammeResponse::from)
@@ -70,7 +98,23 @@ public class CropProgrammeService {
 
     @Transactional(readOnly = true)
     public CropProgrammeResponse findById(Long id) {
-        return CropProgrammeResponse.from(getOrThrow(id));
+        CropProgramme programme = getOrThrow(id);
+
+        AppUser currentUser = farmerAccessService.getCurrentUser();
+        Role role = currentUser.getRole();
+
+        if (role == Role.FIELD_OFFICER
+                || role == Role.DISTRICT_AGRONOMIST) {
+
+            if (currentUser.getDistrict() == null
+                    || !currentUser.getDistrict().getId().equals(
+                            programme.getDistrict().getId())) {
+                throw new AccessDeniedException(
+                        "You do not have permission to perform this action.");
+            }
+        }
+
+        return CropProgrammeResponse.from(programme);
     }
 
     @Transactional

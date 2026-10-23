@@ -1,4 +1,3 @@
-
 package com.acms.entity;
 
 public enum AuditEventType {
@@ -9,5 +8,7 @@ public enum AuditEventType {
     USER_CREATED,
     USER_ROLE_CHANGED,
     USER_ENABLED,
-    USER_DISABLED
+    USER_DISABLED,
+    ACCESS_DENIED,
+    FARMER_STATUS_CHANGED
 }

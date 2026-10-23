@@ -1,5 +1,9 @@
 package com.acms.exception;
 
+import com.acms.entity.AppUser;
+import com.acms.entity.AuditEventType;
+import com.acms.repository.AppUserRepository;
+import com.acms.service.AuditLogService;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.List;
@@ -11,7 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,6 +28,16 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    private final AuditLogService auditLogService;
+    private final AppUserRepository appUserRepository;
+
+    public GlobalExceptionHandler(
+            AuditLogService auditLogService,
+            AppUserRepository appUserRepository) {
+        this.auditLogService = auditLogService;
+        this.appUserRepository = appUserRepository;
+    }
 
     // 400: a field failed @Valid (@NotBlank, @Size, ...)
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -64,7 +80,7 @@ public class GlobalExceptionHandler {
     // 409: the database itself refused (unique or foreign key constraint). Never show the SQL message.
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex,
-                                                         HttpServletRequest request) {
+                                                        HttpServletRequest request) {
         log.warn("Database constraint violation on {}: {}", request.getRequestURI(),
                 ex.getMostSpecificCause().getMessage());
         return build(HttpStatus.CONFLICT, "The request conflicts with existing data.", request, List.of());
@@ -110,12 +126,71 @@ public class GlobalExceptionHandler {
 
     // 403: role, district or ownership check failed
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex,
-                                                        HttpServletRequest request) {
-        return build(HttpStatus.FORBIDDEN,
+    public ResponseEntity<ApiError> handleAccessDenied(
+            AccessDeniedException ex,
+            HttpServletRequest request) {
+
+        try {
+            Long actorUserId = null;
+            String actorUsername = null;
+
+            Authentication authentication =
+                    SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication != null
+                    && authentication.isAuthenticated()
+                    && authentication.getName() != null) {
+                try {
+                    Long userId = Long.valueOf(authentication.getName());
+
+                    AppUser user = appUserRepository.findById(userId)
+                            .filter(AppUser::isEnabled)
+                            .orElse(null);
+
+                    if (user != null) {
+                        actorUserId = user.getId();
+                        actorUsername = user.getUsername();
+                    }
+                } catch (NumberFormatException ignored) {
+                    // The authenticated principal is not a database user ID.
+                }
+            }
+
+            String details = request.getMethod()
+                    + " "
+                    + request.getRequestURI()
+                    + " denied";
+
+            if (details.length() > 500) {
+                details = details.substring(0, 500);
+            }
+
+            String ipAddress = request.getRemoteAddr();
+            if (ipAddress != null && ipAddress.length() > 45) {
+                ipAddress = ipAddress.substring(0, 45);
+            }
+
+            auditLogService.record(
+                    AuditEventType.ACCESS_DENIED,
+                    false,
+                    actorUserId,
+                    actorUsername,
+                    "HTTP_REQUEST",
+                    null,
+                    details,
+                    ipAddress
+            );
+        } catch (RuntimeException auditException) {
+            log.warn("Failed to record access-denied audit event for {} {}",
+                    request.getMethod(), request.getRequestURI(), auditException);
+        }
+
+        return build(
+                HttpStatus.FORBIDDEN,
                 "You do not have permission to perform this action.",
                 request,
-                List.of());
+                List.of()
+        );
     }
 
     // 401: login failed or the account cannot authenticate
@@ -129,7 +204,9 @@ public class GlobalExceptionHandler {
                 request,
                 List.of()
         );
-    }    // Everything else
+    }
+
+    // Everything else
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAny(Exception ex, HttpServletRequest request) {
         // Spring's own web exceptions (404 for unknown URL, 405 wrong method...) already know their status.
