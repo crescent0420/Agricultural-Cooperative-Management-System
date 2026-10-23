@@ -1,17 +1,19 @@
-
 package com.acms.service;
 
 import com.acms.dto.CooperativeRenameRequest;
 import com.acms.dto.CooperativeRequest;
 import com.acms.dto.CooperativeResponse;
+import com.acms.entity.AppUser;
 import com.acms.entity.Cooperative;
 import com.acms.entity.District;
+import com.acms.entity.Role;
 import com.acms.exception.ConflictException;
 import com.acms.exception.ResourceNotFoundException;
 import com.acms.repository.CooperativeRepository;
 import com.acms.repository.DistrictRepository;
 import java.util.List;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,12 +22,15 @@ public class CooperativeService {
 
     private final CooperativeRepository cooperativeRepository;
     private final DistrictRepository districtRepository;
+    private final FarmerAccessService farmerAccessService;
 
     public CooperativeService(
             CooperativeRepository cooperativeRepository,
-            DistrictRepository districtRepository) {
+            DistrictRepository districtRepository,
+            FarmerAccessService farmerAccessService) {
         this.cooperativeRepository = cooperativeRepository;
         this.districtRepository = districtRepository;
+        this.farmerAccessService = farmerAccessService;
     }
 
     @Transactional
@@ -51,6 +56,25 @@ public class CooperativeService {
 
     @Transactional(readOnly = true)
     public List<CooperativeResponse> findAll(Long districtId) {
+        AppUser user = farmerAccessService.getCurrentUser();
+        Role role = user.getRole();
+
+        if (isDistrictRestrictedRole(role)) {
+            if (user.getDistrict() == null) {
+                throw new AccessDeniedException(
+                        "You do not have permission to perform this action.");
+            }
+
+            Long assignedDistrictId = user.getDistrict().getId();
+
+            if (districtId != null && !districtId.equals(assignedDistrictId)) {
+                throw new AccessDeniedException(
+                        "You do not have permission to perform this action.");
+            }
+
+            districtId = assignedDistrictId;
+        }
+
         Sort sort = Sort.by("name");
 
         List<Cooperative> cooperatives = (districtId == null)
@@ -64,7 +88,20 @@ public class CooperativeService {
 
     @Transactional(readOnly = true)
     public CooperativeResponse findById(Long id) {
-        return CooperativeResponse.from(getOrThrow(id));
+        AppUser user = farmerAccessService.getCurrentUser();
+        Cooperative cooperative = getOrThrow(id);
+
+        if (isDistrictRestrictedRole(user.getRole())) {
+            if (user.getDistrict() == null
+                    || cooperative.getDistrict() == null
+                    || !user.getDistrict().getId().equals(
+                            cooperative.getDistrict().getId())) {
+                throw new AccessDeniedException(
+                        "You do not have permission to perform this action.");
+            }
+        }
+
+        return CooperativeResponse.from(cooperative);
     }
 
     @Transactional
@@ -85,6 +122,11 @@ public class CooperativeService {
         cooperative.setName(name);
 
         return CooperativeResponse.from(cooperative);
+    }
+
+    private boolean isDistrictRestrictedRole(Role role) {
+        return role == Role.FIELD_OFFICER
+                || role == Role.DISTRICT_AGRONOMIST;
     }
 
     private Cooperative getOrThrow(Long id) {
