@@ -1,11 +1,8 @@
 package com.acms.controller;
 
 import com.acms.dto.AuditLogResponse;
-import com.acms.exception.BadRequestException;
+import com.acms.dto.PageResponse;
 import com.acms.service.AuditLogService;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,29 +21,13 @@ public class AuditLogController {
 
     @GetMapping
     @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-    public Page<AuditLogResponse> getAuditLogs(
+    public PageResponse<AuditLogResponse> list(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "occurredAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String direction) {
 
-        if (page < 0) {
-            throw new BadRequestException(
-                    "Page number cannot be negative.");
-        }
-
-        if (size < 1 || size > 100) {
-            throw new BadRequestException(
-                    "Page size must be between 1 and 100.");
-        }
-
-        PageRequest pageRequest = PageRequest.of(
-                page,
-                size,
-                Sort.by(
-                        Sort.Order.desc("occurredAt"),
-                        Sort.Order.desc("id")
-                )
-        );
-
-        return auditLogService.getAuditLogs(pageRequest);
+        return auditLogService.findRecent(
+                page, size, sortBy, direction);
     }
 }

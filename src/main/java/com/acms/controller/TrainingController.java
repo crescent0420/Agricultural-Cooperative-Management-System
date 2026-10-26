@@ -1,5 +1,6 @@
 package com.acms.controller;
 
+import com.acms.dto.PageResponse;
 import com.acms.dto.TrainingRequest;
 import com.acms.dto.TrainingResponse;
 import com.acms.service.TrainingService;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,11 +34,13 @@ public class TrainingController {
         return trainingService.create(request);
     }
 
-    @GetMapping
-    public List<TrainingResponse> list() {
-        return trainingService.findAll();
+        @GetMapping
+    public PageResponse<TrainingResponse> list(@RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "20") int size,
+                                               @RequestParam(defaultValue = "name") String sortBy,
+                                               @RequestParam(defaultValue = "asc") String direction) {
+        return trainingService.findAll(page, size, sortBy, direction);
     }
-
     @GetMapping("/{id}")
     public TrainingResponse get(@PathVariable Long id) {
         return trainingService.findById(id);

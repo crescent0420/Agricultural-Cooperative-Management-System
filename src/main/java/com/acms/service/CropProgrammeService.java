@@ -3,25 +3,30 @@ package com.acms.service;
 import com.acms.dto.CropProgrammeRenameRequest;
 import com.acms.dto.CropProgrammeRequest;
 import com.acms.dto.CropProgrammeResponse;
+import com.acms.dto.PageResponse;
 import com.acms.dto.PrerequisiteRequest;
 import com.acms.entity.AppUser;
 import com.acms.entity.CropProgramme;
 import com.acms.entity.District;
-import com.acms.entity.Role;
 import com.acms.entity.Training;
 import com.acms.exception.ConflictException;
 import com.acms.exception.ResourceNotFoundException;
 import com.acms.repository.CropProgrammeRepository;
 import com.acms.repository.DistrictRepository;
 import com.acms.repository.TrainingRepository;
-import java.util.List;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
+
 @Service
 public class CropProgrammeService {
+
+    private static final Set<String> SORTABLE_FIELDS =
+            Set.of("id", "name", "createdAt");
 
     private final CropProgrammeRepository programmeRepository;
     private final DistrictRepository districtRepository;
@@ -57,62 +62,51 @@ public class CropProgrammeService {
         }
 
         CropProgramme programme = new CropProgramme(name, district);
+
         return CropProgrammeResponse.from(
                 programmeRepository.save(programme));
     }
 
     @Transactional(readOnly = true)
-    public List<CropProgrammeResponse> findAll(Long districtId) {
-        AppUser currentUser = farmerAccessService.getCurrentUser();
-        Role role = currentUser.getRole();
+    public PageResponse<CropProgrammeResponse> findAll(
+            Long districtId,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
 
-        Sort sort = Sort.by("name");
-        List<CropProgramme> programmes;
+        Pageable pageable = Paging.of(
+                page, size, sortBy, direction, SORTABLE_FIELDS);
 
-        if (role == Role.FIELD_OFFICER
-                || role == Role.DISTRICT_AGRONOMIST) {
-            if (currentUser.getDistrict() == null) {
-                throw new AccessDeniedException(
-                        "You do not have permission to perform this action.");
+        Long effectiveDistrictId = districtId;
+        AppUser user = farmerAccessService.getCurrentUser();
+
+        if (FarmerAccessService.isDistrictRestricted(user)) {
+            Long ownDistrictId = user.getDistrict().getId();
+
+            if (districtId != null && !districtId.equals(ownDistrictId)) {
+                return PageResponse.from(
+                        Page.<CropProgrammeResponse>empty(pageable));
             }
 
-            Long assignedDistrictId = currentUser.getDistrict().getId();
-
-            if (districtId != null && !districtId.equals(assignedDistrictId)) {
-                throw new AccessDeniedException(
-                        "You do not have permission to perform this action.");
-            }
-
-            programmes = programmeRepository.findByDistrictId(
-                    assignedDistrictId, sort);
-        } else {
-            programmes = (districtId == null)
-                    ? programmeRepository.findAll(sort)
-                    : programmeRepository.findByDistrictId(districtId, sort);
+            effectiveDistrictId = ownDistrictId;
         }
 
-        return programmes.stream()
-                .map(CropProgrammeResponse::from)
-                .toList();
+        Page<CropProgramme> result = (effectiveDistrictId == null)
+                ? programmeRepository.findAll(pageable)
+                : programmeRepository.findByDistrictId(
+                        effectiveDistrictId, pageable);
+
+        return PageResponse.from(
+                result.map(CropProgrammeResponse::from));
     }
 
     @Transactional(readOnly = true)
     public CropProgrammeResponse findById(Long id) {
         CropProgramme programme = getOrThrow(id);
-
         AppUser currentUser = farmerAccessService.getCurrentUser();
-        Role role = currentUser.getRole();
 
-        if (role == Role.FIELD_OFFICER
-                || role == Role.DISTRICT_AGRONOMIST) {
-
-            if (currentUser.getDistrict() == null
-                    || !currentUser.getDistrict().getId().equals(
-                            programme.getDistrict().getId())) {
-                throw new AccessDeniedException(
-                        "You do not have permission to perform this action.");
-            }
-        }
+        checkDistrictAccess(currentUser, programme);
 
         return CropProgrammeResponse.from(programme);
     }
@@ -121,6 +115,10 @@ public class CropProgrammeService {
     public CropProgrammeResponse rename(
             Long id, CropProgrammeRenameRequest request) {
         CropProgramme programme = getOrThrow(id);
+        AppUser currentUser = farmerAccessService.getCurrentUser();
+
+        checkDistrictAccess(currentUser, programme);
+
         String name = request.name().trim();
         Long districtId = programme.getDistrict().getId();
 
@@ -132,6 +130,7 @@ public class CropProgrammeService {
         }
 
         programme.setName(name);
+
         return CropProgrammeResponse.from(programme);
     }
 
@@ -139,6 +138,9 @@ public class CropProgrammeService {
     public CropProgrammeResponse addPrerequisite(
             Long programmeId, PrerequisiteRequest request) {
         CropProgramme programme = getOrThrow(programmeId);
+        AppUser currentUser = farmerAccessService.getCurrentUser();
+
+        checkDistrictAccess(currentUser, programme);
 
         Training training = trainingRepository.findById(request.trainingId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -153,6 +155,7 @@ public class CropProgrammeService {
         }
 
         programme.addPrerequisite(training);
+
         return CropProgrammeResponse.from(programme);
     }
 
@@ -160,6 +163,9 @@ public class CropProgrammeService {
     public CropProgrammeResponse removePrerequisite(
             Long programmeId, Long trainingId) {
         CropProgramme programme = getOrThrow(programmeId);
+        AppUser currentUser = farmerAccessService.getCurrentUser();
+
+        checkDistrictAccess(currentUser, programme);
 
         if (!programme.removePrerequisite(trainingId)) {
             throw new ResourceNotFoundException(
@@ -169,6 +175,16 @@ public class CropProgrammeService {
         }
 
         return CropProgrammeResponse.from(programme);
+    }
+
+    private void checkDistrictAccess(AppUser user, CropProgramme programme) {
+        if (FarmerAccessService.isDistrictRestricted(user)
+                && (user.getDistrict() == null
+                || !user.getDistrict().getId().equals(
+                        programme.getDistrict().getId()))) {
+            throw new AccessDeniedException(
+                    "You do not have permission to perform this action.");
+        }
     }
 
     private CropProgramme getOrThrow(Long id) {

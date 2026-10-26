@@ -3,6 +3,7 @@ package com.acms.service;
 import com.acms.dto.ChangePasswordRequest;
 import com.acms.dto.ChangeRoleRequest;
 import com.acms.dto.CreateUserRequest;
+import com.acms.dto.PageResponse;
 import com.acms.dto.SetEnabledRequest;
 import com.acms.dto.UserResponse;
 import com.acms.entity.AppUser;
@@ -17,7 +18,9 @@ import com.acms.repository.AppUserRepository;
 import com.acms.repository.DistrictRepository;
 import com.acms.repository.FarmerRepository;
 import java.util.List;
+import java.util.Set;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserService {
+
+    private static final Set<String> SORTABLE_FIELDS =
+            Set.of("id", "username", "role", "createdAt");
 
     private final AppUserRepository appUserRepository;
     private final DistrictRepository districtRepository;
@@ -67,20 +73,19 @@ public class UserService {
             if (request.districtId() == null
                     || request.farmerId() != null) {
                 throw new BadRequestException(
-                        "This role requires a district and no farmer assignment."
-                );
+                        "This role requires a district and no farmer assignment.");
             }
 
             district = districtRepository.findById(request.districtId())
                     .orElseThrow(() ->
                             new ResourceNotFoundException("District not found."));
+
         } else if (request.role() == Role.FARMER) {
 
             if (request.farmerId() == null
                     || request.districtId() != null) {
                 throw new BadRequestException(
-                        "FARMER role requires a farmer assignment and no district assignment."
-                );
+                        "FARMER role requires a farmer assignment and no district assignment.");
             }
 
             farmer = farmerRepository.findById(request.farmerId())
@@ -89,23 +94,21 @@ public class UserService {
 
             if (appUserRepository.existsByFarmerId(farmer.getId())) {
                 throw new ConflictException(
-                        "This farmer already has a login account."
-                );
+                        "This farmer already has a login account.");
             }
+
         } else {
             if (request.districtId() != null
                     || request.farmerId() != null) {
                 throw new BadRequestException(
-                        "This role must not have a district or farmer assignment."
-                );
+                        "This role must not have a district or farmer assignment.");
             }
         }
 
         AppUser user = new AppUser(
                 username,
                 passwordEncoder.encode(request.password()),
-                request.role()
-        );
+                request.role());
 
         if (district != null) {
             user.assignDistrict(district);
@@ -126,14 +129,13 @@ public class UserService {
                     "USER",
                     savedUser.getId(),
                     "User account created with role " + savedUser.getRole(),
-                    null
-            );
+                    null);
 
             return toResponse(savedUser);
+
         } catch (DataIntegrityViolationException exception) {
             throw new ConflictException(
-                    "The user could not be created because of a data conflict."
-            );
+                    "The user could not be created because of a data conflict.");
         }
     }
 
@@ -145,8 +147,7 @@ public class UserService {
 
         if (targetUserId.equals(actorUserId)) {
             throw new ConflictException(
-                    "You cannot change your own role."
-            );
+                    "You cannot change your own role.");
         }
 
         AppUser user = findUser(targetUserId);
@@ -160,8 +161,7 @@ public class UserService {
             if (request.districtId() == null
                     || request.farmerId() != null) {
                 throw new BadRequestException(
-                        "This role requires a district and no farmer assignment."
-                );
+                        "This role requires a district and no farmer assignment.");
             }
 
             district = districtRepository.findById(request.districtId())
@@ -173,8 +173,7 @@ public class UserService {
             if (request.farmerId() == null
                     || request.districtId() != null) {
                 throw new BadRequestException(
-                        "FARMER role requires a farmer assignment and no district assignment."
-                );
+                        "FARMER role requires a farmer assignment and no district assignment.");
             }
 
             farmer = farmerRepository.findById(request.farmerId())
@@ -185,15 +184,13 @@ public class UserService {
                     .filter(existing -> !existing.getId().equals(user.getId()))
                     .ifPresent(existing -> {
                         throw new ConflictException(
-                                "This farmer already has a login account."
-                        );
+                                "This farmer already has a login account.");
                     });
 
         } else if (request.districtId() != null
                 || request.farmerId() != null) {
             throw new BadRequestException(
-                    "This role must not have a district or farmer assignment."
-            );
+                    "This role must not have a district or farmer assignment.");
         }
 
         Role previousRole = user.getRole();
@@ -218,8 +215,7 @@ public class UserService {
                 savedUser.getId(),
                 "Role changed from " + previousRole
                         + " to " + savedUser.getRole(),
-                null
-        );
+                null);
 
         return toResponse(savedUser);
     }
@@ -232,8 +228,7 @@ public class UserService {
 
         if (!enabled && targetUserId.equals(actorUserId)) {
             throw new ConflictException(
-                    "You cannot disable your own account."
-            );
+                    "You cannot disable your own account.");
         }
 
         AppUser user = findUser(targetUserId);
@@ -250,8 +245,7 @@ public class UserService {
                 "USER",
                 savedUser.getId(),
                 enabled ? "User account enabled" : "User account disabled",
-                null
-        );
+                null);
 
         return toResponse(savedUser);
     }
@@ -266,6 +260,7 @@ public class UserService {
         if (!passwordEncoder.matches(
                 request.currentPassword(),
                 user.getPasswordHash())) {
+
             auditLogService.record(
                     AuditEventType.PASSWORD_CHANGE_FAILED,
                     false,
@@ -274,12 +269,10 @@ public class UserService {
                     "USER",
                     actorUserId,
                     "Current password verification failed",
-                    null
-            );
+                    null);
 
             throw new BadCredentialsException(
-                    "Current password is incorrect."
-            );
+                    "Current password is incorrect.");
         }
 
         validatePassword(user.getUsername(), request.newPassword());
@@ -288,13 +281,11 @@ public class UserService {
                 request.newPassword(),
                 user.getPasswordHash())) {
             throw new BadRequestException(
-                    "New password must differ from the current password."
-            );
+                    "New password must differ from the current password.");
         }
 
         user.changePasswordHash(
-                passwordEncoder.encode(request.newPassword())
-        );
+                passwordEncoder.encode(request.newPassword()));
 
         appUserRepository.save(user);
 
@@ -306,16 +297,22 @@ public class UserService {
                 "USER",
                 actorUserId,
                 "Password changed successfully",
-                null
-        );
+                null);
     }
 
     @Transactional(readOnly = true)
-    public List<UserResponse> getAllUsers() {
-        return appUserRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    public PageResponse<UserResponse> findAll(
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
+        Pageable pageable = Paging.of(
+                page, size, sortBy, direction, SORTABLE_FIELDS);
+
+        return PageResponse.from(
+                appUserRepository.findAll(pageable)
+                        .map(this::toResponse));
     }
 
     @Transactional(readOnly = true)
@@ -335,15 +332,13 @@ public class UserService {
                 || password.length() > 128
                 || password.isBlank()) {
             throw new BadRequestException(
-                    "Password must contain 12 to 128 characters."
-            );
+                    "Password must contain 12 to 128 characters.");
         }
 
         if (password.toLowerCase()
                 .contains(username.toLowerCase())) {
             throw new BadRequestException(
-                    "Password must not contain the username."
-            );
+                    "Password must not contain the username.");
         }
     }
 
@@ -358,7 +353,6 @@ public class UserService {
                 user.getFarmer() == null
                         ? null : user.getFarmer().getId(),
                 user.getCreatedAt(),
-                user.getUpdatedAt()
-        );
+                user.getUpdatedAt());
     }
 }

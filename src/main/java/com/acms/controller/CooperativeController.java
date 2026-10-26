@@ -1,12 +1,11 @@
-
 package com.acms.controller;
 
 import com.acms.dto.CooperativeRenameRequest;
 import com.acms.dto.CooperativeRequest;
 import com.acms.dto.CooperativeResponse;
+import com.acms.dto.PageResponse;
 import com.acms.service.CooperativeService;
 import jakarta.validation.Valid;
-import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,9 +35,15 @@ public class CooperativeController {
     }
 
     @GetMapping
-    public List<CooperativeResponse> list(
-            @RequestParam(required = false) Long districtId) {
-        return cooperativeService.findAll(districtId);
+    public PageResponse<CooperativeResponse> list(
+            @RequestParam(required = false) Long districtId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "name") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+        return cooperativeService.findAll(
+                districtId, page, size, sortBy, direction);
     }
 
     @GetMapping("/{id}")
