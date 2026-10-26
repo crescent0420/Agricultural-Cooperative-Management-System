@@ -14,9 +14,14 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "app_users")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)   // JPA needs an empty constructor; nobody else should use it
 public class AppUser {
 
     @Id
@@ -25,6 +30,9 @@ public class AppUser {
 
     @Column(name = "username", nullable = false, unique = true, length = 100)
     private String username;
+
+    @Column(name = "email", unique = true, length = 254)
+    private String email;
 
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
@@ -35,6 +43,12 @@ public class AppUser {
 
     @Column(name = "enabled", nullable = false)
     private boolean enabled = true;
+
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified;
+
+    @Column(name = "must_change_password", nullable = false)
+    private boolean mustChangePassword;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -56,14 +70,18 @@ public class AppUser {
     @JoinColumn(name = "farmer_id")
     private Farmer farmer;
 
-    protected AppUser() {
-    }
-
-    public AppUser(String username, String passwordHash, Role role) {
+    /**
+     * A brand-new account: the email address is not verified yet, and the emailed
+     * one-time password must be replaced at the first login.
+     */
+    public AppUser(String username, String email, String passwordHash, Role role) {
         this.username = username;
+        this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
         this.enabled = true;
+        this.emailVerified = false;
+        this.mustChangePassword = true;
     }
 
     @PrePersist
@@ -79,10 +97,24 @@ public class AppUser {
         this.updatedAt = Instant.now();
     }
 
+    /** The user chose their own new password: older tokens stop working and the forced change is done. */
     public void changePasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
         this.passwordChangedAt = Instant.now();
         this.tokenVersion++;
+        this.mustChangePassword = false;
+    }
+
+    /** A new one-time password was issued: older tokens stop working and it must be changed at the next login. */
+    public void resetToTemporaryPassword(String passwordHash) {
+        this.passwordHash = passwordHash;
+        this.passwordChangedAt = Instant.now();
+        this.tokenVersion++;
+        this.mustChangePassword = true;
+    }
+
+    public void markEmailVerified() {
+        this.emailVerified = true;
     }
 
     public void changeRole(Role role) {
@@ -106,49 +138,5 @@ public class AppUser {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public Role getRole() {
-        return role;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public Instant getPasswordChangedAt() {
-        return passwordChangedAt;
-    }
-
-    public long getTokenVersion() {
-        return tokenVersion;
-    }
-
-    public District getDistrict() {
-        return district;
-    }
-
-    public Farmer getFarmer() {
-        return farmer;
     }
 }

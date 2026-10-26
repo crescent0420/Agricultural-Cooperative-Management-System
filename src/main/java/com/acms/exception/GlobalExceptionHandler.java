@@ -32,9 +32,7 @@ public class GlobalExceptionHandler {
     private final AuditLogService auditLogService;
     private final AppUserRepository appUserRepository;
 
-    public GlobalExceptionHandler(
-            AuditLogService auditLogService,
-            AppUserRepository appUserRepository) {
+    public GlobalExceptionHandler(AuditLogService auditLogService, AppUserRepository appUserRepository) {
         this.auditLogService = auditLogService;
         this.appUserRepository = appUserRepository;
     }
@@ -43,7 +41,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex,
                                                      HttpServletRequest request) {
-        log.warn("Validation handler reached for {}", request.getRequestURI());
         List<ApiError.FieldIssue> issues = ex.getBindingResult().getFieldErrors().stream()
                 .map(fe -> new ApiError.FieldIssue(fe.getField(), fe.getDefaultMessage()))
                 .toList();
@@ -54,26 +51,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex,
                                                      HttpServletRequest request) {
-        log.warn("Unreadable request body on {}", request.getRequestURI(), ex.getMessage());
-        return build(
-                HttpStatus.BAD_REQUEST,
-                "Malformed or unreadable request body.",
-                request,
-                List.of()
-        );
+        log.warn("Unreadable request body on {}: {}", request.getRequestURI(), ex.getMessage());
+        return build(HttpStatus.BAD_REQUEST, "Malformed or unreadable request body.", request, List.of());
     }
 
     // 404
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(ResourceNotFoundException ex,
-                                                   HttpServletRequest request) {
+    public ResponseEntity<ApiError> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), request, List.of());
     }
 
     // 409
     @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ApiError> handleConflict(ConflictException ex,
-                                                   HttpServletRequest request) {
+    public ResponseEntity<ApiError> handleConflict(ConflictException ex, HttpServletRequest request) {
         return build(HttpStatus.CONFLICT, ex.getMessage(), request, List.of());
     }
 
@@ -86,67 +76,46 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.CONFLICT, "The request conflicts with existing data.", request, List.of());
     }
 
+    // 422: a business rule forbids the action (email not verified, no email address on the account...)
+    @ExceptionHandler(BusinessRuleException.class)
+    public ResponseEntity<ApiError> handleBusinessRule(BusinessRuleException ex, HttpServletRequest request) {
+        return build(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), request, List.of());
+    }
+
     // 400: a request parameter is not acceptable
     @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ApiError> handleBadRequest(
-            BadRequestException ex, HttpServletRequest request) {
-        return build(
-                HttpStatus.BAD_REQUEST,
-                ex.getMessage(),
-                request,
-                List.of()
-        );
+    public ResponseEntity<ApiError> handleBadRequest(BadRequestException ex, HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request, List.of());
     }
 
     // 400: a URL or query parameter has the wrong type
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiError> handleTypeMismatch(
-            MethodArgumentTypeMismatchException ex,
-            HttpServletRequest request) {
-        return build(
-                HttpStatus.BAD_REQUEST,
-                "Parameter '" + ex.getName() + "' has an invalid value.",
-                request,
-                List.of()
-        );
+    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+                                                       HttpServletRequest request) {
+        return build(HttpStatus.BAD_REQUEST,
+                "Parameter '" + ex.getName() + "' has an invalid value.", request, List.of());
     }
 
     // 409: another request changed the record concurrently
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
-    public ResponseEntity<ApiError> handleOptimisticLock(
-            ObjectOptimisticLockingFailureException ex,
-            HttpServletRequest request) {
-        return build(
-                HttpStatus.CONFLICT,
-                "This record was changed by another request. Reload it and try again.",
-                request,
-                List.of()
-        );
+    public ResponseEntity<ApiError> handleOptimisticLock(ObjectOptimisticLockingFailureException ex,
+                                                         HttpServletRequest request) {
+        return build(HttpStatus.CONFLICT,
+                "This record was changed by another request. Reload it and try again.", request, List.of());
     }
 
     // 403: role, district or ownership check failed
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiError> handleAccessDenied(
-            AccessDeniedException ex,
-            HttpServletRequest request) {
-
+    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
         try {
             Long actorUserId = null;
             String actorUsername = null;
 
-            Authentication authentication =
-                    SecurityContextHolder.getContext().getAuthentication();
-
-            if (authentication != null
-                    && authentication.isAuthenticated()
-                    && authentication.getName() != null) {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.isAuthenticated() && authentication.getName() != null) {
                 try {
                     Long userId = Long.valueOf(authentication.getName());
-
-                    AppUser user = appUserRepository.findById(userId)
-                            .filter(AppUser::isEnabled)
-                            .orElse(null);
-
+                    AppUser user = appUserRepository.findById(userId).filter(AppUser::isEnabled).orElse(null);
                     if (user != null) {
                         actorUserId = user.getId();
                         actorUsername = user.getUsername();
@@ -156,60 +125,35 @@ public class GlobalExceptionHandler {
                 }
             }
 
-            String details = request.getMethod()
-                    + " "
-                    + request.getRequestURI()
-                    + " denied";
-
+            String details = request.getMethod() + " " + request.getRequestURI() + " denied";
             if (details.length() > 500) {
                 details = details.substring(0, 500);
             }
-
             String ipAddress = request.getRemoteAddr();
             if (ipAddress != null && ipAddress.length() > 45) {
                 ipAddress = ipAddress.substring(0, 45);
             }
 
-            auditLogService.record(
-                    AuditEventType.ACCESS_DENIED,
-                    false,
-                    actorUserId,
-                    actorUsername,
-                    "HTTP_REQUEST",
-                    null,
-                    details,
-                    ipAddress
-            );
+            auditLogService.record(AuditEventType.ACCESS_DENIED, false, actorUserId, actorUsername,
+                    "HTTP_REQUEST", null, details, ipAddress);
         } catch (RuntimeException auditException) {
             log.warn("Failed to record access-denied audit event for {} {}",
                     request.getMethod(), request.getRequestURI(), auditException);
         }
 
-        return build(
-                HttpStatus.FORBIDDEN,
-                "You do not have permission to perform this action.",
-                request,
-                List.of()
-        );
+        return build(HttpStatus.FORBIDDEN, "You do not have permission to perform this action.", request, List.of());
     }
 
     // 401: login failed or the account cannot authenticate
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiError> handleAuthentication(
-            AuthenticationException ex,
-            HttpServletRequest request) {
-        return build(
-                HttpStatus.UNAUTHORIZED,
-                "Invalid username or password.",
-                request,
-                List.of()
-        );
+    public ResponseEntity<ApiError> handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+        return build(HttpStatus.UNAUTHORIZED, "Invalid username or password.", request, List.of());
     }
 
     // Everything else
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAny(Exception ex, HttpServletRequest request) {
-        // Spring's own web exceptions (404 for unknown URL, 405 wrong method...) already know their status.
+        // Spring's own web exceptions (404 unknown URL, 405 wrong method, missing parameter...) know their status.
         if (ex instanceof ErrorResponse errorResponse) {
             HttpStatus status = HttpStatus.resolve(errorResponse.getStatusCode().value());
             if (status != null) {
@@ -217,23 +161,13 @@ public class GlobalExceptionHandler {
             }
         }
         log.error("Unexpected error on {}", request.getRequestURI(), ex);
-        return build(HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred.",
-                request,
-                List.of());
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred.", request, List.of());
     }
 
-    private ResponseEntity<ApiError> build(HttpStatus status,
-                                           String message,
-                                           HttpServletRequest request,
+    private ResponseEntity<ApiError> build(HttpStatus status, String message, HttpServletRequest request,
                                            List<ApiError.FieldIssue> issues) {
-        ApiError body = new ApiError(
-                Instant.now().toString(),
-                status.value(),
-                status.getReasonPhrase(),
-                message,
-                request.getRequestURI(),
-                issues);
+        ApiError body = new ApiError(Instant.now().toString(), status.value(), status.getReasonPhrase(),
+                message, request.getRequestURI(), issues);
         return ResponseEntity.status(status).body(body);
     }
 }

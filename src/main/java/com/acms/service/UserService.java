@@ -3,8 +3,9 @@ package com.acms.service;
 import com.acms.dto.ChangePasswordRequest;
 import com.acms.dto.ChangeRoleRequest;
 import com.acms.dto.CreateUserRequest;
+import com.acms.dto.CurrentUserResponse;
+import com.acms.dto.MessageResponse;
 import com.acms.dto.PageResponse;
-import com.acms.dto.SetEnabledRequest;
 import com.acms.dto.UserResponse;
 import com.acms.entity.AppUser;
 import com.acms.entity.AuditEventType;
@@ -12,307 +13,160 @@ import com.acms.entity.District;
 import com.acms.entity.Farmer;
 import com.acms.entity.Role;
 import com.acms.exception.BadRequestException;
+import com.acms.exception.BusinessRuleException;
 import com.acms.exception.ConflictException;
 import com.acms.exception.ResourceNotFoundException;
 import com.acms.repository.AppUserRepository;
 import com.acms.repository.DistrictRepository;
 import com.acms.repository.FarmerRepository;
-import java.util.List;
+import java.util.Locale;
 import java.util.Set;
-import org.springframework.dao.DataIntegrityViolationException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    private static final Set<String> SORTABLE_FIELDS =
-            Set.of("id", "username", "role", "createdAt");
+    private static final Set<String> SORTABLE_FIELDS = Set.of("id", "username", "role", "createdAt");
 
     private final AppUserRepository appUserRepository;
     private final DistrictRepository districtRepository;
     private final FarmerRepository farmerRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditLogService auditLogService;
+    private final AccountOnboardingService onboardingService;
 
-    public UserService(
-            AppUserRepository appUserRepository,
-            DistrictRepository districtRepository,
-            FarmerRepository farmerRepository,
-            PasswordEncoder passwordEncoder,
-            AuditLogService auditLogService) {
-        this.appUserRepository = appUserRepository;
-        this.districtRepository = districtRepository;
-        this.farmerRepository = farmerRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.auditLogService = auditLogService;
+    /** A role's district or farmer link. FARMER accounts may have no farmer yet (linked later). */
+    private record Scope(District district, Farmer farmer) {
     }
 
     @Transactional
-    public UserResponse createUser(
-            CreateUserRequest request,
-            Long actorUserId) {
-
+    public UserResponse createUser(CreateUserRequest request, Long actorUserId) {
         String username = request.username();
-
+        String email = AccountOnboardingService.normaliseEmail(request.email());
         if (appUserRepository.existsByUsername(username)) {
             throw new ConflictException("Username is already in use.");
         }
-
-        validatePassword(username, request.password());
-
-        District district = null;
-        Farmer farmer = null;
-
-        if (request.role() == Role.FIELD_OFFICER
-                || request.role() == Role.DISTRICT_AGRONOMIST) {
-
-            if (request.districtId() == null
-                    || request.farmerId() != null) {
-                throw new BadRequestException(
-                        "This role requires a district and no farmer assignment.");
-            }
-
-            district = districtRepository.findById(request.districtId())
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException("District not found."));
-
-        } else if (request.role() == Role.FARMER) {
-
-            if (request.farmerId() == null
-                    || request.districtId() != null) {
-                throw new BadRequestException(
-                        "FARMER role requires a farmer assignment and no district assignment.");
-            }
-
-            farmer = farmerRepository.findById(request.farmerId())
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException("Farmer not found."));
-
-            if (appUserRepository.existsByFarmerId(farmer.getId())) {
-                throw new ConflictException(
-                        "This farmer already has a login account.");
-            }
-
-        } else {
-            if (request.districtId() != null
-                    || request.farmerId() != null) {
-                throw new BadRequestException(
-                        "This role must not have a district or farmer assignment.");
-            }
+        if (appUserRepository.existsByEmail(email)) {
+            throw new ConflictException("Email address is already in use.");
         }
 
-        AppUser user = new AppUser(
-                username,
-                passwordEncoder.encode(request.password()),
-                request.role());
+        Scope scope = resolveScope(request.role(), request.districtId(), request.farmerId(), null);
+        AppUser saved = onboardingService.createAccount(
+                username, email, request.role(), scope.district(), scope.farmer(), false);
 
-        if (district != null) {
-            user.assignDistrict(district);
-        } else if (farmer != null) {
-            user.assignFarmer(farmer);
-        } else {
-            user.clearScope();
-        }
-
-        try {
-            AppUser savedUser = appUserRepository.save(user);
-
-            auditLogService.record(
-                    AuditEventType.USER_CREATED,
-                    true,
-                    actorUserId,
-                    null,
-                    "USER",
-                    savedUser.getId(),
-                    "User account created with role " + savedUser.getRole(),
-                    null);
-
-            return toResponse(savedUser);
-
-        } catch (DataIntegrityViolationException exception) {
-            throw new ConflictException(
-                    "The user could not be created because of a data conflict.");
-        }
+        AppUser actor = findUser(actorUserId);
+        auditLogService.recordInCurrentTransaction(AuditEventType.USER_CREATED, true,
+                actor.getId(), actor.getUsername(), "USER", saved.getId(),
+                "Account created with role " + saved.getRole() + "; one-time password emailed", null);
+        return toResponse(saved);
     }
 
     @Transactional
-    public UserResponse changeRole(
-            Long targetUserId,
-            ChangeRoleRequest request,
-            Long actorUserId) {
-
+    public UserResponse changeRole(Long targetUserId, ChangeRoleRequest request, Long actorUserId) {
         if (targetUserId.equals(actorUserId)) {
-            throw new ConflictException(
-                    "You cannot change your own role.");
+            throw new ConflictException("You cannot change your own role.");
         }
-
         AppUser user = findUser(targetUserId);
-
-        District district = null;
-        Farmer farmer = null;
-
-        if (request.role() == Role.FIELD_OFFICER
-                || request.role() == Role.DISTRICT_AGRONOMIST) {
-
-            if (request.districtId() == null
-                    || request.farmerId() != null) {
-                throw new BadRequestException(
-                        "This role requires a district and no farmer assignment.");
-            }
-
-            district = districtRepository.findById(request.districtId())
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException("District not found."));
-
-        } else if (request.role() == Role.FARMER) {
-
-            if (request.farmerId() == null
-                    || request.districtId() != null) {
-                throw new BadRequestException(
-                        "FARMER role requires a farmer assignment and no district assignment.");
-            }
-
-            farmer = farmerRepository.findById(request.farmerId())
-                    .orElseThrow(() ->
-                            new ResourceNotFoundException("Farmer not found."));
-
-            appUserRepository.findByFarmerId(farmer.getId())
-                    .filter(existing -> !existing.getId().equals(user.getId()))
-                    .ifPresent(existing -> {
-                        throw new ConflictException(
-                                "This farmer already has a login account.");
-                    });
-
-        } else if (request.districtId() != null
-                || request.farmerId() != null) {
-            throw new BadRequestException(
-                    "This role must not have a district or farmer assignment.");
-        }
+        Scope scope = resolveScope(request.role(), request.districtId(), request.farmerId(), user.getId());
 
         Role previousRole = user.getRole();
         user.changeRole(request.role());
+        applyScope(user, scope);
+        AppUser saved = appUserRepository.saveAndFlush(user);   // flush now so a constraint error appears here
 
-        if (district != null) {
-            user.assignDistrict(district);
-        } else if (farmer != null) {
-            user.assignFarmer(farmer);
-        } else {
-            user.clearScope();
-        }
-
-        AppUser savedUser = appUserRepository.save(user);
-
-        auditLogService.record(
-                AuditEventType.USER_ROLE_CHANGED,
-                true,
-                actorUserId,
-                null,
-                "USER",
-                savedUser.getId(),
-                "Role changed from " + previousRole
-                        + " to " + savedUser.getRole(),
-                null);
-
-        return toResponse(savedUser);
+        AppUser actor = findUser(actorUserId);
+        auditLogService.recordInCurrentTransaction(AuditEventType.USER_ROLE_CHANGED, true,
+                actor.getId(), actor.getUsername(), "USER", saved.getId(),
+                "Role changed from " + previousRole + " to " + saved.getRole(), null);
+        return toResponse(saved);
     }
 
     @Transactional
-    public UserResponse setEnabled(
-            Long targetUserId,
-            boolean enabled,
-            Long actorUserId) {
-
+    public UserResponse setEnabled(Long targetUserId, boolean enabled, Long actorUserId) {
         if (!enabled && targetUserId.equals(actorUserId)) {
-            throw new ConflictException(
-                    "You cannot disable your own account.");
+            throw new ConflictException("You cannot disable your own account.");
         }
-
         AppUser user = findUser(targetUserId);
         user.setEnabled(enabled);
+        AppUser saved = appUserRepository.save(user);
 
-        AppUser savedUser = appUserRepository.save(user);
+        AppUser actor = findUser(actorUserId);
+        auditLogService.recordInCurrentTransaction(
+                enabled ? AuditEventType.USER_ENABLED : AuditEventType.USER_DISABLED, true,
+                actor.getId(), actor.getUsername(), "USER", saved.getId(),
+                enabled ? "User account enabled" : "User account disabled", null);
+        return toResponse(saved);
+    }
 
-        auditLogService.record(
-                enabled ? AuditEventType.USER_ENABLED
-                        : AuditEventType.USER_DISABLED,
-                true,
-                actorUserId,
-                null,
-                "USER",
-                savedUser.getId(),
-                enabled ? "User account enabled" : "User account disabled",
-                null);
+    /** Admin: email the user a new one-time password (for a lost email or a forgotten password). */
+    @Transactional
+    public MessageResponse resetPassword(Long targetUserId, Long actorUserId) {
+        AppUser user = findUser(targetUserId);
+        if (user.getEmail() == null) {
+            throw new BusinessRuleException(
+                    "This account has no email address, so a one-time password cannot be sent.");
+        }
+        if (!user.isEnabled()) {
+            throw new BusinessRuleException("Enable the account before resetting its password.");
+        }
+        onboardingService.reissueCredentials(user);
 
-        return toResponse(savedUser);
+        AppUser actor = findUser(actorUserId);
+        auditLogService.recordInCurrentTransaction(AuditEventType.PASSWORD_RESET, true,
+                actor.getId(), actor.getUsername(), "USER", user.getId(),
+                "New one-time password emailed", null);
+        return new MessageResponse("A new one-time password has been emailed to the user.");
     }
 
     @Transactional
-    public void changePassword(
-            Long actorUserId,
-            ChangePasswordRequest request) {
-
+    public void changePassword(Long actorUserId, ChangePasswordRequest request) {
         AppUser user = findUser(actorUserId);
 
-        if (!passwordEncoder.matches(
-                request.currentPassword(),
-                user.getPasswordHash())) {
-
-            auditLogService.record(
-                    AuditEventType.PASSWORD_CHANGE_FAILED,
-                    false,
-                    actorUserId,
-                    user.getUsername(),
-                    "USER",
-                    actorUserId,
-                    "Current password verification failed",
-                    null);
-
-            throw new BadCredentialsException(
-                    "Current password is incorrect.");
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            auditLogService.record(AuditEventType.PASSWORD_CHANGE_FAILED, false,
+                    user.getId(), user.getUsername(), "USER", user.getId(),
+                    "Current password verification failed", null);
+            // 400, not 401: the user IS logged in; only the value they typed is wrong.
+            throw new BadRequestException("Current password is incorrect.");
         }
 
         validatePassword(user.getUsername(), request.newPassword());
-
-        if (passwordEncoder.matches(
-                request.newPassword(),
-                user.getPasswordHash())) {
-            throw new BadRequestException(
-                    "New password must differ from the current password.");
+        if (passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
+            throw new BadRequestException("New password must differ from the current password.");
         }
 
-        user.changePasswordHash(
-                passwordEncoder.encode(request.newPassword()));
-
+        // Also clears "must change password" and increases the token version: the current token stops working.
+        user.changePasswordHash(passwordEncoder.encode(request.newPassword()));
         appUserRepository.save(user);
 
-        auditLogService.record(
-                AuditEventType.PASSWORD_CHANGED,
-                true,
-                actorUserId,
-                user.getUsername(),
-                "USER",
-                actorUserId,
-                "Password changed successfully",
-                null);
+        auditLogService.recordInCurrentTransaction(AuditEventType.PASSWORD_CHANGED, true,
+                user.getId(), user.getUsername(), "USER", user.getId(),
+                "Password changed successfully", null);
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<UserResponse> findAll(
-            int page,
-            int size,
-            String sortBy,
-            String direction) {
+    public CurrentUserResponse getCurrentUser(Long userId) {
+        AppUser user = findUser(userId);
+        return new CurrentUserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getRole(),
+                user.isEmailVerified(),
+                user.isMustChangePassword(),
+                user.getDistrict() == null ? null : user.getDistrict().getId(),
+                user.getFarmer() == null ? null : user.getFarmer().getId());
+    }
 
-        Pageable pageable = Paging.of(
-                page, size, sortBy, direction, SORTABLE_FIELDS);
-
-        return PageResponse.from(
-                appUserRepository.findAll(pageable)
-                        .map(this::toResponse));
+    @Transactional(readOnly = true)
+    public PageResponse<UserResponse> findAll(int page, int size, String sortBy, String direction) {
+        Pageable pageable = Paging.of(page, size, sortBy, direction, SORTABLE_FIELDS);
+        return PageResponse.from(appUserRepository.findAll(pageable).map(this::toResponse));
     }
 
     @Transactional(readOnly = true)
@@ -320,25 +174,66 @@ public class UserService {
         return toResponse(findUser(userId));
     }
 
+    /**
+     * Field Officers and District Agronomists need a district; a FARMER may be linked to one farmer
+     * record (or none yet); every other role has neither. The database enforces the same rule.
+     */
+    private Scope resolveScope(Role role, Long districtId, Long farmerId, Long currentUserId) {
+        return switch (role) {
+            case FIELD_OFFICER, DISTRICT_AGRONOMIST -> {
+                if (districtId == null || farmerId != null) {
+                    throw new BadRequestException("This role requires a district and no farmer assignment.");
+                }
+                District district = districtRepository.findById(districtId)
+                        .orElseThrow(() -> new ResourceNotFoundException("District not found."));
+                yield new Scope(district, null);
+            }
+            case FARMER -> {
+                if (districtId != null) {
+                    throw new BadRequestException("FARMER role must not have a district assignment.");
+                }
+                if (farmerId == null) {
+                    yield new Scope(null, null);   // linked to a farmer record later by the administrator
+                }
+                Farmer farmer = farmerRepository.findById(farmerId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Farmer not found."));
+                appUserRepository.findByFarmerId(farmer.getId())
+                        .filter(existing -> !existing.getId().equals(currentUserId))
+                        .ifPresent(existing -> {
+                            throw new ConflictException("This farmer already has a login account.");
+                        });
+                yield new Scope(null, farmer);
+            }
+            default -> {
+                if (districtId != null || farmerId != null) {
+                    throw new BadRequestException("This role must not have a district or farmer assignment.");
+                }
+                yield new Scope(null, null);
+            }
+        };
+    }
+
+    private void applyScope(AppUser user, Scope scope) {
+        if (scope.district() != null) {
+            user.assignDistrict(scope.district());
+        } else if (scope.farmer() != null) {
+            user.assignFarmer(scope.farmer());
+        } else {
+            user.clearScope();
+        }
+    }
+
     private AppUser findUser(Long userId) {
         return appUserRepository.findById(userId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("User not found."));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found."));
     }
 
     private void validatePassword(String username, String password) {
-        if (password == null
-                || password.length() < 12
-                || password.length() > 128
-                || password.isBlank()) {
-            throw new BadRequestException(
-                    "Password must contain 12 to 128 characters.");
+        if (password == null || password.isBlank() || password.length() < 12 || password.length() > 128) {
+            throw new BadRequestException("Password must contain 12 to 128 characters.");
         }
-
-        if (password.toLowerCase()
-                .contains(username.toLowerCase())) {
-            throw new BadRequestException(
-                    "Password must not contain the username.");
+        if (password.toLowerCase(Locale.ROOT).contains(username.toLowerCase(Locale.ROOT))) {
+            throw new BadRequestException("Password must not contain the username.");
         }
     }
 
@@ -346,12 +241,13 @@ public class UserService {
         return new UserResponse(
                 user.getId(),
                 user.getUsername(),
+                user.getEmail(),
                 user.getRole(),
                 user.isEnabled(),
-                user.getDistrict() == null
-                        ? null : user.getDistrict().getId(),
-                user.getFarmer() == null
-                        ? null : user.getFarmer().getId(),
+                user.isEmailVerified(),
+                user.isMustChangePassword(),
+                user.getDistrict() == null ? null : user.getDistrict().getId(),
+                user.getFarmer() == null ? null : user.getFarmer().getId(),
                 user.getCreatedAt(),
                 user.getUpdatedAt());
     }
