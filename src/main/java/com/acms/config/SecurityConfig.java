@@ -23,6 +23,12 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
 
+    /** Every real role. A user who must still change the one-time password has none of them. */
+    private static final String[] ALL_ROLES = {
+        "FARMER", "FIELD_OFFICER", "DISTRICT_AGRONOMIST",
+        "UNION_REGISTRAR", "FINANCE_OFFICER", "SYSTEM_ADMIN"
+    };
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -30,18 +36,14 @@ public class SecurityConfig {
 
     @Bean
     public DaoAuthenticationProvider daoAuthenticationProvider(
-            AppUserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder) {
-
-        DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider(userDetailsService);
+            AppUserDetailsService userDetailsService, PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            DaoAuthenticationProvider provider) {
+    public AuthenticationManager authenticationManager(DaoAuthenticationProvider provider) {
         return new ProviderManager(provider);
     }
 
@@ -53,143 +55,64 @@ public class SecurityConfig {
 
         http
             .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint(
-                    errorHandlers.authenticationEntryPoint())
-                .accessDeniedHandler(
-                    errorHandlers.accessDeniedHandler())
-            )
+                .authenticationEntryPoint(errorHandlers.authenticationEntryPoint())
+                .accessDeniedHandler(errorHandlers.accessDeniedHandler()))
             .authorizeHttpRequests(auth -> auth
 
-                // Public endpoints
-                .requestMatchers(
-                    HttpMethod.POST, "/api/auth/login"
-                ).permitAll()
-                .requestMatchers(
-                    "/swagger-ui.html",
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**"
-                ).permitAll()
-                
+                // ---- Public ----
+                .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/auth/verify-email").permitAll()
+                .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/error").permitAll()
 
-                // Every authenticated user can read reference data.
-                .requestMatchers(
-                    HttpMethod.GET,
-                    "/api/districts",
-                    "/api/districts/**",
-                    "/api/cooperatives",
-                    "/api/cooperatives/**",
-                    "/api/trainings",
-                    "/api/trainings/**",
-                    "/api/programmes",
-                    "/api/programmes/**"
-                ).authenticated()
+                // ---- Any logged-in user, INCLUDING one who must still change the one-time password ----
+                .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/auth/change-password").authenticated()
 
-                // Only union registrars can modify reference data.
-                .requestMatchers(
-                    HttpMethod.POST,
-                    "/api/districts",
-                    "/api/cooperatives",
-                    "/api/trainings",
-                    "/api/programmes",
-                    "/api/programmes/*/prerequisites"
-                ).hasRole("UNION_REGISTRAR")
+                // ---- Reference data: every real role may read, only union registrars may change ----
+                .requestMatchers(HttpMethod.GET,
+                    "/api/districts", "/api/districts/**",
+                    "/api/cooperatives", "/api/cooperatives/**",
+                    "/api/trainings", "/api/trainings/**",
+                    "/api/programmes", "/api/programmes/**").hasAnyRole(ALL_ROLES)
+                .requestMatchers(HttpMethod.POST,
+                    "/api/districts", "/api/cooperatives", "/api/trainings",
+                    "/api/programmes", "/api/programmes/*/prerequisites").hasRole("UNION_REGISTRAR")
+                .requestMatchers(HttpMethod.PUT,
+                    "/api/districts/**", "/api/cooperatives/**",
+                    "/api/trainings/**", "/api/programmes/**").hasRole("UNION_REGISTRAR")
+                .requestMatchers(HttpMethod.DELETE, "/api/programmes/*/prerequisites/*").hasRole("UNION_REGISTRAR")
 
-                .requestMatchers(
-                    HttpMethod.PUT,
-                    "/api/districts/**",
-                    "/api/cooperatives/**",
-                    "/api/trainings/**",
-                    "/api/programmes/**"
-                ).hasRole("UNION_REGISTRAR")
+                // ---- Farmers ----
+                .requestMatchers(HttpMethod.GET, "/api/farmers").hasAnyRole(
+                    "UNION_REGISTRAR", "FIELD_OFFICER", "DISTRICT_AGRONOMIST", "FINANCE_OFFICER", "SYSTEM_ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/farmers/*").hasAnyRole(
+                    "FARMER", "UNION_REGISTRAR", "FIELD_OFFICER", "DISTRICT_AGRONOMIST")
+                .requestMatchers(HttpMethod.POST, "/api/farmers").hasRole("UNION_REGISTRAR")
+                .requestMatchers(HttpMethod.PUT, "/api/farmers/*").hasRole("UNION_REGISTRAR")
+                .requestMatchers(HttpMethod.PATCH, "/api/farmers/*/status").hasRole("UNION_REGISTRAR")
 
-                .requestMatchers(
-                    HttpMethod.DELETE,
-                    "/api/programmes/*/prerequisites/*"
-                ).hasRole("UNION_REGISTRAR")
+                // ---- Training records ----
+                .requestMatchers(HttpMethod.POST, "/api/farmers/*/trainings").hasRole("UNION_REGISTRAR")
+                .requestMatchers(HttpMethod.GET,
+                    "/api/farmers/*/trainings", "/api/farmers/*/missing-prerequisites").hasAnyRole(
+                    "FARMER", "UNION_REGISTRAR", "FIELD_OFFICER", "DISTRICT_AGRONOMIST")
 
-                // Farmer summaries: staff roles that need summary access.
-                .requestMatchers(
-                    HttpMethod.GET, "/api/farmers"
-                ).hasAnyRole(
-                    "UNION_REGISTRAR",
-                    "FIELD_OFFICER",
-                    "DISTRICT_AGRONOMIST",
-                    "FINANCE_OFFICER",
-                    "SYSTEM_ADMIN"
-                )
+                // ---- Administration ----
+                .requestMatchers("/api/users", "/api/users/**").hasRole("SYSTEM_ADMIN")
+                .requestMatchers("/api/audit-logs", "/api/audit-logs/**").hasRole("SYSTEM_ADMIN")
 
-                // Farmer details: no finance or system-admin access.
-                .requestMatchers(
-                    HttpMethod.GET, "/api/farmers/*"
-                ).hasAnyRole(
-                    "FARMER",
-                    "UNION_REGISTRAR",
-                    "FIELD_OFFICER",
-                    "DISTRICT_AGRONOMIST"
-                )
+                // ---- A farmer's own profile ----
+                .requestMatchers(HttpMethod.GET, "/api/me/profile").hasRole("FARMER")
 
-                // Farmer registration and changes: registrar only.
-                .requestMatchers(
-                    HttpMethod.POST, "/api/farmers"
-                ).hasRole("UNION_REGISTRAR")
-
-                .requestMatchers(
-                    HttpMethod.PUT, "/api/farmers/*"
-                ).hasRole("UNION_REGISTRAR")
-
-                .requestMatchers(
-                    HttpMethod.PATCH, "/api/farmers/*/status"
-                ).hasRole("UNION_REGISTRAR")
-
-                // Training records: registrar writes, authorised staff read.
-                .requestMatchers(
-                    HttpMethod.POST,
-                    "/api/farmers/*/trainings"
-                ).hasRole("UNION_REGISTRAR")
-
-                .requestMatchers(
-                    HttpMethod.GET,
-                    "/api/farmers/*/trainings",
-                    "/api/farmers/*/missing-prerequisites"
-                ).hasAnyRole(
-                    "FARMER",
-                    "UNION_REGISTRAR",
-                    "FIELD_OFFICER",
-                    "DISTRICT_AGRONOMIST"
-                )
-
-                // User administration: system administrator only.
-                .requestMatchers("/api/users", "/api/users/**")
-                    .hasRole("SYSTEM_ADMIN")
-
-                // Password changes remain available to authenticated users.
-                .requestMatchers(
-                    HttpMethod.POST, "/api/auth/change-password"
-                ).authenticated()
-
-                // Audit logs: system administrator only.
-                .requestMatchers("/api/audit-logs", "/api/audit-logs/**")
-                    .hasRole("SYSTEM_ADMIN")
-
-                // Current authenticated farmer profile endpoint.
-                .requestMatchers(
-                    HttpMethod.GET, "/api/me/profile"
-                ).hasRole("FARMER")
-
-                // Do not expose new endpoints by accident.
-                .anyRequest().denyAll()
-            )
+                // ---- Do not expose new endpoints by accident ----
+                .anyRequest().denyAll())
             .oauth2ResourceServer(oauth2 -> oauth2
-                .authenticationEntryPoint(
-                    errorHandlers.authenticationEntryPoint())
+                .authenticationEntryPoint(errorHandlers.authenticationEntryPoint())
                 .accessDeniedHandler(errorHandlers.accessDeniedHandler())
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter))
-            );
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtConverter)));
 
         return http.build();
     }

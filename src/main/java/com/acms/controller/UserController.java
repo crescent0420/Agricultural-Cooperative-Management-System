@@ -3,11 +3,13 @@ package com.acms.controller;
 import com.acms.dto.ChangePasswordRequest;
 import com.acms.dto.ChangeRoleRequest;
 import com.acms.dto.CreateUserRequest;
+import com.acms.dto.MessageResponse;
 import com.acms.dto.PageResponse;
 import com.acms.dto.SetEnabledRequest;
 import com.acms.dto.UserResponse;
 import com.acms.service.UserService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -23,22 +25,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
     @PostMapping("/users")
     @PreAuthorize("hasRole('SYSTEM_ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse createUser(
-            @Valid @RequestBody CreateUserRequest request,
-            Authentication authentication) {
-        return userService.createUser(
-                request, currentUserId(authentication));
+    public UserResponse createUser(@Valid @RequestBody CreateUserRequest request, Authentication authentication) {
+        return userService.createUser(request, currentUserId(authentication));
     }
 
     @GetMapping("/users")
@@ -59,31 +55,29 @@ public class UserController {
 
     @PatchMapping("/users/{id}/role")
     @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-    public UserResponse changeRole(
-            @PathVariable Long id,
-            @Valid @RequestBody ChangeRoleRequest request,
-            Authentication authentication) {
-        return userService.changeRole(
-                id, request, currentUserId(authentication));
+    public UserResponse changeRole(@PathVariable Long id, @Valid @RequestBody ChangeRoleRequest request,
+                                   Authentication authentication) {
+        return userService.changeRole(id, request, currentUserId(authentication));
     }
 
     @PatchMapping("/users/{id}/enabled")
     @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-    public UserResponse setEnabled(
-            @PathVariable Long id,
-            @Valid @RequestBody SetEnabledRequest request,
-            Authentication authentication) {
-        return userService.setEnabled(
-                id, request.enabled(), currentUserId(authentication));
+    public UserResponse setEnabled(@PathVariable Long id, @Valid @RequestBody SetEnabledRequest request,
+                                   Authentication authentication) {
+        return userService.setEnabled(id, request.enabled(), currentUserId(authentication));
+    }
+
+    /** Emails the user a new one-time password (and a new verification link if still unverified). */
+    @PostMapping("/users/{id}/reset-password")
+    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    public MessageResponse resetPassword(@PathVariable Long id, Authentication authentication) {
+        return userService.resetPassword(id, currentUserId(authentication));
     }
 
     @PostMapping("/auth/change-password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void changePassword(
-            @Valid @RequestBody ChangePasswordRequest request,
-            Authentication authentication) {
-        userService.changePassword(
-                currentUserId(authentication), request);
+    public void changePassword(@Valid @RequestBody ChangePasswordRequest request, Authentication authentication) {
+        userService.changePassword(currentUserId(authentication), request);
     }
 
     private Long currentUserId(Authentication authentication) {
