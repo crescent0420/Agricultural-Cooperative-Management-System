@@ -25,6 +25,11 @@ public class FarmerAccessService {
         this.appUserRepository = appUserRepository;
         this.farmerRepository = farmerRepository;
     }
+        /** Field Officers and District Agronomists may only work with their own district. */
+    public static boolean isDistrictRestricted(AppUser user) {
+        return user.getRole() == Role.FIELD_OFFICER
+                || user.getRole() == Role.DISTRICT_AGRONOMIST;
+    }
 
     public AppUser getCurrentUser() {
         Authentication authentication =

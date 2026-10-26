@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(name = "crop_programmes")
@@ -33,6 +34,7 @@ public class CropProgramme {
     private District district;
 
     @ManyToMany
+    @BatchSize(size = 50)
     @JoinTable(
             name = "programme_prerequisites",
             joinColumns = @JoinColumn(name = "programme_id"),

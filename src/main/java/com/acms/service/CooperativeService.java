@@ -3,6 +3,7 @@ package com.acms.service;
 import com.acms.dto.CooperativeRenameRequest;
 import com.acms.dto.CooperativeRequest;
 import com.acms.dto.CooperativeResponse;
+import com.acms.dto.PageResponse;
 import com.acms.entity.AppUser;
 import com.acms.entity.Cooperative;
 import com.acms.entity.District;
@@ -11,14 +12,18 @@ import com.acms.exception.ConflictException;
 import com.acms.exception.ResourceNotFoundException;
 import com.acms.repository.CooperativeRepository;
 import com.acms.repository.DistrictRepository;
-import java.util.List;
-import org.springframework.data.domain.Sort;
+import java.util.Set;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CooperativeService {
+
+    private static final Set<String> SORTABLE_FIELDS =
+            Set.of("id", "name", "createdAt");
 
     private final CooperativeRepository cooperativeRepository;
     private final DistrictRepository districtRepository;
@@ -37,14 +42,16 @@ public class CooperativeService {
     public CooperativeResponse create(CooperativeRequest request) {
         District district = districtRepository.findById(request.districtId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "District with id " + request.districtId() + " was not found."));
+                        "District with id " + request.districtId()
+                                + " was not found."));
 
         String name = request.name().trim();
 
         if (cooperativeRepository.existsByDistrictIdAndNameIgnoreCase(
                 district.getId(), name)) {
             throw new ConflictException(
-                    "Cooperative '" + name + "' already exists in district "
+                    "Cooperative '" + name
+                            + "' already exists in district "
                             + district.getName() + ".");
         }
 
@@ -55,7 +62,13 @@ public class CooperativeService {
     }
 
     @Transactional(readOnly = true)
-    public List<CooperativeResponse> findAll(Long districtId) {
+    public PageResponse<CooperativeResponse> findAll(
+            Long districtId,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
         AppUser user = farmerAccessService.getCurrentUser();
         Role role = user.getRole();
 
@@ -67,7 +80,8 @@ public class CooperativeService {
 
             Long assignedDistrictId = user.getDistrict().getId();
 
-            if (districtId != null && !districtId.equals(assignedDistrictId)) {
+            if (districtId != null
+                    && !districtId.equals(assignedDistrictId)) {
                 throw new AccessDeniedException(
                         "You do not have permission to perform this action.");
             }
@@ -75,15 +89,16 @@ public class CooperativeService {
             districtId = assignedDistrictId;
         }
 
-        Sort sort = Sort.by("name");
+        Pageable pageable = Paging.of(
+                page, size, sortBy, direction, SORTABLE_FIELDS);
 
-        List<Cooperative> cooperatives = (districtId == null)
-                ? cooperativeRepository.findAll(sort)
-                : cooperativeRepository.findByDistrictId(districtId, sort);
+        Page<Cooperative> result = (districtId == null)
+                ? cooperativeRepository.findAll(pageable)
+                : cooperativeRepository.findByDistrictId(
+                        districtId, pageable);
 
-        return cooperatives.stream()
-                .map(CooperativeResponse::from)
-                .toList();
+        return PageResponse.from(
+                result.map(CooperativeResponse::from));
     }
 
     @Transactional(readOnly = true)

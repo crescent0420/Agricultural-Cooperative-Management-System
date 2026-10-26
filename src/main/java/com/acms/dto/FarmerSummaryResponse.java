@@ -8,6 +8,8 @@ public record FarmerSummaryResponse(
         String fullName,
         Long cooperativeId,
         String cooperativeName,
+        Long districtId,
+        String districtName,
         FarmerStatus status,
         Instant createdAt) {
     public static FarmerSummaryResponse from(Farmer farmer) {
@@ -17,8 +19,9 @@ public record FarmerSummaryResponse(
                 farmer.getFullName(),
                 farmer.getCooperative().getId(),
                 farmer.getCooperative().getName(),
+                farmer.getCooperative().getDistrict().getId(),
+                farmer.getCooperative().getDistrict().getName(),
                 farmer.getStatus(),
                 farmer.getCreatedAt());
     }
 }
-

@@ -2,6 +2,7 @@ package com.acms.service;
 
 import com.acms.dto.FarmerTrainingRequest;
 import com.acms.dto.FarmerTrainingResponse;
+import com.acms.dto.PageResponse;
 import com.acms.dto.TrainingResponse;
 import com.acms.entity.AppUser;
 import com.acms.entity.CropProgramme;
@@ -16,13 +17,17 @@ import com.acms.repository.FarmerRepository;
 import com.acms.repository.FarmerTrainingRepository;
 import com.acms.repository.TrainingRepository;
 import java.util.List;
-import org.springframework.data.domain.Sort;
+import java.util.Set;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class FarmerTrainingService {
+
+    private static final Set<String> SORTABLE_FIELDS =
+            Set.of("id", "completedOn", "recordedAt");
 
     private final FarmerRepository farmerRepository;
     private final TrainingRepository trainingRepository;
@@ -79,19 +84,23 @@ public class FarmerTrainingService {
     }
 
     @Transactional(readOnly = true)
-    public List<FarmerTrainingResponse> findForFarmer(Long farmerId) {
+    public PageResponse<FarmerTrainingResponse> findForFarmer(
+            Long farmerId,
+            int page,
+            int size,
+            String sortBy,
+            String direction) {
+
         Farmer farmer = farmerAccessService.requireFarmerAccess(farmerId);
 
-        Sort newestFirst = Sort.by(
-                Sort.Order.desc("completedOn"),
-                Sort.Order.desc("id"));
+        Pageable pageable = Paging.of(
+                page, size, sortBy, direction, SORTABLE_FIELDS);
 
-        return farmerTrainingRepository.findByFarmerId(
-                        farmer.getId(), newestFirst)
-                .stream()
-                .map(record -> FarmerTrainingResponse.from(
-                        record, farmer.getId()))
-                .toList();
+        return PageResponse.from(
+                farmerTrainingRepository.findByFarmerId(
+                                farmer.getId(), pageable)
+                        .map(record -> FarmerTrainingResponse.from(
+                                record, farmer.getId())));
     }
 
     @Transactional(readOnly = true)

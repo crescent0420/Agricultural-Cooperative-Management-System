@@ -73,6 +73,8 @@ public class SecurityConfig {
                     "/swagger-ui/**",
                     "/v3/api-docs/**"
                 ).permitAll()
+                
+                .requestMatchers("/error").permitAll()
 
                 // Every authenticated user can read reference data.
                 .requestMatchers(
