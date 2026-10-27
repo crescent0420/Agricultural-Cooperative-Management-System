@@ -94,6 +94,13 @@ public class SecurityConfig {
                     .hasRole("UNION_REGISTRAR")
                 .requestMatchers(HttpMethod.PUT, "/api/seasons/*").hasRole("UNION_REGISTRAR")
 
+                // ---- Programme offerings: the district filter is applied in ProgrammeOfferingService ----
+                .requestMatchers(HttpMethod.GET, "/api/offerings/assigned-to-me").hasRole("FIELD_OFFICER")
+                .requestMatchers(HttpMethod.GET, "/api/offerings", "/api/offerings/*").hasAnyRole(
+                    "FARMER", "FIELD_OFFICER", "DISTRICT_AGRONOMIST", "UNION_REGISTRAR", "SYSTEM_ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/offerings").hasRole("UNION_REGISTRAR")
+                .requestMatchers(HttpMethod.PUT, "/api/offerings/*").hasRole("UNION_REGISTRAR")
+
                 // ---- Farmers ----
                 .requestMatchers(HttpMethod.GET, "/api/farmers").hasAnyRole(
                     "UNION_REGISTRAR", "FIELD_OFFICER", "DISTRICT_AGRONOMIST", "FINANCE_OFFICER", "SYSTEM_ADMIN")
