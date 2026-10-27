@@ -71,14 +71,16 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/auth/change-password").authenticated()
 
-                // ---- Reference data: every real role may read, only union registrars may change ----
+                // ---- Reference data: every real role may read; provinces and districts are seeded ----
                 .requestMatchers(HttpMethod.GET,
+                    "/api/provinces", "/api/provinces/**",
                     "/api/districts", "/api/districts/**",
                     "/api/cooperatives", "/api/cooperatives/**",
                     "/api/trainings", "/api/trainings/**",
                     "/api/programmes", "/api/programmes/**").hasAnyRole(ALL_ROLES)
+                // (No POST /api/districts: the 30 districts are seeded; such a request falls to denyAll = 403.)
                 .requestMatchers(HttpMethod.POST,
-                    "/api/districts", "/api/cooperatives", "/api/trainings",
+                    "/api/cooperatives", "/api/trainings",
                     "/api/programmes", "/api/programmes/*/prerequisites").hasRole("UNION_REGISTRAR")
                 .requestMatchers(HttpMethod.PUT,
                     "/api/districts/**", "/api/cooperatives/**",

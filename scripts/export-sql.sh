@@ -22,15 +22,22 @@ get_setting() {
   printf '%s' "${value:-$default}"
 }
 
-DB_URL="$(get_setting DB_URL 'jdbc:postgresql://localhost:5432/acms_db')"
+DB_HOST="$(get_setting DB_HOST '')"
+DB_PORT="$(get_setting DB_PORT '')"
+DB_NAME="$(get_setting DB_NAME '')"
+# Older .env files had one DB_URL line instead of DB_HOST / DB_PORT / DB_NAME. Still understood.
+DB_URL="$(get_setting DB_URL '')"
 re='^jdbc:postgresql://([^:/]+)(:([0-9]+))?/([^?]+)'
-if [[ ! "$DB_URL" =~ $re ]]; then
-  echo "Cannot read DB_URL: $DB_URL" >&2; exit 1
+if [[ -n "$DB_URL" && "$DB_URL" =~ $re ]]; then
+  DB_HOST="${DB_HOST:-${BASH_REMATCH[1]}}"
+  DB_PORT="${DB_PORT:-${BASH_REMATCH[3]:-5432}}"
+  DB_NAME="${DB_NAME:-${BASH_REMATCH[4]}}"
 fi
-DB_HOST="${BASH_REMATCH[1]}"
-DB_PORT="${BASH_REMATCH[3]:-5432}"
-DB_NAME="${BASH_REMATCH[4]}"
-DB_USER="$(get_setting DB_USERNAME acms_user)"
+for v in DB_HOST DB_PORT DB_NAME; do
+  if [[ -z "${!v}" ]]; then echo "$v is not set (add it to .env)." >&2; exit 1; fi
+done
+DB_USER="$(get_setting DB_USERNAME '')"
+if [[ -z "$DB_USER" ]]; then echo "DB_USERNAME is not set (add it to .env)." >&2; exit 1; fi
 PGPASSWORD="$(get_setting DB_PASSWORD '')"
 if [[ -z "$PGPASSWORD" ]]; then
   echo "DB_PASSWORD is not set (in .env or the environment)." >&2; exit 1
