@@ -85,6 +85,13 @@ public class SecurityConfig {
                     "/api/trainings/**", "/api/programmes/**").hasRole("UNION_REGISTRAR")
                 .requestMatchers(HttpMethod.DELETE, "/api/programmes/*/prerequisites/*").hasRole("UNION_REGISTRAR")
 
+                // ---- Seasons and enrolment windows: every role may read, only the Registrar may change ----
+                .requestMatchers(HttpMethod.GET, "/api/seasons", "/api/seasons/**").hasAnyRole(ALL_ROLES)
+                .requestMatchers(HttpMethod.POST,
+                    "/api/seasons", "/api/seasons/*/windows/open", "/api/seasons/*/windows/close")
+                    .hasRole("UNION_REGISTRAR")
+                .requestMatchers(HttpMethod.PUT, "/api/seasons/*").hasRole("UNION_REGISTRAR")
+
                 // ---- Farmers ----
                 .requestMatchers(HttpMethod.GET, "/api/farmers").hasAnyRole(
                     "UNION_REGISTRAR", "FIELD_OFFICER", "DISTRICT_AGRONOMIST", "FINANCE_OFFICER", "SYSTEM_ADMIN")
