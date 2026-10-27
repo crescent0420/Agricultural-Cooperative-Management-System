@@ -67,8 +67,8 @@ public abstract class IntegrationTestBase {
     void checkThisIsTheTestDatabase() {
         String database = new JdbcTemplate(dataSource).queryForObject("SELECT current_database()", String.class);
         assertThat(database)
-                .as("Tests must run against acms_test, never against your real database")
-                .isEqualTo("acms_test");
+                .as("Tests must run against the TEST database (a name ending in _test), never your real one")
+                .endsWith("_test");
     }
 
     // ---------- test data ----------
@@ -100,14 +100,17 @@ public abstract class IntegrationTestBase {
         return appUserRepository.save(user);
     }
 
-    /** Two districts, each with one cooperative and one farmer, created through the real API. */
+    /**
+     * Two seeded districts (Huye and Musanze, created by the provinces migration), each with a new
+     * cooperative and a new farmer created through the real API.
+     */
     protected record World(long districtA, long districtB, long cooperativeA, long cooperativeB,
                            long farmerA, long farmerB) {
     }
 
     protected World createWorld(String registrarToken) throws Exception {
-        long districtA = postForId("/api/districts", registrarToken, json("name", unique("district-a")));
-        long districtB = postForId("/api/districts", registrarToken, json("name", unique("district-b")));
+        long districtA = seededDistrictId("Huye");
+        long districtB = seededDistrictId("Musanze");
         long cooperativeA = postForId("/api/cooperatives", registrarToken,
                 json("name", unique("coop-a"), "districtId", districtA));
         long cooperativeB = postForId("/api/cooperatives", registrarToken,
@@ -117,6 +120,14 @@ public abstract class IntegrationTestBase {
         long farmerB = postForId("/api/farmers", registrarToken,
                 json("fullName", "Test Farmer B", "nationalId", nationalId(), "cooperativeId", cooperativeB));
         return new World(districtA, districtB, cooperativeA, cooperativeB, farmerA, farmerB);
+    }
+
+    /** Id of a district seeded by the migration (looked up by its official name). */
+    protected long seededDistrictId(String name) {
+        Long id = new JdbcTemplate(dataSource).queryForObject(
+                "SELECT id FROM districts WHERE lower(name) = lower(?)", Long.class, name);
+        assertThat(id).as("seeded district " + name).isNotNull();
+        return id;
     }
 
     // ---------- HTTP helpers ----------
