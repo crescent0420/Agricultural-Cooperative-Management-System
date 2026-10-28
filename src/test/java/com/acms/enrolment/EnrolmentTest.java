@@ -13,6 +13,7 @@ import com.jayway.jsonpath.JsonPath;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -28,6 +29,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 class EnrolmentTest extends IntegrationTestBase {
 
     private World world;
+    private AppUser registrar;
     private String registrarToken;
     private AppUser officerA;           // assigned to the offerings created below
     private String officerAToken;
@@ -43,7 +45,7 @@ class EnrolmentTest extends IntegrationTestBase {
     @BeforeAll
     void createWorldAndStaff() throws Exception {
         String registrarName = unique("enrol.registrar");
-        createUser(registrarName, Role.UNION_REGISTRAR, null, null);
+        registrar = createUser(registrarName, Role.UNION_REGISTRAR, null, null);
         registrarToken = login(registrarName, PASSWORD);
         world = createWorld(registrarToken);
 
@@ -103,15 +105,47 @@ class EnrolmentTest extends IntegrationTestBase {
         return offering(programmeA(), season(true), hectares, places);
     }
 
-    private int enrol(String token, long offeringId) throws Exception {
+    /**
+     * Test set-up shortcut (Step 6): the farmer owes 1 000 for the offering's season and has paid it all
+     * (confirmed), so the 30% rule passes. The payment rules themselves are tested in ContributionPaymentTest.
+     */
+    private void ensurePaid(TestFarmer farmer, long offeringId) {
+        Long seasonId = jdbc().queryForObject(
+                "SELECT season_id FROM programme_offerings WHERE id = ?", Long.class, offeringId);
+        Integer existing = jdbc().queryForObject(
+                "SELECT count(*) FROM contribution_obligations WHERE farmer_id = ? AND season_id = ?",
+                Integer.class, farmer.id(), seasonId);
+        if (existing != null && existing > 0) {
+            return;
+        }
+        Long obligationId = jdbc().queryForObject("""
+                INSERT INTO contribution_obligations (farmer_id, season_id, amount_due, created_by)
+                VALUES (?, ?, 1000, ?) RETURNING id""", Long.class, farmer.id(), seasonId, registrar.getId());
+        jdbc().update("""
+                INSERT INTO payments (obligation_id, transaction_reference, amount, method, status,
+                                      provider_reference, requested_by, confirmed_by, confirmed_at)
+                VALUES (?, ?, 1000, 'MOBILE_MONEY', 'CONFIRMED', ?, ?, ?, now())""",
+                obligationId, "TEST-" + UUID.randomUUID(), "PROVIDER-" + UUID.randomUUID(),
+                registrar.getId(), registrar.getId());
+    }
+
+    /** A paid-up farmer enrols. */
+    private int enrol(TestFarmer farmer, long offeringId) throws Exception {
+        ensurePaid(farmer, offeringId);
+        return enrolAs(farmer.token(), offeringId);
+    }
+
+    /** Anyone with this token tries to enrol (no payment set-up). */
+    private int enrolAs(String token, long offeringId) throws Exception {
         return mockMvc.perform(post("/api/offerings/" + offeringId + "/enrolments")
                         .header("Authorization", bearer(token)))
                 .andReturn().getResponse().getStatus();
     }
 
-    private long enrolForId(String token, long offeringId) throws Exception {
+    private long enrolForId(TestFarmer farmer, long offeringId) throws Exception {
+        ensurePaid(farmer, offeringId);
         String body = mockMvc.perform(post("/api/offerings/" + offeringId + "/enrolments")
-                        .header("Authorization", bearer(token)))
+                        .header("Authorization", bearer(farmer.token())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         Number id = JsonPath.read(body, "$.id");
@@ -148,6 +182,7 @@ class EnrolmentTest extends IntegrationTestBase {
     void enrolAndDuplicate() throws Exception {
         long offeringId = openOffering(1.0, 10);
         TestFarmer farmer = newFarmerA();
+        ensurePaid(farmer, offeringId);
 
         mockMvc.perform(post("/api/offerings/" + offeringId + "/enrolments")
                         .header("Authorization", bearer(farmer.token())))
@@ -164,7 +199,7 @@ class EnrolmentTest extends IntegrationTestBase {
                 .andExpect(jsonPath("$.enrolledCount").value(1))
                 .andExpect(jsonPath("$.remainingPlaces").value(9));
 
-        assertThat(enrol(farmer.token(), offeringId)).isEqualTo(409);
+        assertThat(enrol(farmer, offeringId)).isEqualTo(409);
         assertThat(enrolledCount(offeringId)).isEqualTo(1);
     }
 
@@ -175,13 +210,13 @@ class EnrolmentTest extends IntegrationTestBase {
         long offeringId = offering(programmeA(), seasonId, 1.0, 10);
         TestFarmer farmer = newFarmerA();
 
-        assertThat(enrol(farmer.token(), offeringId)).isEqualTo(422);
+        assertThat(enrol(farmer, offeringId)).isEqualTo(422);
 
         mockMvc.perform(post("/api/seasons/" + seasonId + "/windows/open").header("Authorization", bearer(registrarToken)))
                 .andExpect(status().isCreated());
         mockMvc.perform(post("/api/seasons/" + seasonId + "/windows/close").header("Authorization", bearer(registrarToken)))
                 .andExpect(status().isOk());
-        assertThat(enrol(farmer.token(), offeringId)).isEqualTo(422);
+        assertThat(enrol(farmer, offeringId)).isEqualTo(422);
         assertThat(enrolledCount(offeringId)).isZero();
     }
 
@@ -192,7 +227,7 @@ class EnrolmentTest extends IntegrationTestBase {
         TestFarmer farmer = newFarmerA();
         jdbc().update("UPDATE farmers SET status = 'SUSPENDED' WHERE id = ?", farmer.id());
 
-        assertThat(enrol(farmer.token(), offeringId)).isEqualTo(422);
+        assertThat(enrol(farmer, offeringId)).isEqualTo(422);
         assertThat(enrolledCount(offeringId)).isZero();
     }
 
@@ -207,6 +242,7 @@ class EnrolmentTest extends IntegrationTestBase {
                 .andExpect(status().isCreated());
         long offeringId = offering(programmeId, season(true), 1.0, 10);
         TestFarmer farmer = newFarmerA();
+        ensurePaid(farmer, offeringId);
 
         mockMvc.perform(post("/api/offerings/" + offeringId + "/enrolments")
                         .header("Authorization", bearer(farmer.token())))
@@ -218,7 +254,7 @@ class EnrolmentTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("trainingId", trainingId, "completedOn", LocalDate.now().toString())))
                 .andExpect(status().isCreated());
-        assertThat(enrol(farmer.token(), offeringId)).isEqualTo(201);
+        assertThat(enrol(farmer, offeringId)).isEqualTo(201);
     }
 
     @Test
@@ -229,8 +265,8 @@ class EnrolmentTest extends IntegrationTestBase {
         long second = offering(programmeA(), seasonId, 1.5, 10);
         TestFarmer farmer = newFarmerA();
 
-        assertThat(enrol(farmer.token(), first)).isEqualTo(201);       // 1.5 ha
-        assertThat(enrol(farmer.token(), second)).isEqualTo(422);      // 3.0 ha > 2.5 ha
+        assertThat(enrol(farmer, first)).isEqualTo(201);       // 1.5 ha
+        assertThat(enrol(farmer, second)).isEqualTo(422);      // 3.0 ha > 2.5 ha
         assertThat(enrolledCount(second)).isZero();
     }
 
@@ -240,10 +276,10 @@ class EnrolmentTest extends IntegrationTestBase {
         long offeringId = openOffering(1.0, 10);                       // district A
         TestFarmer farmerB = newFarmer(world.cooperativeB());          // district B
 
-        assertThat(enrol(farmerB.token(), offeringId)).isEqualTo(403);
-        assertThat(enrol(officerAToken, offeringId)).isEqualTo(403);
-        assertThat(enrol(registrarToken, offeringId)).isEqualTo(403);
-        assertThat(enrol(newFarmerA().token(), 999_999_999L)).isEqualTo(404);
+        assertThat(enrolAs(farmerB.token(), offeringId)).isEqualTo(403);
+        assertThat(enrolAs(officerAToken, offeringId)).isEqualTo(403);
+        assertThat(enrolAs(registrarToken, offeringId)).isEqualTo(403);
+        assertThat(enrolAs(newFarmerA().token(), 999_999_999L)).isEqualTo(404);
     }
 
     // ---------- concurrency ----------
@@ -255,7 +291,9 @@ class EnrolmentTest extends IntegrationTestBase {
         int attempts = 8;
         List<TestFarmer> farmers = new ArrayList<>();
         for (int i = 0; i < attempts; i++) {
-            farmers.add(newFarmerA());
+            TestFarmer farmer = newFarmerA();
+            ensurePaid(farmer, offeringId);
+            farmers.add(farmer);
         }
 
         ExecutorService pool = Executors.newFixedThreadPool(attempts);
@@ -264,7 +302,7 @@ class EnrolmentTest extends IntegrationTestBase {
         for (TestFarmer farmer : farmers) {
             results.add(pool.submit(() -> {
                 startTogether.await();
-                return enrol(farmer.token(), offeringId);
+                return enrolAs(farmer.token(), offeringId);
             }));
         }
         startTogether.countDown();
@@ -305,7 +343,7 @@ class EnrolmentTest extends IntegrationTestBase {
                 FOR EACH ROW EXECUTE FUNCTION test_fail_enrolment_insert()
                 """);
         try {
-            assertThat(enrol(farmer.token(), offeringId)).isEqualTo(500);
+            assertThat(enrol(farmer, offeringId)).isEqualTo(500);
         } finally {
             jdbc().execute("DROP TRIGGER IF EXISTS test_fail_enrolment_insert ON enrolments");
             jdbc().execute("DROP FUNCTION IF EXISTS test_fail_enrolment_insert()");
@@ -315,7 +353,7 @@ class EnrolmentTest extends IntegrationTestBase {
         assertThat(activeEnrolmentRows(offeringId)).isZero();
 
         // And the system works normally again.
-        assertThat(enrol(farmer.token(), offeringId)).isEqualTo(201);
+        assertThat(enrol(farmer, offeringId)).isEqualTo(201);
         assertThat(enrolledCount(offeringId)).isEqualTo(1);
     }
 
@@ -327,15 +365,15 @@ class EnrolmentTest extends IntegrationTestBase {
         long offeringId = openOffering(1.0, 1);
         TestFarmer first = newFarmerA();
         TestFarmer second = newFarmerA();
-        long enrolmentId = enrolForId(first.token(), offeringId);
-        assertThat(enrol(second.token(), offeringId)).isEqualTo(409);   // full
+        long enrolmentId = enrolForId(first, offeringId);
+        assertThat(enrol(second, offeringId)).isEqualTo(409);   // full
 
         assertThat(cancel(second.token(), enrolmentId, null)).isEqualTo(403);
         assertThat(cancel(first.token(), enrolmentId, null)).isEqualTo(200);
         assertThat(cancel(first.token(), enrolmentId, null)).isEqualTo(409);
         assertThat(enrolledCount(offeringId)).isZero();
 
-        assertThat(enrol(second.token(), offeringId)).isEqualTo(201);   // the freed place is usable
+        assertThat(enrol(second, offeringId)).isEqualTo(201);   // the freed place is usable
         mockMvc.perform(get("/api/enrolments/" + enrolmentId).header("Authorization", bearer(first.token())))
                 .andExpect(jsonPath("$.status").value("CANCELLED"))
                 .andExpect(jsonPath("$.cancelledAt").isNotEmpty());
@@ -347,7 +385,7 @@ class EnrolmentTest extends IntegrationTestBase {
         long seasonId = season(true);
         long offeringId = offering(programmeA(), seasonId, 1.0, 10);
         TestFarmer farmer = newFarmerA();
-        long enrolmentId = enrolForId(farmer.token(), offeringId);
+        long enrolmentId = enrolForId(farmer, offeringId);
         mockMvc.perform(post("/api/seasons/" + seasonId + "/windows/close").header("Authorization", bearer(registrarToken)))
                 .andExpect(status().isOk());
 
@@ -365,7 +403,7 @@ class EnrolmentTest extends IntegrationTestBase {
     void fieldOfficerSeesOwnOfferingOnly() throws Exception {
         long offeringId = openOffering(1.0, 10);
         TestFarmer farmer = newFarmerA();
-        long enrolmentId = enrolForId(farmer.token(), offeringId);
+        long enrolmentId = enrolForId(farmer, offeringId);
         String url = "/api/offerings/" + offeringId + "/enrolments";
 
         mockMvc.perform(get(url).header("Authorization", bearer(officerAToken)))
@@ -392,7 +430,7 @@ class EnrolmentTest extends IntegrationTestBase {
     void prerequisitesFrozenWhileEnrolled() throws Exception {
         long programmeId = programmeA();
         long offeringId = offering(programmeId, season(true), 1.0, 10);
-        enrolForId(newFarmerA().token(), offeringId);
+        enrolForId(newFarmerA(), offeringId);
         long trainingId = postForId("/api/trainings", registrarToken, json("name", unique("Late Training")));
 
         mockMvc.perform(post("/api/programmes/" + programmeId + "/prerequisites")

@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "278de63c-b9e0-4ca2-af56-7d1fb54f7a04",
     "name": "ACMS - Part E Offerings and enrolment",
-    "description": "Run in order with the ACMS-Local environment. Needs: the registrar, field officer and farmer accounts from the main collection's Setup; the Field Officer (officerUserId) and the farmer's cooperative must both be in ownDistrictId. Every run creates its own season, programme and offering, so it can be run again.",
+    "description": "Run in order with the ACMS-Local environment. Needs: the registrar, field officer and farmer accounts from the main collection's Setup; the Field Officer (officerUserId) and the farmer's cooperative must both be in ownDistrictId. Every run creates its own season, programme and offering, so it can be run again. Since Step 6 the farmer must have paid at least 30%: E08a-E08d record and confirm a full payment first (needs financeUsername/financePassword and ownFarmerId).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -569,6 +569,243 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"window opened (201)\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "E08a Login as Finance Officer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{financeUsername}}\",\n  \"password\": \"{{financePassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"financeToken\", pm.response.json().accessToken);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "E08b Finance records 10 000 owed for this season",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/contributions",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "contributions"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"farmerId\": {{ownFarmerId}},\n  \"seasonId\": {{seasonId}},\n  \"amountDue\": 10000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "pm.test(\"outstanding 10 000\", () => pm.expect(pm.response.json().outstanding).to.eql(10000));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"contributionId\", pm.response.json().id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "E08c Payment request: 10 000 (everything)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transactionReference\": \"{{txRef2}}\",\n  \"contributionId\": {{contributionId}},\n  \"amount\": 10000,\n  \"method\": \"MOBILE_MONEY\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"txRef2\", \"TX-\" + Date.now() + \"-\" + Math.floor(Math.random() * 1e6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"paymentId2\", pm.response.json().id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "E08d Confirm it (100% paid, so the farmer may enrol)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/{{paymentId2}}/confirm",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "{{paymentId2}}",
+            "confirm"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"providerReference\": \"{{prov2}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"prov2\", \"MTN-\" + Date.now() + \"-\" + Math.floor(Math.random() * 1e6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
             ]
           }
         }
@@ -1172,6 +1409,18 @@
     {
       "key": "officerUserId",
       "value": "2"
+    },
+    {
+      "key": "ownFarmerId",
+      "value": "1"
+    },
+    {
+      "key": "financeUsername",
+      "value": "finance1"
+    },
+    {
+      "key": "financePassword",
+      "value": ""
     }
   ]
 }

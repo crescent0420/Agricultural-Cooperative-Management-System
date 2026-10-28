@@ -110,6 +110,18 @@ public class SecurityConfig {
                     "FARMER", "FIELD_OFFICER", "DISTRICT_AGRONOMIST", "UNION_REGISTRAR", "SYSTEM_ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/enrolments/*/cancel").hasAnyRole("FARMER", "UNION_REGISTRAR")
 
+                // ---- Contributions and payments: only Finance Officers change money; the Registrar may read;
+                //      a farmer reads only their own (checked in the services) ----
+                .requestMatchers(HttpMethod.GET, "/api/me/contributions").hasRole("FARMER")
+                .requestMatchers(HttpMethod.POST, "/api/contributions", "/api/contributions/*/adjustments")
+                    .hasRole("FINANCE_OFFICER")
+                .requestMatchers(HttpMethod.GET, "/api/contributions", "/api/contributions/*/adjustments")
+                    .hasAnyRole("FINANCE_OFFICER", "UNION_REGISTRAR")
+                .requestMatchers(HttpMethod.GET, "/api/contributions/*", "/api/contributions/*/payments",
+                    "/api/payments/*").hasAnyRole("FINANCE_OFFICER", "UNION_REGISTRAR", "FARMER")
+                .requestMatchers(HttpMethod.POST, "/api/payments", "/api/payments/*/confirm", "/api/payments/*/fail")
+                    .hasRole("FINANCE_OFFICER")
+
                 // ---- Farmers ----
                 .requestMatchers(HttpMethod.GET, "/api/farmers").hasAnyRole(
                     "UNION_REGISTRAR", "FIELD_OFFICER", "DISTRICT_AGRONOMIST", "FINANCE_OFFICER", "SYSTEM_ADMIN")
