@@ -1,15 +1,15 @@
 package com.acms.repository;
 
+import com.acms.common.BaseRepository;
 import com.acms.entity.ContributionObligation;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ContributionObligationRepository
-        extends JpaRepository<ContributionObligation, Long>, JpaSpecificationExecutor<ContributionObligation> {
+        extends BaseRepository<ContributionObligation>, JpaSpecificationExecutor<ContributionObligation> {
 
     boolean existsByFarmerIdAndSeasonId(Long farmerId, Long seasonId);
 

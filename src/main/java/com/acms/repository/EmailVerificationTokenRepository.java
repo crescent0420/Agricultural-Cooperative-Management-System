@@ -1,17 +1,17 @@
 package com.acms.repository;
 
+import com.acms.common.BaseRepository;
 import com.acms.entity.EmailVerificationToken;
 import jakarta.persistence.LockModeType;
 import java.time.Instant;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface EmailVerificationTokenRepository extends JpaRepository<EmailVerificationToken, Long> {
+public interface EmailVerificationTokenRepository extends BaseRepository<EmailVerificationToken> {
 
     /** Row lock: if the link is clicked twice at once, the second click waits and then sees it as used. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)

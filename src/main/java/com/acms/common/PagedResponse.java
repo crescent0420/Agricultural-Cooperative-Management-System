@@ -1,10 +1,10 @@
-package com.acms.dto;
+package com.acms.common;
 
 import java.util.List;
 import org.springframework.data.domain.Page;
 
-/** Our own, stable JSON shape for every paginated list. */
-public record PageResponse<T>(
+/** One page of DTOs, the "data" of every list endpoint. Same shape for all lists. */
+public record PagedResponse<T>(
         List<T> content,
         int page,
         int size,
@@ -16,8 +16,8 @@ public record PageResponse<T>(
         boolean hasPrevious,
         String sort) {
 
-    public static <T> PageResponse<T> from(Page<T> page) {
-        return new PageResponse<>(
+    public static <T> PagedResponse<T> from(Page<T> page) {
+        return new PagedResponse<>(
                 page.getContent(),
                 page.getNumber(),
                 page.getSize(),

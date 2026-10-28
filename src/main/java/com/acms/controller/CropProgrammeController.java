@@ -1,10 +1,11 @@
 package com.acms.controller;
 
-import org.springframework.web.bind.annotation.RequestParam;
+import com.acms.common.ApiResponse;
+import com.acms.common.BaseController;
+import com.acms.common.PagedResponse;
 import com.acms.dto.CropProgrammeRenameRequest;
 import com.acms.dto.CropProgrammeRequest;
 import com.acms.dto.CropProgrammeResponse;
-import com.acms.dto.PageResponse;
 import com.acms.dto.PrerequisiteRequest;
 import com.acms.service.CropProgrammeService;
 import jakarta.validation.Valid;
@@ -22,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/programmes")
-public class CropProgrammeController {
+public class CropProgrammeController extends BaseController {
 
     private final CropProgrammeService programmeService;
 
@@ -32,44 +33,44 @@ public class CropProgrammeController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CropProgrammeResponse create(
+    public ApiResponse<CropProgrammeResponse> create(
             @Valid @RequestBody CropProgrammeRequest request) {
-        return programmeService.create(request);
+        return created(programmeService.create(request));
     }
 
     @GetMapping
-    public PageResponse<CropProgrammeResponse> list(@RequestParam(required = false) Long districtId,
+    public ApiResponse<PagedResponse<CropProgrammeResponse>> list(@RequestParam(required = false) Long districtId,
                                                     @RequestParam(defaultValue = "0") int page,
                                                     @RequestParam(defaultValue = "20") int size,
                                                     @RequestParam(defaultValue = "name") String sortBy,
                                                     @RequestParam(defaultValue = "asc") String direction) {
-        return programmeService.findAll(districtId, page, size, sortBy, direction);
+        return ok(programmeService.findAll(districtId, page, size, sortBy, direction));
     }
 
     @GetMapping("/{id}")
-    public CropProgrammeResponse get(@PathVariable Long id) {
-        return programmeService.findById(id);
+    public ApiResponse<CropProgrammeResponse> get(@PathVariable Long id) {
+        return ok(programmeService.findById(id));
     }
 
     @PutMapping("/{id}")
-    public CropProgrammeResponse rename(
+    public ApiResponse<CropProgrammeResponse> rename(
             @PathVariable Long id,
             @Valid @RequestBody CropProgrammeRenameRequest request) {
-        return programmeService.rename(id, request);
+        return ok(programmeService.rename(id, request));
     }
 
     @PostMapping("/{id}/prerequisites")
     @ResponseStatus(HttpStatus.CREATED)
-    public CropProgrammeResponse addPrerequisite(
+    public ApiResponse<CropProgrammeResponse> addPrerequisite(
             @PathVariable Long id,
             @Valid @RequestBody PrerequisiteRequest request) {
-        return programmeService.addPrerequisite(id, request);
+        return created(programmeService.addPrerequisite(id, request));
     }
 
     @DeleteMapping("/{id}/prerequisites/{trainingId}")
-    public CropProgrammeResponse removePrerequisite(
+    public ApiResponse<CropProgrammeResponse> removePrerequisite(
             @PathVariable Long id,
             @PathVariable Long trainingId) {
-        return programmeService.removePrerequisite(id, trainingId);
+        return ok(programmeService.removePrerequisite(id, trainingId));
     }
 }

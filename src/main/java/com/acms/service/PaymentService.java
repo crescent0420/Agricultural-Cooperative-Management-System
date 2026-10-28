@@ -1,6 +1,8 @@
 package com.acms.service;
 
-import com.acms.dto.PageResponse;
+import com.acms.common.BaseService;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.PaymentRequest;
 import com.acms.dto.PaymentResponse;
 import com.acms.entity.AppUser;
@@ -29,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
-public class PaymentService {
+public class PaymentService extends BaseService {
 
     private static final Set<String> SORTABLE_FIELDS = Set.of("id", "requestedAt", "amount", "status");
 
@@ -150,13 +152,13 @@ public class PaymentService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<PaymentResponse> findForContribution(Long obligationId, int page, int size,
+    public PagedResponse<PaymentResponse> findForContribution(Long obligationId, int page, int size,
                                                              String sortBy, String direction) {
         Pageable pageable = Paging.of(page, size, sortBy, direction, SORTABLE_FIELDS);
         ContributionObligation obligation = obligationRepository.findWithDetailsById(obligationId)
                 .orElseThrow(() -> ContributionService.notFound(obligationId));
         contributionService.requireCanView(obligation);
-        return PageResponse.from(paymentRepository.findByObligationId(obligationId, pageable)
+        return PagedResponse.from(paymentRepository.findByObligationId(obligationId, pageable)
                 .map(PaymentResponse::from));
     }
 

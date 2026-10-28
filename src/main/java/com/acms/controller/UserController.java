@@ -1,10 +1,11 @@
 package com.acms.controller;
 
+import com.acms.common.ApiResponse;
+import com.acms.common.BaseController;
+import com.acms.common.PagedResponse;
 import com.acms.dto.ChangePasswordRequest;
 import com.acms.dto.ChangeRoleRequest;
 import com.acms.dto.CreateUserRequest;
-import com.acms.dto.MessageResponse;
-import com.acms.dto.PageResponse;
 import com.acms.dto.SetEnabledRequest;
 import com.acms.dto.UserResponse;
 import com.acms.service.UserService;
@@ -23,64 +24,63 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/** @PreAuthorize is a second check, after the URL rule in SecurityConfig (defence in depth). */
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
-public class UserController {
+public class UserController extends BaseController {
 
     private final UserService userService;
 
     @PostMapping("/users")
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
+    @PreAuthorize("hasAuthority('USER_MANAGE')")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserResponse createUser(@Valid @RequestBody CreateUserRequest request, Authentication authentication) {
-        return userService.createUser(request, currentUserId(authentication));
+    public ApiResponse<UserResponse> createUser(@Valid @RequestBody CreateUserRequest request,
+                                                Authentication authentication) {
+        return created(userService.createUser(request, currentUserId(authentication)));
     }
 
     @GetMapping("/users")
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-    public PageResponse<UserResponse> list(
+    @PreAuthorize("hasAuthority('USER_MANAGE')")
+    public ApiResponse<PagedResponse<UserResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "username") String sortBy,
             @RequestParam(defaultValue = "asc") String direction) {
-        return userService.findAll(page, size, sortBy, direction);
+        return ok(userService.findAll(page, size, sortBy, direction));
     }
 
     @GetMapping("/users/{id}")
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-    public UserResponse getUser(@PathVariable Long id) {
-        return userService.getUser(id);
+    @PreAuthorize("hasAuthority('USER_MANAGE')")
+    public ApiResponse<UserResponse> getUser(@PathVariable Long id) {
+        return ok(userService.getUser(id));
     }
 
     @PatchMapping("/users/{id}/role")
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-    public UserResponse changeRole(@PathVariable Long id, @Valid @RequestBody ChangeRoleRequest request,
-                                   Authentication authentication) {
-        return userService.changeRole(id, request, currentUserId(authentication));
+    @PreAuthorize("hasAuthority('USER_MANAGE')")
+    public ApiResponse<UserResponse> changeRole(@PathVariable Long id, @Valid @RequestBody ChangeRoleRequest request,
+                                                Authentication authentication) {
+        return ok(userService.changeRole(id, request, currentUserId(authentication)));
     }
 
     @PatchMapping("/users/{id}/enabled")
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-    public UserResponse setEnabled(@PathVariable Long id, @Valid @RequestBody SetEnabledRequest request,
-                                   Authentication authentication) {
-        return userService.setEnabled(id, request.enabled(), currentUserId(authentication));
+    @PreAuthorize("hasAuthority('USER_MANAGE')")
+    public ApiResponse<UserResponse> setEnabled(@PathVariable Long id, @Valid @RequestBody SetEnabledRequest request,
+                                                Authentication authentication) {
+        return ok(userService.setEnabled(id, request.enabled(), currentUserId(authentication)));
     }
 
     /** Emails the user a new one-time password (and a new verification link if still unverified). */
     @PostMapping("/users/{id}/reset-password")
-    @PreAuthorize("hasRole('SYSTEM_ADMIN')")
-    public MessageResponse resetPassword(@PathVariable Long id, Authentication authentication) {
-        return userService.resetPassword(id, currentUserId(authentication));
+    @PreAuthorize("hasAuthority('USER_MANAGE')")
+    public ApiResponse<Void> resetPassword(@PathVariable Long id, Authentication authentication) {
+        return message(userService.resetPassword(id, currentUserId(authentication)));
     }
 
+    /** 204 No Content: success without a body (so no envelope either). */
     @PostMapping("/auth/change-password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changePassword(@Valid @RequestBody ChangePasswordRequest request, Authentication authentication) {
         userService.changePassword(currentUserId(authentication), request);
-    }
-
-    private Long currentUserId(Authentication authentication) {
-        return Long.valueOf(authentication.getName());
     }
 }

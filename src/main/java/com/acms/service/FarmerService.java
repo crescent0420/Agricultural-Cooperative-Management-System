@@ -1,11 +1,13 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.FarmerRegistrationRequest;
 import com.acms.dto.FarmerResponse;
 import com.acms.dto.FarmerStatusChangeRequest;
 import com.acms.dto.FarmerSummaryResponse;
 import com.acms.dto.FarmerUpdateRequest;
-import com.acms.dto.PageResponse;
 import com.acms.entity.AppUser;
 import com.acms.entity.AuditEventType;
 import com.acms.entity.Cooperative;
@@ -26,7 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class FarmerService {
+public class FarmerService extends BaseService {
 
     private static final Set<String> SORTABLE_FIELDS =
             Set.of("id", "fullName", "membershipNumber", "status", "createdAt");
@@ -110,7 +112,7 @@ public class FarmerService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<FarmerSummaryResponse> search(String name, String membershipNumber,
+    public PagedResponse<FarmerSummaryResponse> search(String name, String membershipNumber,
                                                       Long cooperativeId, FarmerStatus status,
                                                       int page, int size,
                                                       String sortBy, String direction) {
@@ -125,7 +127,7 @@ public class FarmerService {
         Page<Farmer> result = farmerRepository.findAll(
                 FarmerSpecifications.search(name, membershipNumber, cooperativeId, status, districtScope),
                 pageable);
-        return PageResponse.from(result.map(FarmerSummaryResponse::from));
+        return PagedResponse.from(result.map(FarmerSummaryResponse::from));
     }
 
     @Transactional

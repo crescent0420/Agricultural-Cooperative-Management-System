@@ -1,10 +1,12 @@
 package com.acms.controller;
+import com.acms.common.ApiResponse;
+import com.acms.common.BaseController;
+import com.acms.common.PagedResponse;
 import com.acms.dto.FarmerRegistrationRequest;
 import com.acms.dto.FarmerResponse;
 import com.acms.dto.FarmerStatusChangeRequest;
 import com.acms.dto.FarmerSummaryResponse;
 import com.acms.dto.FarmerUpdateRequest;
-import com.acms.dto.PageResponse;
 import com.acms.entity.FarmerStatus;
 import com.acms.service.FarmerService;
 import jakarta.validation.Valid;
@@ -21,19 +23,19 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/farmers")
-public class FarmerController {
+public class FarmerController extends BaseController {
     private final FarmerService farmerService;
     public FarmerController(FarmerService farmerService) {
         this.farmerService = farmerService;
     }
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public FarmerResponse register(
+    public ApiResponse<FarmerResponse> register(
             @Valid @RequestBody FarmerRegistrationRequest request) {
-        return farmerService.register(request);
+        return created(farmerService.register(request));
     }
     @GetMapping
-    public PageResponse<FarmerSummaryResponse> search(
+    public ApiResponse<PagedResponse<FarmerSummaryResponse>> search(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String membershipNumber,
             @RequestParam(required = false) Long cooperativeId,
@@ -42,7 +44,7 @@ public class FarmerController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String direction) {
-        return farmerService.search(
+        return ok(farmerService.search(
                 name,
                 membershipNumber,
                 cooperativeId,
@@ -50,22 +52,22 @@ public class FarmerController {
                 page,
                 size,
                 sortBy,
-                direction);
+                direction));
     }
     @GetMapping("/{id}")
-    public FarmerResponse get(@PathVariable Long id) {
-        return farmerService.findById(id);
+    public ApiResponse<FarmerResponse> get(@PathVariable Long id) {
+        return ok(farmerService.findById(id));
     }
     @PutMapping("/{id}")
-    public FarmerResponse update(
+    public ApiResponse<FarmerResponse> update(
             @PathVariable Long id,
             @Valid @RequestBody FarmerUpdateRequest request) {
-        return farmerService.update(id, request);
+        return ok(farmerService.update(id, request));
     }
     @PatchMapping("/{id}/status")
-    public FarmerResponse changeStatus(
+    public ApiResponse<FarmerResponse> changeStatus(
             @PathVariable Long id,
             @Valid @RequestBody FarmerStatusChangeRequest request) {
-        return farmerService.changeStatus(id, request);
+        return ok(farmerService.changeStatus(id, request));
     }
 }

@@ -1,5 +1,6 @@
 package com.acms.repository;
 
+import com.acms.common.BaseRepository;
 import com.acms.entity.EnrolmentWindow;
 import com.acms.entity.WindowStatus;
 import java.util.Collection;
@@ -8,11 +9,10 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface EnrolmentWindowRepository extends JpaRepository<EnrolmentWindow, Long> {
+public interface EnrolmentWindowRepository extends BaseRepository<EnrolmentWindow> {
 
     Optional<EnrolmentWindow> findBySeasonIdAndStatus(Long seasonId, WindowStatus status);
 

@@ -48,7 +48,7 @@ class RwandaReferenceDataTest extends IntegrationTestBase {
         String body = mockMvc.perform(get("/api/provinces").header("Authorization", bearer(farmerToken)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        List<String> names = JsonPath.read(body, "$.content[*].name");
+        List<String> names = JsonPath.read(body, "$.data.content[*].name");
         assertThat(names).containsExactlyInAnyOrderElementsOf(OFFICIAL.keySet());
     }
 
@@ -59,14 +59,14 @@ class RwandaReferenceDataTest extends IntegrationTestBase {
                 .andReturn().getResponse().getContentAsString();
         int total = 0;
         for (Map.Entry<String, List<String>> province : OFFICIAL.entrySet()) {
-            List<Number> ids = JsonPath.read(provinces, "$.content[?(@.name == '" + province.getKey() + "')].id");
+            List<Number> ids = JsonPath.read(provinces, "$.data.content[?(@.name == '" + province.getKey() + "')].id");
             String districts = mockMvc.perform(get("/api/districts")
                             .param("provinceId", String.valueOf(ids.get(0).longValue()))
                             .param("size", "100")
                             .header("Authorization", bearer(farmerToken)))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
-            List<String> names = JsonPath.read(districts, "$.content[*].name");
+            List<String> names = JsonPath.read(districts, "$.data.content[*].name");
             assertThat(names).as(province.getKey()).containsExactlyInAnyOrderElementsOf(province.getValue());
             total += names.size();
         }
@@ -86,7 +86,7 @@ class RwandaReferenceDataTest extends IntegrationTestBase {
     void districtShowsItsProvince() throws Exception {
         mockMvc.perform(get("/api/districts/" + seededDistrictId("Huye")).header("Authorization", bearer(farmerToken)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Huye"))
-                .andExpect(jsonPath("$.provinceName").value("Southern Province"));
+                .andExpect(jsonPath("$.data.name").value("Huye"))
+                .andExpect(jsonPath("$.data.provinceName").value("Southern Province"));
     }
 }

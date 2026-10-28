@@ -39,9 +39,9 @@ class LoginAndTokenTest extends IntegrationTestBase {
         mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content(json("username", username, "password", PASSWORD)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.accessToken").isNotEmpty())
-                .andExpect(jsonPath("$.tokenType").value("Bearer"))
-                .andExpect(jsonPath("$.mustChangePassword").value(false));
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty())
+                .andExpect(jsonPath("$.data.tokenType").value("Bearer"))
+                .andExpect(jsonPath("$.data.mustChangePassword").value(false));
     }
 
     @Test
@@ -72,7 +72,7 @@ class LoginAndTokenTest extends IntegrationTestBase {
         mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content(json("username", username, "password", PASSWORD)))
                 .andExpect(status().is(422))
-                .andExpect(jsonPath("$.accessToken").doesNotExist());
+                .andExpect(jsonPath("$.data.accessToken").doesNotExist());
     }
 
     // ---------- every later request ----------
@@ -92,9 +92,9 @@ class LoginAndTokenTest extends IntegrationTestBase {
 
         mockMvc.perform(get("/api/auth/me").header("Authorization", bearer(token)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(Math.toIntExact(user.getId())))
-                .andExpect(jsonPath("$.username").value(username))
-                .andExpect(jsonPath("$.role").value("FINANCE_OFFICER"));
+                .andExpect(jsonPath("$.data.id").value(Math.toIntExact(user.getId())))
+                .andExpect(jsonPath("$.data.username").value(username))
+                .andExpect(jsonPath("$.data.role").value("FINANCE_OFFICER"));
     }
 
     @Test

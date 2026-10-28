@@ -1,7 +1,9 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.AuditLogResponse;
-import com.acms.dto.PageResponse;
 import com.acms.entity.AuditEventType;
 import com.acms.entity.AuditLog;
 import com.acms.repository.AuditLogRepository;
@@ -14,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class AuditLogService {
+public class AuditLogService extends BaseService {
 
     private static final Set<String> SORTABLE_FIELDS = Set.of("id", "occurredAt", "eventType");
 
@@ -45,8 +47,8 @@ public class AuditLogService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<AuditLogResponse> findRecent(int page, int size, String sortBy, String direction) {
+    public PagedResponse<AuditLogResponse> findRecent(int page, int size, String sortBy, String direction) {
         Pageable pageable = Paging.of(page, size, sortBy, direction, SORTABLE_FIELDS);
-        return PageResponse.from(auditLogRepository.findAll(pageable).map(AuditLogResponse::from));
+        return PagedResponse.from(auditLogRepository.findAll(pageable).map(AuditLogResponse::from));
     }
 }

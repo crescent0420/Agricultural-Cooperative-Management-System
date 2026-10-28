@@ -1,5 +1,6 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
 import com.acms.entity.ContributionObligation;
 import com.acms.entity.Farmer;
 import com.acms.entity.Season;
@@ -17,7 +18,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @RequiredArgsConstructor
-public class ContributionPolicy implements EnrolmentContributionRule {
+public class ContributionPolicy extends BaseService implements EnrolmentContributionRule {
 
     public static final int ENROLMENT_MIN_PERCENT = 30;
     public static final int COLLECTION_MIN_PERCENT = 100;

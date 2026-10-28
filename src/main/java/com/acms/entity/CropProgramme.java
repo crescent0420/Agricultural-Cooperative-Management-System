@@ -1,18 +1,14 @@
 package com.acms.entity;
 
+import com.acms.common.CreatedEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -20,11 +16,7 @@ import org.hibernate.annotations.BatchSize;
 
 @Entity
 @Table(name = "crop_programmes")
-public class CropProgramme {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class CropProgramme extends CreatedEntity {
 
     @Column(nullable = false, length = 150)
     private String name;
@@ -41,20 +33,12 @@ public class CropProgramme {
             inverseJoinColumns = @JoinColumn(name = "training_id"))
     private Set<Training> prerequisites = new HashSet<>();
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
     protected CropProgramme() {
     }
 
     public CropProgramme(String name, District district) {
         this.name = name;
         this.district = district;
-    }
-
-    @PrePersist
-    void onCreate() {
-        this.createdAt = Instant.now();
     }
 
     public boolean hasPrerequisite(Long trainingId) {
@@ -71,10 +55,6 @@ public class CropProgramme {
                 training -> trainingId.equals(training.getId()));
     }
 
-    public Long getId() {
-        return id;
-    }
-
     public String getName() {
         return name;
     }
@@ -89,9 +69,5 @@ public class CropProgramme {
 
     public Set<Training> getPrerequisites() {
         return Collections.unmodifiableSet(prerequisites);
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
     }
 }

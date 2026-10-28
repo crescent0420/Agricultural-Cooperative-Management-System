@@ -1,11 +1,13 @@
 package com.acms.exception;
 
+import com.acms.common.ApiError;
+import com.acms.common.ApiException;
+import com.acms.common.ApiResponse;
 import com.acms.entity.AppUser;
 import com.acms.entity.AuditEventType;
 import com.acms.repository.AppUserRepository;
 import com.acms.service.AuditLogService;
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.Instant;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
+/** Turns every exception into the same ApiResponse envelope, with success = false. */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -37,10 +40,16 @@ public class GlobalExceptionHandler {
         this.appUserRepository = appUserRepository;
     }
 
+    // 404, 409, 422, 400: all our own exceptions carry their status (see ApiException and its subclasses)
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ApiResponse<Void>> handleApiException(ApiException ex, HttpServletRequest request) {
+        return build(ex.getStatus(), ex.getMessage(), request, List.of());
+    }
+
     // 400: a field failed @Valid (@NotBlank, @Size, ...)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex,
-                                                     HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex,
+                                                              HttpServletRequest request) {
         List<ApiError.FieldIssue> issues = ex.getBindingResult().getFieldErrors().stream()
                 .map(fe -> new ApiError.FieldIssue(fe.getField(), fe.getDefaultMessage()))
                 .toList();
@@ -49,64 +58,41 @@ public class GlobalExceptionHandler {
 
     // 400: the JSON body is broken or has the wrong types
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex,
-                                                     HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleUnreadable(HttpMessageNotReadableException ex,
+                                                              HttpServletRequest request) {
         log.warn("Unreadable request body on {}: {}", request.getRequestURI(), ex.getMessage());
         return build(HttpStatus.BAD_REQUEST, "Malformed or unreadable request body.", request, List.of());
     }
 
-    // 404
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
-        return build(HttpStatus.NOT_FOUND, ex.getMessage(), request, List.of());
-    }
-
-    // 409
-    @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ApiError> handleConflict(ConflictException ex, HttpServletRequest request) {
-        return build(HttpStatus.CONFLICT, ex.getMessage(), request, List.of());
-    }
-
     // 409: the database itself refused (unique or foreign key constraint). Never show the SQL message.
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex,
-                                                        HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(DataIntegrityViolationException ex,
+                                                                 HttpServletRequest request) {
         log.warn("Database constraint violation on {}: {}", request.getRequestURI(),
                 ex.getMostSpecificCause().getMessage());
         return build(HttpStatus.CONFLICT, "The request conflicts with existing data.", request, List.of());
     }
 
-    // 422: a business rule forbids the action (email not verified, no email address on the account...)
-    @ExceptionHandler(BusinessRuleException.class)
-    public ResponseEntity<ApiError> handleBusinessRule(BusinessRuleException ex, HttpServletRequest request) {
-        return build(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage(), request, List.of());
-    }
-
-    // 400: a request parameter is not acceptable
-    @ExceptionHandler(BadRequestException.class)
-    public ResponseEntity<ApiError> handleBadRequest(BadRequestException ex, HttpServletRequest request) {
-        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request, List.of());
-    }
-
     // 400: a URL or query parameter has the wrong type
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
-                                                       HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException ex,
+                                                                HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST,
                 "Parameter '" + ex.getName() + "' has an invalid value.", request, List.of());
     }
 
     // 409: another request changed the record concurrently
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
-    public ResponseEntity<ApiError> handleOptimisticLock(ObjectOptimisticLockingFailureException ex,
-                                                         HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleOptimisticLock(ObjectOptimisticLockingFailureException ex,
+                                                                  HttpServletRequest request) {
         return build(HttpStatus.CONFLICT,
                 "This record was changed by another request. Reload it and try again.", request, List.of());
     }
 
     // 403: role, district or ownership check failed
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex,
+                                                                HttpServletRequest request) {
         try {
             Long actorUserId = null;
             String actorUsername = null;
@@ -146,13 +132,14 @@ public class GlobalExceptionHandler {
 
     // 401: login failed or the account cannot authenticate
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiError> handleAuthentication(AuthenticationException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleAuthentication(AuthenticationException ex,
+                                                                  HttpServletRequest request) {
         return build(HttpStatus.UNAUTHORIZED, "Invalid username or password.", request, List.of());
     }
 
     // Everything else
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleAny(Exception ex, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<Void>> handleAny(Exception ex, HttpServletRequest request) {
         // Spring's own web exceptions (404 unknown URL, 405 wrong method, missing parameter...) know their status.
         if (ex instanceof ErrorResponse errorResponse) {
             HttpStatus status = HttpStatus.resolve(errorResponse.getStatusCode().value());
@@ -164,10 +151,14 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred.", request, List.of());
     }
 
-    private ResponseEntity<ApiError> build(HttpStatus status, String message, HttpServletRequest request,
-                                           List<ApiError.FieldIssue> issues) {
-        ApiError body = new ApiError(Instant.now().toString(), status.value(), status.getReasonPhrase(),
-                message, request.getRequestURI(), issues);
-        return ResponseEntity.status(status).body(body);
+    /** The same error envelope for every case. Also used by SecurityErrorHandlers for 401/403 from the filters. */
+    public static ApiResponse<Void> errorBody(HttpStatus status, String message, String path,
+                                              List<ApiError.FieldIssue> issues) {
+        return ApiResponse.failure(message, new ApiError(status.value(), status.getReasonPhrase(), path, issues));
+    }
+
+    private ResponseEntity<ApiResponse<Void>> build(HttpStatus status, String message, HttpServletRequest request,
+                                                    List<ApiError.FieldIssue> issues) {
+        return ResponseEntity.status(status).body(errorBody(status, message, request.getRequestURI(), issues));
     }
 }

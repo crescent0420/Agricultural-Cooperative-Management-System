@@ -1,8 +1,10 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.FarmerTrainingRequest;
 import com.acms.dto.FarmerTrainingResponse;
-import com.acms.dto.PageResponse;
 import com.acms.dto.TrainingResponse;
 import com.acms.entity.AppUser;
 import com.acms.entity.CropProgramme;
@@ -24,7 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class FarmerTrainingService {
+public class FarmerTrainingService extends BaseService {
 
     private static final Set<String> SORTABLE_FIELDS =
             Set.of("id", "completedOn", "recordedAt");
@@ -84,7 +86,7 @@ public class FarmerTrainingService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<FarmerTrainingResponse> findForFarmer(
+    public PagedResponse<FarmerTrainingResponse> findForFarmer(
             Long farmerId,
             int page,
             int size,
@@ -96,7 +98,7 @@ public class FarmerTrainingService {
         Pageable pageable = Paging.of(
                 page, size, sortBy, direction, SORTABLE_FIELDS);
 
-        return PageResponse.from(
+        return PagedResponse.from(
                 farmerTrainingRepository.findByFarmerId(
                                 farmer.getId(), pageable)
                         .map(record -> FarmerTrainingResponse.from(

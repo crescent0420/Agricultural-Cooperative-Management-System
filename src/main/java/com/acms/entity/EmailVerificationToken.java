@@ -1,11 +1,9 @@
 package com.acms.entity;
 
+import com.acms.common.CreatedEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -19,11 +17,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "email_verification_tokens")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class EmailVerificationToken {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class EmailVerificationToken extends CreatedEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
@@ -38,14 +32,10 @@ public class EmailVerificationToken {
     @Column(name = "used_at")
     private Instant usedAt;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
     public EmailVerificationToken(AppUser user, String tokenHash, Instant expiresAt) {
         this.user = user;
         this.tokenHash = tokenHash;
         this.expiresAt = expiresAt;
-        this.createdAt = Instant.now();
     }
 
     /** A link works once, and only before it expires. */

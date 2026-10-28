@@ -148,7 +148,7 @@ class EnrolmentTest extends IntegrationTestBase {
                         .header("Authorization", bearer(farmer.token())))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Number id = JsonPath.read(body, "$.id");
+        Number id = JsonPath.read(body, "$.data.id");
         return id.longValue();
     }
 
@@ -187,17 +187,17 @@ class EnrolmentTest extends IntegrationTestBase {
         mockMvc.perform(post("/api/offerings/" + offeringId + "/enrolments")
                         .header("Authorization", bearer(farmer.token())))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("ENROLLED"))
-                .andExpect(jsonPath("$.farmerId").value(farmer.id()))
-                .andExpect(jsonPath("$.hectares").value(1.0));
+                .andExpect(jsonPath("$.data.status").value("ENROLLED"))
+                .andExpect(jsonPath("$.data.farmerId").value(farmer.id()))
+                .andExpect(jsonPath("$.data.hectares").value(1.0));
 
         mockMvc.perform(get("/api/me/enrolments").header("Authorization", bearer(farmer.token())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.content[0].offeringId").value(offeringId));
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].offeringId").value(offeringId));
         mockMvc.perform(get("/api/offerings/" + offeringId).header("Authorization", bearer(farmer.token())))
-                .andExpect(jsonPath("$.enrolledCount").value(1))
-                .andExpect(jsonPath("$.remainingPlaces").value(9));
+                .andExpect(jsonPath("$.data.enrolledCount").value(1))
+                .andExpect(jsonPath("$.data.remainingPlaces").value(9));
 
         assertThat(enrol(farmer, offeringId)).isEqualTo(409);
         assertThat(enrolledCount(offeringId)).isEqualTo(1);
@@ -375,8 +375,8 @@ class EnrolmentTest extends IntegrationTestBase {
 
         assertThat(enrol(second, offeringId)).isEqualTo(201);   // the freed place is usable
         mockMvc.perform(get("/api/enrolments/" + enrolmentId).header("Authorization", bearer(first.token())))
-                .andExpect(jsonPath("$.status").value("CANCELLED"))
-                .andExpect(jsonPath("$.cancelledAt").isNotEmpty());
+                .andExpect(jsonPath("$.data.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.data.cancelledAt").isNotEmpty());
     }
 
     @Test
@@ -408,8 +408,8 @@ class EnrolmentTest extends IntegrationTestBase {
 
         mockMvc.perform(get(url).header("Authorization", bearer(officerAToken)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.content[0].farmerId").value(farmer.id()));
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].farmerId").value(farmer.id()));
         mockMvc.perform(get(url).header("Authorization", bearer(agronomistAToken))).andExpect(status().isOk());
         mockMvc.perform(get(url).header("Authorization", bearer(registrarToken))).andExpect(status().isOk());
 

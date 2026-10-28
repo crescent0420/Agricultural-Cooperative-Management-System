@@ -1,8 +1,12 @@
 package com.acms.exception;
 
-/** Thrown when a record that was asked for does not exist. Becomes HTTP 404. */
-public class ResourceNotFoundException extends RuntimeException {
+import com.acms.common.ApiException;
+import org.springframework.http.HttpStatus;
+
+/** HTTP 404, the requested record does not exist. */
+public class ResourceNotFoundException extends ApiException {
+
     public ResourceNotFoundException(String message) {
-        super(message);
+        super(HttpStatus.NOT_FOUND, message);
     }
 }

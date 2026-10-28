@@ -67,11 +67,11 @@ class SeasonAndWindowTest extends IntegrationTestBase {
 
         mockMvc.perform(get("/api/seasons/" + id).header("Authorization", bearer(farmerToken)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.maxLandHectares").value(2.5))
-                .andExpect(jsonPath("$.enrolmentOpen").value(false));
+                .andExpect(jsonPath("$.data.maxLandHectares").value(2.5))
+                .andExpect(jsonPath("$.data.enrolmentOpen").value(false));
         mockMvc.perform(get("/api/seasons").header("Authorization", bearer(farmerToken)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray());
+                .andExpect(jsonPath("$.data.content").isArray());
     }
 
     @Test
@@ -112,17 +112,17 @@ class SeasonAndWindowTest extends IntegrationTestBase {
 
         mockMvc.perform(post(open).header("Authorization", bearer(registrarToken)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("OPEN"))
-                .andExpect(jsonPath("$.openedBy").value(registrar.getUsername()));
+                .andExpect(jsonPath("$.data.status").value("OPEN"))
+                .andExpect(jsonPath("$.data.openedBy").value(registrar.getUsername()));
         mockMvc.perform(get("/api/seasons/" + id).header("Authorization", bearer(farmerToken)))
-                .andExpect(jsonPath("$.enrolmentOpen").value(true));
+                .andExpect(jsonPath("$.data.enrolmentOpen").value(true));
         mockMvc.perform(post(open).header("Authorization", bearer(registrarToken)))
                 .andExpect(status().isConflict());
 
         mockMvc.perform(post(close).header("Authorization", bearer(registrarToken)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CLOSED"))
-                .andExpect(jsonPath("$.closedAt").isNotEmpty());
+                .andExpect(jsonPath("$.data.status").value("CLOSED"))
+                .andExpect(jsonPath("$.data.closedAt").isNotEmpty());
         mockMvc.perform(post(close).header("Authorization", bearer(registrarToken)))
                 .andExpect(status().isConflict());
 
@@ -130,7 +130,7 @@ class SeasonAndWindowTest extends IntegrationTestBase {
                 .andExpect(status().isCreated());
         mockMvc.perform(get("/api/seasons/" + id + "/windows").header("Authorization", bearer(registrarToken)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(2));
+                .andExpect(jsonPath("$.data.totalElements").value(2));
     }
 
     @Test

@@ -1,8 +1,8 @@
 
 package com.acms.repository;
 
+import com.acms.common.BaseRepository;
 import com.acms.entity.AuditLog;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
+public interface AuditLogRepository extends BaseRepository<AuditLog> {
 }

@@ -1,4 +1,5 @@
 package com.acms.service;
+import com.acms.common.BaseService;
 import com.acms.entity.AppUser;
 import com.acms.repository.AppUserRepository;
 import org.springframework.security.core.userdetails.User;
@@ -7,7 +8,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 @Service
-public class AppUserDetailsService implements UserDetailsService {
+public class AppUserDetailsService extends BaseService implements UserDetailsService  {
     private final AppUserRepository appUserRepository;
     public AppUserDetailsService(AppUserRepository appUserRepository) {
         this.appUserRepository = appUserRepository;

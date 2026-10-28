@@ -1,18 +1,18 @@
 package com.acms.repository;
 
+import com.acms.common.BaseRepository;
 import com.acms.entity.Enrolment;
 import com.acms.entity.EnrolmentStatus;
 import jakarta.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface EnrolmentRepository extends JpaRepository<Enrolment, Long>, JpaSpecificationExecutor<Enrolment> {
+public interface EnrolmentRepository extends BaseRepository<Enrolment>, JpaSpecificationExecutor<Enrolment> {
 
     boolean existsByOfferingIdAndFarmerIdAndStatus(Long offeringId, Long farmerId, EnrolmentStatus status);
 

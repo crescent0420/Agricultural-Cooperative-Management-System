@@ -1,13 +1,11 @@
-package com.acms.exception;
+package com.acms.common;
 
 import java.util.List;
 
-/** The one JSON shape used for every error response. */
+/** The "error" part of an ApiResponse: HTTP status, its name, the URL, and invalid fields (validation only). */
 public record ApiError(
-        String timestamp,
         int status,
         String error,
-        String message,
         String path,
         List<FieldIssue> fieldErrors) {
 

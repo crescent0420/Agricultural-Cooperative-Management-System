@@ -1,6 +1,8 @@
 package com.acms.controller;
 
-import com.acms.dto.PageResponse;
+import com.acms.common.ApiResponse;
+import com.acms.common.BaseController;
+import com.acms.common.PagedResponse;
 import com.acms.dto.TrainingRequest;
 import com.acms.dto.TrainingResponse;
 import com.acms.service.TrainingService;
@@ -19,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/trainings")
-public class TrainingController {
+public class TrainingController extends BaseController {
 
     private final TrainingService trainingService;
 
@@ -29,27 +31,27 @@ public class TrainingController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TrainingResponse create(
+    public ApiResponse<TrainingResponse> create(
             @Valid @RequestBody TrainingRequest request) {
-        return trainingService.create(request);
+        return created(trainingService.create(request));
     }
 
         @GetMapping
-    public PageResponse<TrainingResponse> list(@RequestParam(defaultValue = "0") int page,
+    public ApiResponse<PagedResponse<TrainingResponse>> list(@RequestParam(defaultValue = "0") int page,
                                                @RequestParam(defaultValue = "20") int size,
                                                @RequestParam(defaultValue = "name") String sortBy,
                                                @RequestParam(defaultValue = "asc") String direction) {
-        return trainingService.findAll(page, size, sortBy, direction);
+        return ok(trainingService.findAll(page, size, sortBy, direction));
     }
     @GetMapping("/{id}")
-    public TrainingResponse get(@PathVariable Long id) {
-        return trainingService.findById(id);
+    public ApiResponse<TrainingResponse> get(@PathVariable Long id) {
+        return ok(trainingService.findById(id));
     }
 
     @PutMapping("/{id}")
-    public TrainingResponse rename(
+    public ApiResponse<TrainingResponse> rename(
             @PathVariable Long id,
             @Valid @RequestBody TrainingRequest request) {
-        return trainingService.rename(id, request);
+        return ok(trainingService.rename(id, request));
     }
 }

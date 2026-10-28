@@ -1,13 +1,11 @@
 
 package com.acms.entity;
 
+import com.acms.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import org.hibernate.annotations.Immutable;
@@ -15,11 +13,7 @@ import org.hibernate.annotations.Immutable;
 @Entity
 @Immutable
 @Table(name = "audit_log")
-public class AuditLog {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class AuditLog extends BaseEntity {
 
     @Column(name = "occurred_at", nullable = false, updatable = false)
     private Instant occurredAt;
@@ -70,10 +64,6 @@ public class AuditLog {
         this.targetId = targetId;
         this.details = details;
         this.ipAddress = ipAddress;
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public Instant getOccurredAt() {

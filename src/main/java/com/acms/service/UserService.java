@@ -1,11 +1,13 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
+import com.acms.common.MessageResponse;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.ChangePasswordRequest;
 import com.acms.dto.ChangeRoleRequest;
 import com.acms.dto.CreateUserRequest;
 import com.acms.dto.CurrentUserResponse;
-import com.acms.dto.MessageResponse;
-import com.acms.dto.PageResponse;
 import com.acms.dto.UserResponse;
 import com.acms.entity.AppUser;
 import com.acms.entity.AuditEventType;
@@ -19,6 +21,8 @@ import com.acms.exception.ResourceNotFoundException;
 import com.acms.repository.AppUserRepository;
 import com.acms.repository.DistrictRepository;
 import com.acms.repository.FarmerRepository;
+import com.acms.security.PermissionMatrix;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class UserService extends BaseService {
 
     private static final Set<String> SORTABLE_FIELDS = Set.of("id", "username", "role", "createdAt");
 
@@ -160,13 +164,14 @@ public class UserService {
                 user.isEmailVerified(),
                 user.isMustChangePassword(),
                 user.getDistrict() == null ? null : user.getDistrict().getId(),
-                user.getFarmer() == null ? null : user.getFarmer().getId());
+                user.getFarmer() == null ? null : user.getFarmer().getId(),
+                user.isMustChangePassword() ? List.of() : PermissionMatrix.permissionsOf(user.getRole()));
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<UserResponse> findAll(int page, int size, String sortBy, String direction) {
+    public PagedResponse<UserResponse> findAll(int page, int size, String sortBy, String direction) {
         Pageable pageable = Paging.of(page, size, sortBy, direction, SORTABLE_FIELDS);
-        return PageResponse.from(appUserRepository.findAll(pageable).map(this::toResponse));
+        return PagedResponse.from(appUserRepository.findAll(pageable).map(this::toResponse));
     }
 
     @Transactional(readOnly = true)

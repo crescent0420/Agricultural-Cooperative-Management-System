@@ -1,17 +1,13 @@
 package com.acms.entity;
 
+import com.acms.common.AuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -24,11 +20,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "enrolments")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Enrolment {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Enrolment extends AuditableEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "offering_id", nullable = false, updatable = false)
@@ -62,12 +54,6 @@ public class Enrolment {
     @Column(name = "cancellation_reason", length = 500)
     private String cancellationReason;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
-
     public Enrolment(ProgrammeOffering offering, Farmer farmer, BigDecimal hectares, AppUser enrolledBy) {
         this.offering = offering;
         this.farmer = farmer;
@@ -86,17 +72,5 @@ public class Enrolment {
         this.cancelledBy = cancelledBy;
         this.cancelledAt = Instant.now();
         this.cancellationReason = reason;
-    }
-
-    @PrePersist
-    void onCreate() {
-        Instant now = Instant.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        this.updatedAt = Instant.now();
     }
 }

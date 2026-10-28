@@ -104,7 +104,7 @@ class ProgrammeOfferingTest extends IntegrationTestBase {
         String body = mockMvc.perform(get(url).header("Authorization", bearer(token)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        List<Number> ids = JsonPath.read(body, "$.content[*].id");
+        List<Number> ids = JsonPath.read(body, "$.data.content[*].id");
         return ids.stream().map(Number::longValue).toList();
     }
 
@@ -125,12 +125,12 @@ class ProgrammeOfferingTest extends IntegrationTestBase {
 
         mockMvc.perform(get("/api/offerings/" + id).header("Authorization", bearer(registrarToken)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.districtId").value(world.districtA()))
-                .andExpect(jsonPath("$.fieldOfficerUsername").value(officerA.getUsername()))
-                .andExpect(jsonPath("$.hectaresPerParticipant").value(1.5))
-                .andExpect(jsonPath("$.maxParticipants").value(40))
-                .andExpect(jsonPath("$.enrolledCount").value(0))
-                .andExpect(jsonPath("$.remainingPlaces").value(40));
+                .andExpect(jsonPath("$.data.districtId").value(world.districtA()))
+                .andExpect(jsonPath("$.data.fieldOfficerUsername").value(officerA.getUsername()))
+                .andExpect(jsonPath("$.data.hectaresPerParticipant").value(1.5))
+                .andExpect(jsonPath("$.data.maxParticipants").value(40))
+                .andExpect(jsonPath("$.data.enrolledCount").value(0))
+                .andExpect(jsonPath("$.data.remainingPlaces").value(40));
 
         postOffering(registrarToken, body, 409);
     }
@@ -208,9 +208,9 @@ class ProgrammeOfferingTest extends IntegrationTestBase {
 
         putOffering(id, updateJson(secondOfficerA.getId(), 2.0, 60), 200);
         mockMvc.perform(get("/api/offerings/" + id).header("Authorization", bearer(registrarToken)))
-                .andExpect(jsonPath("$.fieldOfficerId").value(secondOfficerA.getId()))
-                .andExpect(jsonPath("$.hectaresPerParticipant").value(2.0))
-                .andExpect(jsonPath("$.maxParticipants").value(60));
+                .andExpect(jsonPath("$.data.fieldOfficerId").value(secondOfficerA.getId()))
+                .andExpect(jsonPath("$.data.hectaresPerParticipant").value(2.0))
+                .andExpect(jsonPath("$.data.maxParticipants").value(60));
 
         putOffering(id, updateJson(officerB.getId(), 2.0, 60), 422);
 
@@ -231,7 +231,7 @@ class ProgrammeOfferingTest extends IntegrationTestBase {
         putOffering(id, updateJson(officerA.getId(), 1.5, 3), 200);    // exactly full is fine
 
         mockMvc.perform(get("/api/offerings/" + id).header("Authorization", bearer(registrarToken)))
-                .andExpect(jsonPath("$.remainingPlaces").value(0));
+                .andExpect(jsonPath("$.data.remainingPlaces").value(0));
     }
 
     @Test

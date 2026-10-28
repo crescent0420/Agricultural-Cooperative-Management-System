@@ -1,6 +1,7 @@
 package com.acms.service;
 
-import com.acms.dto.MessageResponse;
+import com.acms.common.BaseService;
+import com.acms.common.MessageResponse;
 import com.acms.dto.RegisterRequest;
 import com.acms.entity.AppUser;
 import com.acms.entity.AuditEventType;
@@ -28,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 /** Creating accounts, issuing one-time passwords and verifying email addresses. */
 @Service
 @RequiredArgsConstructor
-public class AccountOnboardingService {
+public class AccountOnboardingService extends BaseService {
 
     private static final Duration VERIFICATION_LINK_VALIDITY = Duration.ofHours(24);
     private static final String INVALID_LINK = "The verification link is invalid, already used or expired.";

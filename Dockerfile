@@ -3,7 +3,7 @@
 # container STARTS (env_file in compose.yaml).
 
 # ---------- 1. Build the jar with Maven and JDK 25 ----------
-FROM eclipse-temurin:25cle-jdk AS build
+FROM eclipse-temurin:25-jdk AS build
 WORKDIR /build
 
 # Dependencies first: this layer is cached and only re-downloaded when pom.xml changes.
