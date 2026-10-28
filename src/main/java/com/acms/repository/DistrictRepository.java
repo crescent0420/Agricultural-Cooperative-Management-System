@@ -1,13 +1,13 @@
 package com.acms.repository;
 
+import com.acms.common.BaseRepository;
 import com.acms.entity.District;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface DistrictRepository extends JpaRepository<District, Long> {
+public interface DistrictRepository extends BaseRepository<District> {
 
     boolean existsByNameIgnoreCase(String name);
 

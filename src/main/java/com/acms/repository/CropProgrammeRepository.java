@@ -1,12 +1,12 @@
 package com.acms.repository;
 
+import com.acms.common.BaseRepository;
 import com.acms.entity.CropProgramme;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CropProgrammeRepository extends JpaRepository<CropProgramme, Long> {
+public interface CropProgrammeRepository extends BaseRepository<CropProgramme> {
 
     boolean existsByDistrictIdAndNameIgnoreCase(Long districtId, String name);
 

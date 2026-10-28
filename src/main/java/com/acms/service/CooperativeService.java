@@ -1,9 +1,11 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.CooperativeRenameRequest;
 import com.acms.dto.CooperativeRequest;
 import com.acms.dto.CooperativeResponse;
-import com.acms.dto.PageResponse;
 import com.acms.entity.AppUser;
 import com.acms.entity.Cooperative;
 import com.acms.entity.District;
@@ -20,7 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class CooperativeService {
+public class CooperativeService extends BaseService {
 
     private static final Set<String> SORTABLE_FIELDS =
             Set.of("id", "name", "createdAt");
@@ -62,7 +64,7 @@ public class CooperativeService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<CooperativeResponse> findAll(
+    public PagedResponse<CooperativeResponse> findAll(
             Long districtId,
             int page,
             int size,
@@ -97,7 +99,7 @@ public class CooperativeService {
                 : cooperativeRepository.findByDistrictId(
                         districtId, pageable);
 
-        return PageResponse.from(
+        return PagedResponse.from(
                 result.map(CooperativeResponse::from));
     }
 

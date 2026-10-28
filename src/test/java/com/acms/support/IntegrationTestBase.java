@@ -138,7 +138,7 @@ public abstract class IntegrationTestBase {
                         .content(json("username", username, "password", password)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
-        return JsonPath.read(body, "$.accessToken");
+        return JsonPath.read(body, "$.data.accessToken");
     }
 
     protected long postForId(String url, String token, String jsonBody) throws Exception {
@@ -148,7 +148,7 @@ public abstract class IntegrationTestBase {
                         .content(jsonBody))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
-        Number id = JsonPath.read(body, "$.id");
+        Number id = JsonPath.read(body, "$.data.id");
         return id.longValue();
     }
 

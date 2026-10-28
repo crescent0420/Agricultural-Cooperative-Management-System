@@ -1,7 +1,9 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.EnrolmentResponse;
-import com.acms.dto.PageResponse;
 import com.acms.entity.AppUser;
 import com.acms.entity.AuditEventType;
 import com.acms.entity.Enrolment;
@@ -44,7 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
-public class EnrolmentService {
+public class EnrolmentService extends BaseService {
 
     private static final Set<String> SORTABLE_FIELDS = Set.of("id", "enrolledAt", "status");
     private static final String NO_PERMISSION = "You do not have permission to perform this action.";
@@ -211,11 +213,11 @@ public class EnrolmentService {
 
     /** A farmer's own enrolments. */
     @Transactional(readOnly = true)
-    public PageResponse<EnrolmentResponse> findMine(Long seasonId, EnrolmentStatus status,
+    public PagedResponse<EnrolmentResponse> findMine(Long seasonId, EnrolmentStatus status,
                                                     int page, int size, String sortBy, String direction) {
         Pageable pageable = Paging.of(page, size, sortBy, direction, SORTABLE_FIELDS);
         Farmer farmer = farmerAccessService.requireCurrentFarmer();
-        return PageResponse.from(enrolmentRepository
+        return PagedResponse.from(enrolmentRepository
                 .findAll(EnrolmentSpecifications.search(farmer.getId(), null, seasonId, status), pageable)
                 .map(EnrolmentResponse::from));
     }
@@ -226,13 +228,13 @@ public class EnrolmentService {
      * district. Registrar and System Admin: any offering.
      */
     @Transactional(readOnly = true)
-    public PageResponse<EnrolmentResponse> findForOffering(Long offeringId, EnrolmentStatus status,
+    public PagedResponse<EnrolmentResponse> findForOffering(Long offeringId, EnrolmentStatus status,
                                                            int page, int size, String sortBy, String direction) {
         Pageable pageable = Paging.of(page, size, sortBy, direction, SORTABLE_FIELDS);
         ProgrammeOffering offering = offeringRepository.findWithDetailsById(offeringId)
                 .orElseThrow(() -> offeringNotFound(offeringId));
         requireStaffAccess(farmerAccessService.getCurrentUser(), offering);
-        return PageResponse.from(enrolmentRepository
+        return PagedResponse.from(enrolmentRepository
                 .findAll(EnrolmentSpecifications.search(null, offeringId, null, status), pageable)
                 .map(EnrolmentResponse::from));
     }

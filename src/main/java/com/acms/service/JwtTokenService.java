@@ -1,5 +1,6 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
 import com.acms.config.JwtProperties;
 import com.acms.entity.AppUser;
 import com.acms.repository.AppUserRepository;
@@ -12,7 +13,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
 @Service
-public class JwtTokenService {
+public class JwtTokenService extends BaseService {
 
     private final JwtEncoder jwtEncoder;
     private final JwtProperties jwtProperties;

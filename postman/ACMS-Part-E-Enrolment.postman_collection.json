@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "278de63c-b9e0-4ca2-af56-7d1fb54f7a04",
     "name": "ACMS - Part E Offerings and enrolment",
-    "description": "Run in order with the ACMS-Local environment. Needs: the registrar, field officer and farmer accounts from the main collection's Setup; the Field Officer (officerUserId) and the farmer's cooperative must both be in ownDistrictId. Every run creates its own season, programme and offering, so it can be run again. Since Step 6 the farmer must have paid at least 30%: E08a-E08d record and confirm a full payment first (needs financeUsername/financePassword and ownFarmerId).",
+    "description": "Run in order with the ACMS-Local environment. Needs: the registrar, field officer and farmer accounts from the main collection's Setup; the Field Officer (officerUserId) and the farmer's cooperative must both be in ownDistrictId. Every run creates its own season, programme and offering, so it can be run again. Since Step 6 the farmer must have paid at least 30%: E08a-E08d record and confirm a full payment first (needs financeUsername/financePassword and ownFarmerId). Since the common-response refactor every answer is {success, message, data | error, timestamp}: the tests read data, and fall back to the top level for errors and message-only answers.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -49,7 +49,7 @@
               "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
               "if (pm.response.code === 200) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
-              "    store.set(\"registrarToken\", pm.response.json().accessToken);",
+              "    store.set(\"registrarToken\", (pm.response.json().data || pm.response.json()).accessToken);",
               "}"
             ]
           }
@@ -99,7 +99,7 @@
               "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
               "if (pm.response.code === 200) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
-              "    store.set(\"officerToken\", pm.response.json().accessToken);",
+              "    store.set(\"officerToken\", (pm.response.json().data || pm.response.json()).accessToken);",
               "}"
             ]
           }
@@ -149,7 +149,7 @@
               "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
               "if (pm.response.code === 200) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
-              "    store.set(\"farmerToken\", pm.response.json().accessToken);",
+              "    store.set(\"farmerToken\", (pm.response.json().data || pm.response.json()).accessToken);",
               "}"
             ]
           }
@@ -217,7 +217,7 @@
               "pm.test(\"season created (201)\", () => pm.response.to.have.status(201));",
               "if (pm.response.code === 201) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
-              "    store.set(\"seasonId\", pm.response.json().id);",
+              "    store.set(\"seasonId\", (pm.response.json().data || pm.response.json()).id);",
               "}"
             ]
           }
@@ -273,7 +273,7 @@
               "pm.test(\"programme created (201)\", () => pm.response.to.have.status(201));",
               "if (pm.response.code === 201) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
-              "    store.set(\"programmeId\", pm.response.json().id);",
+              "    store.set(\"programmeId\", (pm.response.json().data || pm.response.json()).id);",
               "}"
             ]
           }
@@ -327,10 +327,10 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"offering created (201)\", () => pm.response.to.have.status(201));",
-              "pm.test(\"all places free\", () => pm.expect(pm.response.json().remainingPlaces).to.eql(1));",
+              "pm.test(\"all places free\", () => pm.expect((pm.response.json().data || pm.response.json()).remainingPlaces).to.eql(1));",
               "if (pm.response.code === 201) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
-              "    store.set(\"offeringId\", pm.response.json().id);",
+              "    store.set(\"offeringId\", (pm.response.json().data || pm.response.json()).id);",
               "}"
             ]
           }
@@ -617,7 +617,7 @@
               "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
               "if (pm.response.code === 200) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
-              "    store.set(\"financeToken\", pm.response.json().accessToken);",
+              "    store.set(\"financeToken\", (pm.response.json().data || pm.response.json()).accessToken);",
               "}"
             ]
           }
@@ -671,10 +671,10 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
-              "pm.test(\"outstanding 10 000\", () => pm.expect(pm.response.json().outstanding).to.eql(10000));",
+              "pm.test(\"outstanding 10 000\", () => pm.expect((pm.response.json().data || pm.response.json()).outstanding).to.eql(10000));",
               "if (pm.response.code === 201) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
-              "    store.set(\"contributionId\", pm.response.json().id);",
+              "    store.set(\"contributionId\", (pm.response.json().data || pm.response.json()).id);",
               "}"
             ]
           }
@@ -740,7 +740,7 @@
               "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
               "if (pm.response.code === 201) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
-              "    store.set(\"paymentId2\", pm.response.json().id);",
+              "    store.set(\"paymentId2\", (pm.response.json().data || pm.response.json()).id);",
               "}"
             ]
           }
@@ -846,10 +846,10 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"enrolled (201)\", () => pm.response.to.have.status(201));",
-              "pm.test(\"status ENROLLED\", () => pm.expect(pm.response.json().status).to.eql(\"ENROLLED\"));",
+              "pm.test(\"status ENROLLED\", () => pm.expect((pm.response.json().data || pm.response.json()).status).to.eql(\"ENROLLED\"));",
               "if (pm.response.code === 201) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
-              "    store.set(\"enrolmentId\", pm.response.json().id);",
+              "    store.set(\"enrolmentId\", (pm.response.json().data || pm.response.json()).id);",
               "}"
             ]
           }
@@ -930,7 +930,7 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-              "pm.test(\"no places left\", () => pm.expect(pm.response.json().remainingPlaces).to.eql(0));"
+              "pm.test(\"no places left\", () => pm.expect((pm.response.json().data || pm.response.json()).remainingPlaces).to.eql(0));"
             ]
           }
         }
@@ -976,7 +976,7 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-              "pm.test(\"contains the new offering\", () => pm.expect(pm.response.json().content.map(o => o.id)).to.include(Number(pm.variables.get(\"offeringId\"))));"
+              "pm.test(\"contains the new offering\", () => pm.expect((pm.response.json().data || pm.response.json()).content.map(o => o.id)).to.include(Number(pm.variables.get(\"offeringId\"))));"
             ]
           }
         }
@@ -1017,7 +1017,7 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-              "pm.test(\"one enrolled farmer\", () => pm.expect(pm.response.json().totalElements).to.eql(1));"
+              "pm.test(\"one enrolled farmer\", () => pm.expect((pm.response.json().data || pm.response.json()).totalElements).to.eql(1));"
             ]
           }
         }
@@ -1097,7 +1097,7 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-              "pm.test(\"contains the enrolment\", () => pm.expect(pm.response.json().content.map(e => e.id)).to.include(Number(pm.variables.get(\"enrolmentId\"))));"
+              "pm.test(\"contains the enrolment\", () => pm.expect((pm.response.json().data || pm.response.json()).content.map(e => e.id)).to.include(Number(pm.variables.get(\"enrolmentId\"))));"
             ]
           }
         }
@@ -1205,7 +1205,7 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-              "pm.test(\"status CANCELLED\", () => pm.expect(pm.response.json().status).to.eql(\"CANCELLED\"));"
+              "pm.test(\"status CANCELLED\", () => pm.expect((pm.response.json().data || pm.response.json()).status).to.eql(\"CANCELLED\"));"
             ]
           }
         }
@@ -1285,7 +1285,7 @@
             "type": "text/javascript",
             "exec": [
               "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
-              "pm.test(\"one place free\", () => pm.expect(pm.response.json().remainingPlaces).to.eql(1));"
+              "pm.test(\"one place free\", () => pm.expect((pm.response.json().data || pm.response.json()).remainingPlaces).to.eql(1));"
             ]
           }
         }

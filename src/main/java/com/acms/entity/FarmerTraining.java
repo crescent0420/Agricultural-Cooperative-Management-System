@@ -1,11 +1,9 @@
 package com.acms.entity;
 
+import com.acms.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
@@ -15,11 +13,7 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "farmer_trainings")
-public class FarmerTraining {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class FarmerTraining extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "farmer_id", nullable = false, updatable = false)
@@ -56,10 +50,6 @@ public class FarmerTraining {
     @PrePersist
     void onCreate() {
         this.recordedAt = Instant.now();
-    }
-
-    public Long getId() {
-        return id;
     }
 
     public Farmer getFarmer() {

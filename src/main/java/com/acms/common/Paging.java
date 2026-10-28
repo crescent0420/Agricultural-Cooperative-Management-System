@@ -1,4 +1,4 @@
-package com.acms.service;
+package com.acms.common;
 
 import com.acms.exception.BadRequestException;
 import java.util.Locale;

@@ -1,17 +1,17 @@
 package com.acms.repository;
 
+import com.acms.common.BaseRepository;
 import com.acms.entity.FarmerTraining;
 import com.acms.entity.Training;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface FarmerTrainingRepository
-        extends JpaRepository<FarmerTraining, Long> {
+        extends BaseRepository<FarmerTraining> {
 
     boolean existsByFarmerIdAndTrainingId(Long farmerId, Long trainingId);
 

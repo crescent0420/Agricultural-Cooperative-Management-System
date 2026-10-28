@@ -92,7 +92,7 @@ class ContributionPaymentTest extends IntegrationTestBase {
     }
 
     private long paymentId(MvcResult result) throws Exception {
-        Number id = JsonPath.read(result.getResponse().getContentAsString(), "$.id");
+        Number id = JsonPath.read(result.getResponse().getContentAsString(), "$.data.id");
         return id.longValue();
     }
 
@@ -136,10 +136,10 @@ class ContributionPaymentTest extends IntegrationTestBase {
 
         mockMvc.perform(get("/api/contributions/" + id).header("Authorization", bearer(financeToken)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.amountDue").value(10000.0))
-                .andExpect(jsonPath("$.outstanding").value(10000.0))
-                .andExpect(jsonPath("$.paidPercent").value(0.0))
-                .andExpect(jsonPath("$.enrolmentAllowed").value(false));
+                .andExpect(jsonPath("$.data.amountDue").value(10000.0))
+                .andExpect(jsonPath("$.data.outstanding").value(10000.0))
+                .andExpect(jsonPath("$.data.paidPercent").value(0.0))
+                .andExpect(jsonPath("$.data.enrolmentAllowed").value(false));
 
         String again = json("farmerId", farmerId, "seasonId", seasonId, "amountDue", 5000);
         for (String[] attempt : new String[][] {{financeToken, "409"}, {registrarToken, "403"}, {farmerAToken, "403"}}) {
@@ -168,19 +168,19 @@ class ContributionPaymentTest extends IntegrationTestBase {
         long paymentId = paymentId(requested);
 
         mockMvc.perform(get("/api/contributions/" + id).header("Authorization", bearer(financeToken)))
-                .andExpect(jsonPath("$.confirmedPaid").value(0.0))
-                .andExpect(jsonPath("$.pendingAmount").value(4000.0))
-                .andExpect(jsonPath("$.outstanding").value(10000.0));
+                .andExpect(jsonPath("$.data.confirmedPaid").value(0.0))
+                .andExpect(jsonPath("$.data.pendingAmount").value(4000.0))
+                .andExpect(jsonPath("$.data.outstanding").value(10000.0));
 
         // Provider references are unique in the whole database, so every test run uses new ones.
         String providerReference = "MTN-" + UUID.randomUUID();
-        confirm(paymentId, providerReference).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("CONFIRMED"));
+        confirm(paymentId, providerReference).andExpect(status().isOk()).andExpect(jsonPath("$.data.status").value("CONFIRMED"));
         mockMvc.perform(get("/api/contributions/" + id).header("Authorization", bearer(financeToken)))
-                .andExpect(jsonPath("$.confirmedPaid").value(4000.0))
-                .andExpect(jsonPath("$.outstanding").value(6000.0))
-                .andExpect(jsonPath("$.paidPercent").value(40.0))
-                .andExpect(jsonPath("$.enrolmentAllowed").value(true))
-                .andExpect(jsonPath("$.inputCollectionAllowed").value(false));
+                .andExpect(jsonPath("$.data.confirmedPaid").value(4000.0))
+                .andExpect(jsonPath("$.data.outstanding").value(6000.0))
+                .andExpect(jsonPath("$.data.paidPercent").value(40.0))
+                .andExpect(jsonPath("$.data.enrolmentAllowed").value(true))
+                .andExpect(jsonPath("$.data.inputCollectionAllowed").value(false));
 
         confirm(paymentId, providerReference).andExpect(status().isOk());          // the operator resent it
         confirm(paymentId, "MTN-" + UUID.randomUUID()).andExpect(status().isConflict());   // a different one
@@ -252,7 +252,7 @@ class ContributionPaymentTest extends IntegrationTestBase {
         mockMvc.perform(post("/api/payments/" + paymentId(first) + "/fail").header("Authorization", bearer(financeToken))
                         .contentType(MediaType.APPLICATION_JSON).content(json("reason", "Insufficient mobile money balance")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("FAILED"));
+                .andExpect(jsonPath("$.data.status").value("FAILED"));
         assertThat(requestPayment(paymentJson(reference(), id, 500)).getResponse().getStatus()).isEqualTo(201);
     }
 
@@ -271,8 +271,8 @@ class ContributionPaymentTest extends IntegrationTestBase {
         confirm(paymentId, "BK-" + UUID.randomUUID()).andExpect(status().isConflict());
 
         mockMvc.perform(get("/api/contributions/" + id).header("Authorization", bearer(financeToken)))
-                .andExpect(jsonPath("$.confirmedPaid").value(0.0))
-                .andExpect(jsonPath("$.outstanding").value(1000.0));
+                .andExpect(jsonPath("$.data.confirmedPaid").value(0.0))
+                .andExpect(jsonPath("$.data.outstanding").value(1000.0));
     }
 
     // ---------- permanent history ----------
@@ -305,14 +305,14 @@ class ContributionPaymentTest extends IntegrationTestBase {
         mockMvc.perform(post(url).header("Authorization", bearer(financeToken)).contentType(MediaType.APPLICATION_JSON)
                         .content(json("newAmountDue", 8000, "reason", "Fertiliser price reduced")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.amountDue").value(8000.0))
-                .andExpect(jsonPath("$.outstanding").value(4000.0))
-                .andExpect(jsonPath("$.paidPercent").value(50.0));
+                .andExpect(jsonPath("$.data.amountDue").value(8000.0))
+                .andExpect(jsonPath("$.data.outstanding").value(4000.0))
+                .andExpect(jsonPath("$.data.paidPercent").value(50.0));
         mockMvc.perform(get(url).header("Authorization", bearer(financeToken)))
-                .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.content[0].oldAmount").value(10000.0))
-                .andExpect(jsonPath("$.content[0].newAmount").value(8000.0))
-                .andExpect(jsonPath("$.content[0].reason").value("Fertiliser price reduced"));
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].oldAmount").value(10000.0))
+                .andExpect(jsonPath("$.data.content[0].newAmount").value(8000.0))
+                .andExpect(jsonPath("$.data.content[0].reason").value("Fertiliser price reduced"));
 
         String[][] refused = {
                 {json("newAmountDue", 3000, "reason", "below the 4000 paid"), "422"},
@@ -339,8 +339,8 @@ class ContributionPaymentTest extends IntegrationTestBase {
 
         mockMvc.perform(get("/api/me/contributions?seasonId=" + seasonId).header("Authorization", bearer(farmerAToken)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(1))
-                .andExpect(jsonPath("$.content[0].id").value(ownId));
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].id").value(ownId));
         mockMvc.perform(get("/api/contributions/" + ownId).header("Authorization", bearer(farmerAToken)))
                 .andExpect(status().isOk());
         mockMvc.perform(get("/api/contributions/" + otherId).header("Authorization", bearer(farmerAToken)))

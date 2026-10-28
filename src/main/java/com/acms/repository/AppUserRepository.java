@@ -1,11 +1,11 @@
 package com.acms.repository;
 
+import com.acms.common.BaseRepository;
 import com.acms.entity.AppUser;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-public interface AppUserRepository extends JpaRepository<AppUser, Long> {
+public interface AppUserRepository extends BaseRepository<AppUser> {
 
     Optional<AppUser> findByUsername(String username);
 

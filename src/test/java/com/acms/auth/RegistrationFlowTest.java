@@ -54,16 +54,16 @@ class RegistrationFlowTest extends IntegrationTestBase {
         String loginAnswer = mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content(json("username", username, "password", oneTimePassword)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.mustChangePassword").value(true))
+                .andExpect(jsonPath("$.data.mustChangePassword").value(true))
                 .andReturn().getResponse().getContentAsString();
-        String limitedToken = JsonPath.read(loginAnswer, "$.accessToken");
+        String limitedToken = JsonPath.read(loginAnswer, "$.data.accessToken");
 
         mockMvc.perform(get("/api/districts").header("Authorization", bearer(limitedToken)))
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/api/auth/me").header("Authorization", bearer(limitedToken)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.role").value("FARMER"))
-                .andExpect(jsonPath("$.mustChangePassword").value(true));
+                .andExpect(jsonPath("$.data.role").value("FARMER"))
+                .andExpect(jsonPath("$.data.mustChangePassword").value(true));
 
         // 6. Wrong current password: 400. Correct change: 204, and the limited token dies.
         mockMvc.perform(post("/api/auth/change-password").header("Authorization", bearer(limitedToken))
@@ -118,10 +118,10 @@ class RegistrationFlowTest extends IntegrationTestBase {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json("username", newName, "email", newEmail, "role", "UNION_REGISTRAR")))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.emailVerified").value(false))
-                .andExpect(jsonPath("$.mustChangePassword").value(true))
+                .andExpect(jsonPath("$.data.emailVerified").value(false))
+                .andExpect(jsonPath("$.data.mustChangePassword").value(true))
                 .andReturn().getResponse().getContentAsString();
-        Number newId = JsonPath.read(created, "$.id");
+        Number newId = JsonPath.read(created, "$.data.id");
         assertThat(oneTimePassword(lastEmailTo(newEmail))).hasSize(16);
 
         // Reset: a second email, with a new one-time password and (still unverified) a new link.

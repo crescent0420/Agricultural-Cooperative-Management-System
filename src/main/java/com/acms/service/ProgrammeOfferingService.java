@@ -1,6 +1,8 @@
 package com.acms.service;
 
-import com.acms.dto.PageResponse;
+import com.acms.common.BaseService;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.ProgrammeOfferingRequest;
 import com.acms.dto.ProgrammeOfferingResponse;
 import com.acms.dto.ProgrammeOfferingUpdateRequest;
@@ -36,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
-public class ProgrammeOfferingService {
+public class ProgrammeOfferingService extends BaseService {
 
     private static final Set<String> SORTABLE_FIELDS =
             Set.of("id", "createdAt", "maxParticipants", "enrolledCount", "hectaresPerParticipant");
@@ -131,7 +133,7 @@ public class ProgrammeOfferingService {
     // ---------- reading ----------
 
     @Transactional(readOnly = true)
-    public PageResponse<ProgrammeOfferingResponse> findAll(Long seasonId, Long programmeId, Long districtId,
+    public PagedResponse<ProgrammeOfferingResponse> findAll(Long seasonId, Long programmeId, Long districtId,
                                                            int page, int size, String sortBy, String direction) {
         Pageable pageable = Paging.of(page, size, sortBy, direction, SORTABLE_FIELDS);
         Long scope = districtScope(farmerAccessService.getCurrentUser());
@@ -140,11 +142,11 @@ public class ProgrammeOfferingService {
         if (scope != null) {
             if (districtId != null && !districtId.equals(scope)) {
                 // Asking for another district: nothing to see (same behaviour as programmes and farmers).
-                return PageResponse.from(Page.<ProgrammeOfferingResponse>empty(pageable));
+                return PagedResponse.from(Page.<ProgrammeOfferingResponse>empty(pageable));
             }
             effectiveDistrictId = scope;
         }
-        return PageResponse.from(offeringRepository
+        return PagedResponse.from(offeringRepository
                 .findAll(ProgrammeOfferingSpecifications.search(seasonId, programmeId, effectiveDistrictId, null),
                         pageable)
                 .map(ProgrammeOfferingResponse::from));
@@ -152,7 +154,7 @@ public class ProgrammeOfferingService {
 
     /** A Field Officer's own offerings: the ones they are assigned to. */
     @Transactional(readOnly = true)
-    public PageResponse<ProgrammeOfferingResponse> findAssignedToCurrentOfficer(
+    public PagedResponse<ProgrammeOfferingResponse> findAssignedToCurrentOfficer(
             Long seasonId, int page, int size, String sortBy, String direction) {
         Pageable pageable = Paging.of(page, size, sortBy, direction, SORTABLE_FIELDS);
         AppUser officer = farmerAccessService.getCurrentUser();
@@ -160,7 +162,7 @@ public class ProgrammeOfferingService {
             throw new AccessDeniedException(NO_PERMISSION);
         }
         // Both conditions: assigned to me AND in my district (in case an officer was later moved).
-        return PageResponse.from(offeringRepository
+        return PagedResponse.from(offeringRepository
                 .findAll(ProgrammeOfferingSpecifications.search(
                                 seasonId, null, officer.getDistrict().getId(), officer.getId()),
                         pageable)

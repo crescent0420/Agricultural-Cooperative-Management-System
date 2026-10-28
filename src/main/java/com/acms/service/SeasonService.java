@@ -1,7 +1,9 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.EnrolmentWindowResponse;
-import com.acms.dto.PageResponse;
 import com.acms.dto.SeasonRequest;
 import com.acms.dto.SeasonResponse;
 import com.acms.entity.AppUser;
@@ -31,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class SeasonService {
+public class SeasonService extends BaseService {
 
     private static final Set<String> SEASON_SORT_FIELDS = Set.of("id", "name", "startsOn", "endsOn", "createdAt");
     private static final Set<String> WINDOW_SORT_FIELDS = Set.of("id", "openedAt", "closedAt");
@@ -81,7 +83,7 @@ public class SeasonService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<SeasonResponse> findAll(int page, int size, String sortBy, String direction) {
+    public PagedResponse<SeasonResponse> findAll(int page, int size, String sortBy, String direction) {
         Pageable pageable = Paging.of(page, size, sortBy, direction, SEASON_SORT_FIELDS);
         Page<Season> seasons = seasonRepository.findAll(pageable);
 
@@ -92,7 +94,7 @@ public class SeasonService {
                 : windowRepository.findOpenForSeasons(seasonIds).stream()
                         .collect(Collectors.toMap(w -> w.getSeason().getId(), Function.identity()));
 
-        return PageResponse.from(seasons.map(s -> toResponse(s, openBySeason.get(s.getId()))));
+        return PagedResponse.from(seasons.map(s -> toResponse(s, openBySeason.get(s.getId()))));
     }
 
     // ---------- enrolment windows ----------
@@ -131,13 +133,13 @@ public class SeasonService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<EnrolmentWindowResponse> windows(Long seasonId, int page, int size,
+    public PagedResponse<EnrolmentWindowResponse> windows(Long seasonId, int page, int size,
                                                          String sortBy, String direction) {
         if (!seasonRepository.existsById(seasonId)) {
             throw notFound(seasonId);
         }
         Pageable pageable = Paging.of(page, size, sortBy, direction, WINDOW_SORT_FIELDS);
-        return PageResponse.from(windowRepository.findBySeasonId(seasonId, pageable).map(EnrolmentWindowResponse::from));
+        return PagedResponse.from(windowRepository.findBySeasonId(seasonId, pageable).map(EnrolmentWindowResponse::from));
     }
 
     /** Used by enrolment (Step 5c): farmers may enrol only while the season's window is open. */

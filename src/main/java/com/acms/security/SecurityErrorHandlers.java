@@ -2,14 +2,13 @@ package com.acms.security;
 
 import com.acms.entity.AppUser;
 import com.acms.entity.AuditEventType;
-import com.acms.exception.ApiError;
+import com.acms.exception.GlobalExceptionHandler;
 import com.acms.repository.AppUserRepository;
 import com.acms.service.AuditLogService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,14 +126,8 @@ public class SecurityErrorHandlers {
             HttpStatus status,
             String message) throws IOException {
 
-        ApiError body = new ApiError(
-                Instant.now().toString(),
-                status.value(),
-                status.getReasonPhrase(),
-                message,
-                request.getRequestURI(),
-                List.of()
-        );
+        // Same envelope as every other response (success = false), built in one place.
+        var body = GlobalExceptionHandler.errorBody(status, message, request.getRequestURI(), List.of());
 
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

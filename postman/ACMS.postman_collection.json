@@ -1,0 +1,2363 @@
+{
+  "info": {
+    "_postman_id": "ca1cfdb1-74a3-413a-9a82-82fa32005432",
+    "name": "ACMS API tests",
+    "description": "ACMS (Agricultural Cooperative Management System) API tests.\nSet passwords in a Postman ENVIRONMENT (type: secret), never in this collection. Since the common-response refactor every answer is {success, message, data | error, timestamp}: the tests read data, and fall back to the top level for errors and message-only answers.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0 Setup (run once, in order)",
+      "item": [
+        {
+          "name": "Login as System Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{adminUsername}}\",\n  \"password\": \"{{adminPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+                  "    store.set(\"adminToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List farmers (choose the farmer ids)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/farmers?size=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "farmers"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "100"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "// Open View > Postman Console to see this table, then set ownFarmerId / otherFarmerId.",
+                  "(pm.response.json().data || pm.response.json()).content.forEach(f =>",
+                  "    console.log(`farmer id=${f.id}  ${f.fullName}  districtId=${f.districtId}  ${f.status}`));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create registrar account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{registrarUsername}}\",\n  \"email\": \"{{registrarUsername}}@example.test\",\n  \"role\": \"UNION_REGISTRAR\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Since Part D the password is generated and emailed. 409 = the account already exists (it keeps its old password). If 201: read the email in Mailpit, verify the link, log in with the one-time password, change it, and put your new password in the environment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"created (201) or already exists (409)\", () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create farmer account (linked to ownFarmerId)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{farmerUsername}}\",\n  \"email\": \"{{farmerUsername}}@example.test\",\n  \"role\": \"FARMER\",\n  \"farmerId\": {{ownFarmerId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Since Part D the password is generated and emailed. 409 = the account already exists (it keeps its old password). If 201: read the email in Mailpit, verify the link, log in with the one-time password, change it, and put your new password in the environment."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"created (201) or already exists (409)\", () => pm.expect(pm.response.code).to.be.oneOf([201, 409]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Union Registrar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{registrarUsername}}\",\n  \"password\": \"{{registrarPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+                  "    store.set(\"registrarToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Field Officer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{officerUsername}}\",\n  \"password\": \"{{officerPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+                  "    store.set(\"officerToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login as Farmer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{farmerUsername}}\",\n  \"password\": \"{{farmerPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+                  "    store.set(\"farmerToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Part C - Pagination",
+      "item": [
+        {
+          "name": "01 Districts default page",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/districts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "districts"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"page 0, size 20, sorted by name then id\", () => {",
+                  "    pm.expect(body.page).to.eql(0);",
+                  "    pm.expect(body.size).to.eql(20);",
+                  "    pm.expect(body.sort).to.include(\"name: ASC\").and.include(\"id: ASC\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 Districts size=1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/districts?size=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "districts"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "1"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"one item, first page\", () => {",
+                  "    pm.expect(body.content.length).to.be.at.most(1);",
+                  "    pm.expect(body.hasPrevious).to.eql(false);",
+                  "    pm.expect(body.hasNext).to.eql(body.totalElements > 1);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 Districts size=1 page=1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/districts?size=1&page=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "districts"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "1"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"second page\", () => {",
+                  "    pm.expect(body.page).to.eql(1);",
+                  "    pm.expect(body.hasPrevious).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 Districts past the end",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/districts?size=1&page=999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "districts"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "1"
+                },
+                {
+                  "key": "page",
+                  "value": "999"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"empty content\", () => pm.expect(body.content).to.have.length(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 Districts newest first",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/districts?sortBy=createdAt&direction=desc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "districts"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                },
+                {
+                  "key": "direction",
+                  "value": "desc"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"sorted createdAt DESC, id DESC\", () => pm.expect(body.sort).to.include(\"createdAt: DESC\").and.include(\"id: DESC\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 Unknown sort field",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/districts?sortBy=secret",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "districts"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "secret"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));",
+                  "pm.test(\"explains allowed fields\", () => pm.expect((pm.response.json().data || pm.response.json()).message).to.include(\"sortBy must be one of\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07a size=0",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/districts?size=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "districts"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "0"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07b size=101",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/districts?size=101",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "districts"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "101"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 page=-1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/districts?page=-1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "districts"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "-1"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 direction=up",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/districts?direction=up",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "districts"
+              ],
+              "query": [
+                {
+                  "key": "direction",
+                  "value": "up"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 Cooperatives of own district",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/cooperatives?districtId={{ownDistrictId}}&size=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cooperatives"
+              ],
+              "query": [
+                {
+                  "key": "districtId",
+                  "value": "{{ownDistrictId}}"
+                },
+                {
+                  "key": "size",
+                  "value": "1"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"only that district\", () => body.content.forEach(c =>",
+                  "    pm.expect(String(c.districtId)).to.eql(pm.variables.get(\"ownDistrictId\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11 Trainings size=1",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/trainings?size=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "trainings"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "1"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "12 Programmes include prerequisites",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/programmes?size=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "programmes"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "1"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"each programme lists its prerequisites\", () => body.content.forEach(p =>",
+                  "    pm.expect(p.prerequisites).to.be.an(\"array\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "13 Officer cannot see another district's programmes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/programmes?districtId={{otherDistrictId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "programmes"
+              ],
+              "query": [
+                {
+                  "key": "districtId",
+                  "value": "{{otherDistrictId}}"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{officerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"nothing visible\", () => pm.expect(body.totalElements).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14 A farmer's trainings, newest first",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/farmers/{{ownFarmerId}}/trainings?size=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "farmers",
+                "{{ownFarmerId}}",
+                "trainings"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "1"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"sorted completedOn DESC\", () => pm.expect(body.sort).to.include(\"completedOn: DESC\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "15 Farmer reads ANOTHER farmer's trainings (IDOR)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/farmers/{{otherFarmerId}}/trainings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "farmers",
+                "{{otherFarmerId}}",
+                "trainings"
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{farmerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "16a Farmers page 2 of size 2",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/farmers?size=2&page=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "farmers"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "2"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"page 1\", () => pm.expect(body.page).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "16b Officer sees only own district's farmers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/farmers?size=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "farmers"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "100"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{officerToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});",
+                  "",
+                  "pm.test(\"every farmer is in the officer's district\", () => body.content.forEach(f =>",
+                  "    pm.expect(String(f.districtId)).to.eql(pm.variables.get(\"ownDistrictId\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "17a Users sorted by createdAt",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/users?sortBy=createdAt",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "createdAt"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "17b Audit log newest first",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit-logs?size=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit-logs"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "5"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "",
+                  "const body = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"has the page shape\", () => {",
+                  "    [\"content\",\"page\",\"size\",\"totalElements\",\"totalPages\",\"first\",\"last\",\"hasNext\",\"hasPrevious\",\"sort\"]",
+                  "        .forEach(k => pm.expect(body).to.have.property(k));",
+                  "    pm.expect(body.content).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"sorted occurredAt DESC\", () => pm.expect(body.sort).to.include(\"occurredAt: DESC\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "18 Audit log: forbidden sort field",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/audit-logs?sortBy=details",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "audit-logs"
+              ],
+              "query": [
+                {
+                  "key": "sortBy",
+                  "value": "details"
+                }
+              ]
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "19 No token at all",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/districts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "districts"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Part D - Registration, email, forced password change",
+      "item": [
+        {
+          "name": "D01 Register a new user (public)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/register",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"{{newUsername}}\",\"email\":\"{{newEmail}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+                  "const n = \"farmer\" + Math.floor(Math.random()*900000 + 100000);",
+                  "store.set(\"newUsername\", n);",
+                  "store.set(\"newEmail\", n + \"@example.test\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"no password in the response\", () => pm.expect(pm.response.text()).to.not.include(\"assword\\\":\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D02 Read the welcome email (Mailpit)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{mailpitUrl}}/api/v1/message/latest",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+                  "",
+                  "pm.test(\"Mailpit returned the latest email\", () => pm.response.to.have.status(200));",
+                  "const mail = (pm.response.json().data || pm.response.json());",
+                  "const text = mail.Text || \"\";",
+                  "const to = (mail.To && mail.To[0] && mail.To[0].Address) || \"\";",
+                  "pm.test(\"email was sent to the expected address\", () => pm.expect(to).to.eql(pm.variables.get(\"newEmail\")));",
+                  "const pw = text.match(/One-time password: (\\S+)/);",
+                  "const tk = text.match(/token=([A-Za-z0-9_-]+)/);",
+                  "pm.test(\"email contains a one-time password\", () => pm.expect(pw).to.not.be.null);",
+                  "if (pw) store.set(\"tempPassword\", pw[1]);",
+                  "pm.test(\"email contains a verification link\", () => pm.expect(tk).to.not.be.null);",
+                  "if (tk) store.set(\"verifyToken\", tk[1]);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D03 Register the same username again",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/register",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"{{newUsername}}\",\"email\":\"other.{{newEmail}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D04 Register with an invalid email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/register",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"bademail.user\",\"email\":\"not-an-email\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D05 Login BEFORE verifying the email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"{{newUsername}}\",\"password\":\"{{tempPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));",
+                  "pm.test(\"asks to confirm the email\", () => pm.expect((pm.response.json().data || pm.response.json()).message).to.include(\"confirm your email\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D06 Verify with a fake token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/verify-email?token=fake-token-123",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D07 Verify with the real link",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/verify-email?token={{verifyToken}}",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D08 Use the same link again",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/verify-email?token={{verifyToken}}",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D09 Login with the one-time password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"{{newUsername}}\",\"password\":\"{{tempPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+                  "pm.test(\"must change password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword).to.eql(true));",
+                  "store.set(\"newUserToken\", (pm.response.json().data || pm.response.json()).accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D10 Business endpoint before changing the password",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/districts",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{newUserToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D11 /api/auth/me still works",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{newUserToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "const me = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"FARMER, verified, must change, not linked yet\", () => {",
+                  "  pm.expect(me.role).to.eql(\"FARMER\");",
+                  "  pm.expect(me.emailVerified).to.eql(true);",
+                  "  pm.expect(me.mustChangePassword).to.eql(true);",
+                  "  pm.expect(me.farmerId).to.eql(null);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D12 Change password with the WRONG current password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/change-password",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{newUserToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"currentPassword\":\"wrong-password-123\",\"newPassword\":\"{{newPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D13 Change password correctly",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/change-password",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{newUserToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"currentPassword\":\"{{tempPassword}}\",\"newPassword\":\"{{newPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D14 Old token after the change",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{newUserToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D15 Login with the NEW password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/login",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"{{newUsername}}\",\"password\":\"{{newPassword}}\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+                  "pm.test(\"no forced change any more\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword).to.eql(false));",
+                  "store.set(\"newUserToken\", (pm.response.json().data || pm.response.json()).accessToken);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D16 Business endpoint now works",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/districts",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{newUserToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D17 Unlinked farmer has no farmer profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/me/profile",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{newUserToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D18 Admin creates a registrar (with email)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"{{adminCreatedUsername}}\",\"email\":\"{{adminCreatedUsername}}@example.test\",\"role\":\"UNION_REGISTRAR\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+                  "store.set(\"adminCreatedUsername\", \"registrar\" + Math.floor(Math.random()*900000 + 100000));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 201\", () => pm.response.to.have.status(201));",
+                  "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+                  "const u = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"unverified and must change password\", () => {",
+                  "  pm.expect(u.emailVerified).to.eql(false);",
+                  "  pm.expect(u.mustChangePassword).to.eql(true);",
+                  "});",
+                  "store.set(\"adminCreatedUserId\", u.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D19 Admin creates a user WITHOUT email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/users",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"username\":\"noemail.user\",\"role\":\"UNION_REGISTRAR\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D20 Admin resets the new registrar's password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{{adminCreatedUserId}}/reset-password",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D21 Read the reset email (Mailpit)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{mailpitUrl}}/api/v1/message/latest",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+                  "pm.test(\"Mailpit returned the latest email\", () => pm.response.to.have.status(200));",
+                  "const mail = (pm.response.json().data || pm.response.json());",
+                  "pm.test(\"reset email went to the new registrar\", () => pm.expect(mail.To[0].Address).to.include(pm.variables.get(\"adminCreatedUsername\")));",
+                  "pm.test(\"contains a NEW verification link (still unverified)\", () => pm.expect(mail.Text).to.include(\"verify-email?token=\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D22 Reset an account that has no email",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{{officerUserId}}/reset-password",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 422\", () => pm.response.to.have.status(422));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D23 Registrar may not reset passwords",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/users/{{adminCreatedUserId}}/reset-password",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{registrarToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "D24 /api/auth/me as admin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"status is 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"SYSTEM_ADMIN\", () => pm.expect((pm.response.json().data || pm.response.json()).role).to.eql(\"SYSTEM_ADMIN\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "adminUsername",
+      "value": "step4a-test-admin"
+    },
+    {
+      "key": "adminPassword",
+      "value": ""
+    },
+    {
+      "key": "registrarUsername",
+      "value": "registrar1"
+    },
+    {
+      "key": "registrarPassword",
+      "value": ""
+    },
+    {
+      "key": "officerUsername",
+      "value": "fieldofficer_test"
+    },
+    {
+      "key": "officerPassword",
+      "value": ""
+    },
+    {
+      "key": "farmerUsername",
+      "value": "aline"
+    },
+    {
+      "key": "farmerPassword",
+      "value": ""
+    },
+    {
+      "key": "ownDistrictId",
+      "value": "1"
+    },
+    {
+      "key": "otherDistrictId",
+      "value": "2"
+    },
+    {
+      "key": "ownFarmerId",
+      "value": "1"
+    },
+    {
+      "key": "otherFarmerId",
+      "value": "2"
+    },
+    {
+      "key": "mailpitUrl",
+      "value": "http://localhost:8025"
+    },
+    {
+      "key": "newPassword",
+      "value": "Brand-New-Pass-2026"
+    },
+    {
+      "key": "officerUserId",
+      "value": "2"
+    }
+  ]
+}

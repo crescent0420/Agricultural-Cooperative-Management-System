@@ -1,10 +1,12 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.ContributionAdjustmentRequest;
 import com.acms.dto.ContributionAdjustmentResponse;
 import com.acms.dto.ContributionRequest;
 import com.acms.dto.ContributionResponse;
-import com.acms.dto.PageResponse;
 import com.acms.entity.AppUser;
 import com.acms.entity.AuditEventType;
 import com.acms.entity.ContributionAdjustment;
@@ -42,7 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
-public class ContributionService {
+public class ContributionService extends BaseService {
 
     private static final Set<String> SORTABLE_FIELDS = Set.of("id", "createdAt", "amountDue");
     private static final Set<String> ADJUSTMENT_SORT_FIELDS = Set.of("id", "adjustedAt");
@@ -119,14 +121,14 @@ public class ContributionService {
 
     /** Finance Officer and Registrar: every contribution, filtered by farmer and/or season. */
     @Transactional(readOnly = true)
-    public PageResponse<ContributionResponse> findAll(Long farmerId, Long seasonId,
+    public PagedResponse<ContributionResponse> findAll(Long farmerId, Long seasonId,
                                                       int page, int size, String sortBy, String direction) {
         return search(farmerId, seasonId, Paging.of(page, size, sortBy, direction, SORTABLE_FIELDS));
     }
 
     /** A farmer's own contributions and balances. */
     @Transactional(readOnly = true)
-    public PageResponse<ContributionResponse> findMine(Long seasonId,
+    public PagedResponse<ContributionResponse> findMine(Long seasonId,
                                                        int page, int size, String sortBy, String direction) {
         Pageable pageable = Paging.of(page, size, sortBy, direction, SORTABLE_FIELDS);
         Farmer farmer = farmerAccessService.requireCurrentFarmer();
@@ -134,13 +136,13 @@ public class ContributionService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<ContributionAdjustmentResponse> adjustments(Long obligationId, int page, int size,
+    public PagedResponse<ContributionAdjustmentResponse> adjustments(Long obligationId, int page, int size,
                                                                     String sortBy, String direction) {
         if (!obligationRepository.existsById(obligationId)) {
             throw notFound(obligationId);
         }
         Pageable pageable = Paging.of(page, size, sortBy, direction, ADJUSTMENT_SORT_FIELDS);
-        return PageResponse.from(adjustmentRepository.findByObligationId(obligationId, pageable)
+        return PagedResponse.from(adjustmentRepository.findByObligationId(obligationId, pageable)
                 .map(ContributionAdjustmentResponse::from));
     }
 
@@ -172,7 +174,7 @@ public class ContributionService {
 
     // ---------- helpers ----------
 
-    private PageResponse<ContributionResponse> search(Long farmerId, Long seasonId, Pageable pageable) {
+    private PagedResponse<ContributionResponse> search(Long farmerId, Long seasonId, Pageable pageable) {
         Page<ContributionObligation> obligations = obligationRepository.findAll(
                 ContributionObligationSpecifications.search(farmerId, seasonId), pageable);
 
@@ -192,7 +194,7 @@ public class ContributionService {
                 }
             }
         }
-        return PageResponse.from(obligations.map(o -> ContributionResponse.from(o,
+        return PagedResponse.from(obligations.map(o -> ContributionResponse.from(o,
                 ContributionBalance.of(o.getAmountDue(), confirmed.get(o.getId()), pending.get(o.getId())))));
     }
 

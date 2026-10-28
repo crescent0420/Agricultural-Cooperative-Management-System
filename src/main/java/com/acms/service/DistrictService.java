@@ -1,8 +1,10 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.DistrictRequest;
 import com.acms.dto.DistrictResponse;
-import com.acms.dto.PageResponse;
 import com.acms.entity.District;
 import com.acms.exception.ConflictException;
 import com.acms.exception.ResourceNotFoundException;
@@ -20,20 +22,20 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
-public class DistrictService {
+public class DistrictService extends BaseService {
 
     private static final Set<String> SORTABLE_FIELDS = Set.of("id", "name", "createdAt");
 
     private final DistrictRepository districtRepository;
 
     @Transactional(readOnly = true)
-    public PageResponse<DistrictResponse> findAll(Long provinceId, int page, int size,
+    public PagedResponse<DistrictResponse> findAll(Long provinceId, int page, int size,
                                                   String sortBy, String direction) {
         Pageable pageable = Paging.of(page, size, sortBy, direction, SORTABLE_FIELDS);
         Page<District> districts = (provinceId == null)
                 ? districtRepository.findAll(pageable)
                 : districtRepository.findByProvinceId(provinceId, pageable);
-        return PageResponse.from(districts.map(DistrictResponse::from));
+        return PagedResponse.from(districts.map(DistrictResponse::from));
     }
 
     @Transactional(readOnly = true)

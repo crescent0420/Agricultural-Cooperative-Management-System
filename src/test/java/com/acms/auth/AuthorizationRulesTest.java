@@ -123,7 +123,7 @@ class AuthorizationRulesTest extends IntegrationTestBase {
                             .header("Authorization", bearer(officerToken)))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
-            List<Number> districts = JsonPath.read(body, "$.content[*].districtId");
+            List<Number> districts = JsonPath.read(body, "$.data.content[*].districtId");
             assertThat(districts).isNotEmpty();
             assertThat(districts).allMatch(d -> d.longValue() == world.districtA());
 
@@ -131,7 +131,7 @@ class AuthorizationRulesTest extends IntegrationTestBase {
             mockMvc.perform(get("/api/farmers").param("cooperativeId", String.valueOf(world.cooperativeB()))
                             .header("Authorization", bearer(officerToken)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.totalElements").value(0));
+                    .andExpect(jsonPath("$.data.totalElements").value(0));
         }
 
         @Test
@@ -140,7 +140,7 @@ class AuthorizationRulesTest extends IntegrationTestBase {
             mockMvc.perform(get("/api/programmes").param("districtId", String.valueOf(world.districtB()))
                             .header("Authorization", bearer(officerToken)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.totalElements").value(0));
+                    .andExpect(jsonPath("$.data.totalElements").value(0));
         }
     }
 
@@ -153,7 +153,7 @@ class AuthorizationRulesTest extends IntegrationTestBase {
         void farmerReadsOwnRecord() throws Exception {
             mockMvc.perform(get("/api/farmers/" + world.farmerA()).header("Authorization", bearer(farmerToken)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value(Math.toIntExact(world.farmerA())));
+                    .andExpect(jsonPath("$.data.id").value(Math.toIntExact(world.farmerA())));
         }
 
         @Test
@@ -177,7 +177,7 @@ class AuthorizationRulesTest extends IntegrationTestBase {
         void ownProfileComesFromTheToken() throws Exception {
             mockMvc.perform(get("/api/me/profile").header("Authorization", bearer(farmerToken)))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.id").value(Math.toIntExact(world.farmerA())));
+                    .andExpect(jsonPath("$.data.id").value(Math.toIntExact(world.farmerA())));
         }
     }
 }

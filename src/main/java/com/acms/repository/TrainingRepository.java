@@ -1,9 +1,9 @@
 package com.acms.repository;
 
+import com.acms.common.BaseRepository;
 import com.acms.entity.Training;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface TrainingRepository extends JpaRepository<Training, Long> {
+public interface TrainingRepository extends BaseRepository<Training> {
 
     boolean existsByNameIgnoreCase(String name);
 

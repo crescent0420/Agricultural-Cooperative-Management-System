@@ -1,5 +1,6 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
 import com.acms.entity.AppUser;
 import com.acms.entity.Farmer;
 import com.acms.entity.Role;
@@ -14,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional(readOnly = true)
-public class FarmerAccessService {
+public class FarmerAccessService extends BaseService {
 
     private final AppUserRepository appUserRepository;
     private final FarmerRepository farmerRepository;

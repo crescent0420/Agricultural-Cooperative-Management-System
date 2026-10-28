@@ -1,5 +1,7 @@
 package com.acms.controller;
 
+import com.acms.common.ApiResponse;
+import com.acms.common.BaseController;
 import com.acms.dto.PaymentConfirmRequest;
 import com.acms.dto.PaymentFailRequest;
 import com.acms.dto.PaymentRequest;
@@ -19,29 +21,31 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
-public class PaymentController {
+public class PaymentController extends BaseController {
 
     private final PaymentService paymentService;
 
     /** 201 for a new payment; 200 (with the original payment) when the same request is sent again. */
     @PostMapping
-    public ResponseEntity<PaymentResponse> request(@Valid @RequestBody PaymentRequest request) {
+    public ResponseEntity<ApiResponse<PaymentResponse>> request(@Valid @RequestBody PaymentRequest request) {
         PaymentService.PaymentResult result = paymentService.request(request);
-        return ResponseEntity.status(result.created() ? HttpStatus.CREATED : HttpStatus.OK).body(result.payment());
+        return result.created()
+                ? ResponseEntity.status(HttpStatus.CREATED).body(created(result.payment()))
+                : ResponseEntity.ok(ok("Already received: this is the original payment", result.payment()));
     }
 
     @PostMapping("/{id}/confirm")
-    public PaymentResponse confirm(@PathVariable Long id, @Valid @RequestBody PaymentConfirmRequest request) {
-        return paymentService.confirm(id, request.providerReference());
+    public ApiResponse<PaymentResponse> confirm(@PathVariable Long id, @Valid @RequestBody PaymentConfirmRequest request) {
+        return ok(paymentService.confirm(id, request.providerReference()));
     }
 
     @PostMapping("/{id}/fail")
-    public PaymentResponse fail(@PathVariable Long id, @Valid @RequestBody PaymentFailRequest request) {
-        return paymentService.fail(id, request.reason());
+    public ApiResponse<PaymentResponse> fail(@PathVariable Long id, @Valid @RequestBody PaymentFailRequest request) {
+        return ok(paymentService.fail(id, request.reason()));
     }
 
     @GetMapping("/{id}")
-    public PaymentResponse get(@PathVariable Long id) {
-        return paymentService.findById(id);
+    public ApiResponse<PaymentResponse> get(@PathVariable Long id) {
+        return ok(paymentService.findById(id));
     }
 }

@@ -1,6 +1,8 @@
 package com.acms.dto;
 
 import com.acms.entity.Role;
+import com.acms.security.Permission;
+import java.util.List;
 
 /** Answer of GET /api/auth/me: who this token belongs to, from the database right now. */
 public record CurrentUserResponse(
@@ -11,5 +13,6 @@ public record CurrentUserResponse(
         boolean emailVerified,
         boolean mustChangePassword,
         Long districtId,
-        Long farmerId) {
+        Long farmerId,
+        List<Permission> permissions) {   // empty while the one-time password must still be changed
 }

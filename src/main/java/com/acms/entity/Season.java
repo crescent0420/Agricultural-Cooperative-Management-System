@@ -1,15 +1,10 @@
 package com.acms.entity;
 
+import com.acms.common.AuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -19,11 +14,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "seasons")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Season {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Season extends AuditableEntity {
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -41,12 +32,6 @@ public class Season {
     @Column(name = "distribution_date", nullable = false)
     private LocalDate distributionDate;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
-
     public Season(String name, LocalDate startsOn, LocalDate endsOn,
                   BigDecimal maxLandHectares, LocalDate distributionDate) {
         update(name, startsOn, endsOn, maxLandHectares, distributionDate);
@@ -63,17 +48,5 @@ public class Season {
 
     public boolean hasEnded(LocalDate today) {
         return today.isAfter(endsOn);
-    }
-
-    @PrePersist
-    void onCreate() {
-        Instant now = Instant.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        this.updatedAt = Instant.now();
     }
 }

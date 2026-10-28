@@ -1,7 +1,9 @@
 
 package com.acms.service;
 
-import com.acms.dto.PageResponse;
+import com.acms.common.BaseService;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.TrainingRequest;
 import com.acms.dto.TrainingResponse;
 import com.acms.entity.Training;
@@ -15,7 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class TrainingService {
+public class TrainingService extends BaseService {
 
     private static final Set<String> SORTABLE_FIELDS =
             Set.of("id", "name", "createdAt");
@@ -40,13 +42,13 @@ public class TrainingService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<TrainingResponse> findAll(
+    public PagedResponse<TrainingResponse> findAll(
             int page, int size, String sortBy, String direction) {
 
         Pageable pageable = Paging.of(
                 page, size, sortBy, direction, SORTABLE_FIELDS);
 
-        return PageResponse.from(
+        return PagedResponse.from(
                 trainingRepository.findAll(pageable)
                         .map(TrainingResponse::from));
     }

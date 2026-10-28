@@ -1,5 +1,6 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
 import com.acms.dto.LoginRequest;
 import com.acms.dto.LoginResponse;
 import com.acms.entity.AppUser;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AuthenticationService {
+public class AuthenticationService extends BaseService {
 
     // Only usernames that look like usernames are written to the audit log
     // (people sometimes type their password into the username box).

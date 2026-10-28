@@ -1,11 +1,9 @@
 package com.acms.entity;
 
+import com.acms.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -22,11 +20,7 @@ import org.hibernate.annotations.Immutable;
 @Table(name = "contribution_adjustments")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ContributionAdjustment {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class ContributionAdjustment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "obligation_id", nullable = false)

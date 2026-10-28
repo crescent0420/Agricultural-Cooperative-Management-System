@@ -1,9 +1,11 @@
 
 package com.acms.controller;
 
+import com.acms.common.ApiResponse;
+import com.acms.common.BaseController;
+import com.acms.common.PagedResponse;
 import com.acms.dto.FarmerTrainingRequest;
 import com.acms.dto.FarmerTrainingResponse;
-import com.acms.dto.PageResponse;
 import com.acms.dto.TrainingResponse;
 import com.acms.service.FarmerTrainingService;
 import jakarta.validation.Valid;
@@ -20,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/farmers/{farmerId}")
-public class FarmerTrainingController {
+public class FarmerTrainingController extends BaseController {
 
     private final FarmerTrainingService farmerTrainingService;
 
@@ -31,28 +33,28 @@ public class FarmerTrainingController {
 
     @PostMapping("/trainings")
     @ResponseStatus(HttpStatus.CREATED)
-    public FarmerTrainingResponse record(
+    public ApiResponse<FarmerTrainingResponse> record(
             @PathVariable Long farmerId,
             @Valid @RequestBody FarmerTrainingRequest request) {
-        return farmerTrainingService.record(farmerId, request);
+        return created(farmerTrainingService.record(farmerId, request));
     }
 
     @GetMapping("/trainings")
-    public PageResponse<FarmerTrainingResponse> list(
+    public ApiResponse<PagedResponse<FarmerTrainingResponse>> list(
             @PathVariable Long farmerId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "completedOn") String sortBy,
             @RequestParam(defaultValue = "desc") String direction) {
-        return farmerTrainingService.findForFarmer(
-                farmerId, page, size, sortBy, direction);
+        return ok(farmerTrainingService.findForFarmer(
+                farmerId, page, size, sortBy, direction));
     }
 
     @GetMapping("/missing-prerequisites")
-    public List<TrainingResponse> missingPrerequisites(
+    public ApiResponse<List<TrainingResponse>> missingPrerequisites(
             @PathVariable Long farmerId,
             @RequestParam Long programmeId) {
-        return farmerTrainingService.findMissingPrerequisites(
-                farmerId, programmeId);
+        return ok(farmerTrainingService.findMissingPrerequisites(
+                farmerId, programmeId));
     }
 }

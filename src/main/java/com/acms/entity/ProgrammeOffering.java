@@ -1,18 +1,13 @@
 package com.acms.entity;
 
+import com.acms.common.AuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
-import java.time.Instant;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,11 +17,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "programme_offerings")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProgrammeOffering {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class ProgrammeOffering extends AuditableEntity {
 
     // updatable = false: a different programme or season would be a different offering.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
@@ -49,12 +40,6 @@ public class ProgrammeOffering {
 
     @Column(name = "enrolled_count", nullable = false)
     private int enrolledCount;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
 
     public ProgrammeOffering(CropProgramme programme, Season season, AppUser fieldOfficer,
                              BigDecimal hectaresPerParticipant, int maxParticipants) {
@@ -84,17 +69,5 @@ public class ProgrammeOffering {
 
     public void changeMaxParticipants(int maxParticipants) {
         this.maxParticipants = maxParticipants;
-    }
-
-    @PrePersist
-    void onCreate() {
-        Instant now = Instant.now();
-        this.createdAt = now;
-        this.updatedAt = now;
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        this.updatedAt = Instant.now();
     }
 }

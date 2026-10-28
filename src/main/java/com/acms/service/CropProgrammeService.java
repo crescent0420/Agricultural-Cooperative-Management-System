@@ -1,9 +1,11 @@
 package com.acms.service;
 
+import com.acms.common.BaseService;
+import com.acms.common.PagedResponse;
+import com.acms.common.Paging;
 import com.acms.dto.CropProgrammeRenameRequest;
 import com.acms.dto.CropProgrammeRequest;
 import com.acms.dto.CropProgrammeResponse;
-import com.acms.dto.PageResponse;
 import com.acms.dto.PrerequisiteRequest;
 import com.acms.entity.AppUser;
 import com.acms.entity.CropProgramme;
@@ -16,16 +18,15 @@ import com.acms.repository.CropProgrammeRepository;
 import com.acms.repository.DistrictRepository;
 import com.acms.repository.EnrolmentRepository;
 import com.acms.repository.TrainingRepository;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Set;
-
 @Service
-public class CropProgrammeService {
+public class CropProgrammeService extends BaseService {
 
     private static final Set<String> SORTABLE_FIELDS =
             Set.of("id", "name", "createdAt");
@@ -73,7 +74,7 @@ public class CropProgrammeService {
     }
 
     @Transactional(readOnly = true)
-    public PageResponse<CropProgrammeResponse> findAll(
+    public PagedResponse<CropProgrammeResponse> findAll(
             Long districtId,
             int page,
             int size,
@@ -90,7 +91,7 @@ public class CropProgrammeService {
             Long ownDistrictId = user.getDistrict().getId();
 
             if (districtId != null && !districtId.equals(ownDistrictId)) {
-                return PageResponse.from(
+                return PagedResponse.from(
                         Page.<CropProgrammeResponse>empty(pageable));
             }
 
@@ -102,7 +103,7 @@ public class CropProgrammeService {
                 : programmeRepository.findByDistrictId(
                         effectiveDistrictId, pageable);
 
-        return PageResponse.from(
+        return PagedResponse.from(
                 result.map(CropProgrammeResponse::from));
     }
 

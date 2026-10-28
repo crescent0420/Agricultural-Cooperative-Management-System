@@ -1,8 +1,12 @@
 package com.acms.exception;
 
-/** Thrown when the request clashes with existing data (duplicate, already enrolled...). Becomes HTTP 409. */
-public class ConflictException extends RuntimeException {
+import com.acms.common.ApiException;
+import org.springframework.http.HttpStatus;
+
+/** HTTP 409, the request clashes with existing data (duplicate, already enrolled...). */
+public class ConflictException extends ApiException {
+
     public ConflictException(String message) {
-        super(message);
+        super(HttpStatus.CONFLICT, message);
     }
 }

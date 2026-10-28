@@ -1,17 +1,14 @@
 package com.acms.entity;
 
+import com.acms.common.AuditableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import lombok.AccessLevel;
@@ -22,11 +19,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "app_users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)   // JPA needs an empty constructor; nobody else should use it
-public class AppUser {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class AppUser extends AuditableEntity {
 
     @Column(name = "username", nullable = false, unique = true, length = 100)
     private String username;
@@ -49,12 +42,6 @@ public class AppUser {
 
     @Column(name = "must_change_password", nullable = false)
     private boolean mustChangePassword;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
 
     @Column(name = "password_changed_at", nullable = false)
     private Instant passwordChangedAt;
@@ -84,17 +71,11 @@ public class AppUser {
         this.mustChangePassword = true;
     }
 
+    /** created_at and updated_at are set by AuditableEntity; only the password timestamp is set here. */
     @PrePersist
-    void onCreate() {
+    void initPasswordChangedAt() {
         Instant now = Instant.now();
-        this.createdAt = now;
-        this.updatedAt = now;
         this.passwordChangedAt = now;
-    }
-
-    @PreUpdate
-    void onUpdate() {
-        this.updatedAt = Instant.now();
     }
 
     /** The user chose their own new password: older tokens stop working and the forced change is done. */
