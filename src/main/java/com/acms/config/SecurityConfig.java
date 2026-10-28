@@ -101,6 +101,15 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/offerings").hasRole("UNION_REGISTRAR")
                 .requestMatchers(HttpMethod.PUT, "/api/offerings/*").hasRole("UNION_REGISTRAR")
 
+                // ---- Enrolment: ownership and district are checked in EnrolmentService ----
+                .requestMatchers(HttpMethod.POST, "/api/offerings/*/enrolments").hasRole("FARMER")
+                .requestMatchers(HttpMethod.GET, "/api/offerings/*/enrolments").hasAnyRole(
+                    "FIELD_OFFICER", "DISTRICT_AGRONOMIST", "UNION_REGISTRAR", "SYSTEM_ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/me/enrolments").hasRole("FARMER")
+                .requestMatchers(HttpMethod.GET, "/api/enrolments/*").hasAnyRole(
+                    "FARMER", "FIELD_OFFICER", "DISTRICT_AGRONOMIST", "UNION_REGISTRAR", "SYSTEM_ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/enrolments/*/cancel").hasAnyRole("FARMER", "UNION_REGISTRAR")
+
                 // ---- Farmers ----
                 .requestMatchers(HttpMethod.GET, "/api/farmers").hasAnyRole(
                     "UNION_REGISTRAR", "FIELD_OFFICER", "DISTRICT_AGRONOMIST", "FINANCE_OFFICER", "SYSTEM_ADMIN")

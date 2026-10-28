@@ -8,11 +8,13 @@ import com.acms.dto.PrerequisiteRequest;
 import com.acms.entity.AppUser;
 import com.acms.entity.CropProgramme;
 import com.acms.entity.District;
+import com.acms.entity.EnrolmentStatus;
 import com.acms.entity.Training;
 import com.acms.exception.ConflictException;
 import com.acms.exception.ResourceNotFoundException;
 import com.acms.repository.CropProgrammeRepository;
 import com.acms.repository.DistrictRepository;
+import com.acms.repository.EnrolmentRepository;
 import com.acms.repository.TrainingRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,16 +34,19 @@ public class CropProgrammeService {
     private final DistrictRepository districtRepository;
     private final TrainingRepository trainingRepository;
     private final FarmerAccessService farmerAccessService;
+    private final EnrolmentRepository enrolmentRepository;
 
     public CropProgrammeService(
             CropProgrammeRepository programmeRepository,
             DistrictRepository districtRepository,
             TrainingRepository trainingRepository,
-            FarmerAccessService farmerAccessService) {
+            FarmerAccessService farmerAccessService,
+            EnrolmentRepository enrolmentRepository) {
         this.programmeRepository = programmeRepository;
         this.districtRepository = districtRepository;
         this.trainingRepository = trainingRepository;
         this.farmerAccessService = farmerAccessService;
+        this.enrolmentRepository = enrolmentRepository;
     }
 
     @Transactional
@@ -138,6 +143,7 @@ public class CropProgrammeService {
     public CropProgrammeResponse addPrerequisite(
             Long programmeId, PrerequisiteRequest request) {
         CropProgramme programme = getOrThrow(programmeId);
+        requireNoActiveEnrolments(programme);
         AppUser currentUser = farmerAccessService.getCurrentUser();
 
         checkDistrictAccess(currentUser, programme);
@@ -163,6 +169,7 @@ public class CropProgrammeService {
     public CropProgrammeResponse removePrerequisite(
             Long programmeId, Long trainingId) {
         CropProgramme programme = getOrThrow(programmeId);
+        requireNoActiveEnrolments(programme);
         AppUser currentUser = farmerAccessService.getCurrentUser();
 
         checkDistrictAccess(currentUser, programme);
@@ -175,6 +182,14 @@ public class CropProgrammeService {
         }
 
         return CropProgrammeResponse.from(programme);
+    }
+
+    /** Changing the training rules would be unfair to farmers already enrolled under the old rules. */
+    private void requireNoActiveEnrolments(CropProgramme programme) {
+        if (enrolmentRepository.existsByOfferingProgrammeIdAndStatus(programme.getId(), EnrolmentStatus.ENROLLED)) {
+            throw new ConflictException("The prerequisites of programme '" + programme.getName()
+                    + "' cannot change while farmers are enrolled in it.");
+        }
     }
 
     private void checkDistrictAccess(AppUser user, CropProgramme programme) {
