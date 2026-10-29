@@ -14,6 +14,10 @@ import static com.acms.security.Permission.FARMER_LIST;
 import static com.acms.security.Permission.FARMER_MANAGE;
 import static com.acms.security.Permission.FARMER_READ;
 import static com.acms.security.Permission.FARMER_STATUS_CHANGE;
+import static com.acms.security.Permission.GRADING_SCALE_MANAGE;
+import static com.acms.security.Permission.GRADING_SCALE_READ;
+import static com.acms.security.Permission.INSPECTION_MANAGE;
+import static com.acms.security.Permission.INSPECTION_READ;
 import static com.acms.security.Permission.OFFERING_MANAGE;
 import static com.acms.security.Permission.OFFERING_READ;
 import static com.acms.security.Permission.OFFERING_READ_ASSIGNED;
@@ -22,6 +26,11 @@ import static com.acms.security.Permission.PERMISSION_MATRIX_READ;
 import static com.acms.security.Permission.PROFILE_READ_OWN;
 import static com.acms.security.Permission.REFERENCE_MANAGE;
 import static com.acms.security.Permission.REFERENCE_READ;
+import static com.acms.security.Permission.RESULT_APPROVE;
+import static com.acms.security.Permission.RESULT_CORRECT;
+import static com.acms.security.Permission.RESULT_ENTER;
+import static com.acms.security.Permission.RESULT_READ;
+import static com.acms.security.Permission.RESULT_READ_OWN;
 import static com.acms.security.Permission.SEASON_MANAGE;
 import static com.acms.security.Permission.SEASON_READ;
 import static com.acms.security.Permission.TRAINING_RECORD_MANAGE;
@@ -152,6 +161,23 @@ public class SecurityConfig {
                     "/api/payments/*").hasAuthority(can(CONTRIBUTION_READ))
                 .requestMatchers(HttpMethod.POST, "/api/payments", "/api/payments/*/confirm", "/api/payments/*/fail")
                     .hasAuthority(can(PAYMENT_MANAGE))
+
+                // ---- Inspections and results (offering, district and stage rules are in the services) ----
+                .requestMatchers(HttpMethod.GET, "/api/grading-scale").hasAuthority(can(GRADING_SCALE_READ))
+                .requestMatchers(HttpMethod.PUT, "/api/grading-scale").hasAuthority(can(GRADING_SCALE_MANAGE))
+                .requestMatchers(HttpMethod.GET, "/api/offerings/*/inspections", "/api/offerings/*/results")
+                    .hasAuthority(can(INSPECTION_READ))
+                .requestMatchers(HttpMethod.POST, "/api/offerings/*/inspections").hasAuthority(can(INSPECTION_MANAGE))
+                .requestMatchers(HttpMethod.PUT, "/api/inspections/*").hasAuthority(can(INSPECTION_MANAGE))
+                .requestMatchers(HttpMethod.DELETE, "/api/inspections/*").hasAuthority(can(INSPECTION_MANAGE))
+                .requestMatchers(HttpMethod.PUT, "/api/enrolments/*/scores").hasAuthority(can(RESULT_ENTER))
+                .requestMatchers(HttpMethod.POST, "/api/results/*/submit").hasAuthority(can(RESULT_ENTER))
+                .requestMatchers(HttpMethod.POST, "/api/results/*/approve", "/api/results/*/return")
+                    .hasAuthority(can(RESULT_APPROVE))
+                .requestMatchers(HttpMethod.POST, "/api/results/*/corrections").hasAuthority(can(RESULT_CORRECT))
+                .requestMatchers(HttpMethod.GET, "/api/me/results").hasAuthority(can(RESULT_READ_OWN))
+                .requestMatchers(HttpMethod.GET, "/api/results/*", "/api/results/*/corrections",
+                    "/api/farmers/*/results").hasAuthority(can(RESULT_READ))
 
                 // ---- Farmers ----
                 .requestMatchers(HttpMethod.GET, "/api/farmers").hasAuthority(can(FARMER_LIST))
