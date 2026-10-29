@@ -1,0 +1,1199 @@
+{
+  "info": {
+    "_postman_id": "b0bbfd4f-4d18-474a-850c-f5b0961e4827",
+    "name": "ACMS - Part H Collection permits",
+    "description": "Run in order with the ACMS-Local environment. Needs the registrar, Finance Officer and farmer accounts (ownFarmerId, in ownDistrictId) and officerUserId. Each run creates its own season, so it can be run again. Every answer is {success, message, data | error, timestamp}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "H00a Login as Union Registrar",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{registrarUsername}}\",\n  \"password\": \"{{registrarPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"registrarToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"Union Registrar has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H00b Login as Finance Officer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{financeUsername}}\",\n  \"password\": \"{{financePassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"financeToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"Finance Officer has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H00c Login as Farmer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{farmerUsername}}\",\n  \"password\": \"{{farmerPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"farmerToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"Farmer has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H01 Setup: season (distribution in 30 days)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/seasons",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seasons"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Permit season {{hStamp}}\",\n  \"startsOn\": \"{{today}}\",\n  \"endsOn\": \"{{in90days}}\",\n  \"maxLandHectares\": 2.5,\n  \"distributionDate\": \"{{in30days}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const d = n => { const x = new Date(); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };",
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"today\", d(0)); store.set(\"in30days\", d(30)); store.set(\"in90days\", d(90)); store.set(\"hStamp\", Date.now());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"hSeasonId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H02 Setup: programme in your district",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/programmes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "programmes"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Permit beans {{hStamp}}\",\n  \"districtId\": {{ownDistrictId}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"hProgrammeId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H03 Setup: offering",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/offerings",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "offerings"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"programmeId\": {{hProgrammeId}},\n  \"seasonId\": {{hSeasonId}},\n  \"fieldOfficerId\": {{officerUserId}},\n  \"hectaresPerParticipant\": 1.0,\n  \"maxParticipants\": 10\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"hOfferingId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H04 Setup: open the enrolment window",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/seasons/{{hSeasonId}}/windows/open",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seasons",
+            "{{hSeasonId}}",
+            "windows",
+            "open"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H05 Setup: contribution of 1 000",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/contributions",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "contributions"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"farmerId\": {{ownFarmerId}},\n  \"seasonId\": {{hSeasonId}},\n  \"amountDue\": 1000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"hContributionId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H06 Setup: payment of 400 (40%)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transactionReference\": \"{{hTx1}}\",\n  \"contributionId\": {{hContributionId}},\n  \"amount\": 400,\n  \"method\": \"MOBILE_MONEY\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"hTx1\", \"TX-\" + Date.now() + \"-\" + Math.floor(Math.random() * 1e6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"hPay1\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H07 Setup: confirm it",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/{{hPay1}}/confirm",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "{{hPay1}}",
+            "confirm"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"providerReference\": \"{{hProv1}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"hProv1\", \"MTN-\" + Date.now() + \"-\" + Math.floor(Math.random() * 1e6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H08 Setup: farmer enrols (40% is enough to enrol)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/offerings/{{hOfferingId}}/enrolments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "offerings",
+            "{{hOfferingId}}",
+            "enrolments"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"hEnrolmentId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H09 Permit at 40% paid",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/enrolments/{{hEnrolmentId}}/permit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "enrolments",
+            "{{hEnrolmentId}}",
+            "permit"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"refused: not fully paid (422)\", () => pm.response.to.have.status(422));",
+              "pm.test(\"explains the 100% rule\", () => pm.expect((pm.response.json().data || pm.response.json()).message).to.include(\"100%\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H10 Payment of the remaining 600",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transactionReference\": \"{{hTx2}}\",\n  \"contributionId\": {{hContributionId}},\n  \"amount\": 600,\n  \"method\": \"MOBILE_MONEY\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"hTx2\", \"TX-\" + Date.now() + \"-\" + Math.floor(Math.random() * 1e6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"hPay2\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H11 Confirm it (now 100%)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/{{hPay2}}/confirm",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "{{hPay2}}",
+            "confirm"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"providerReference\": \"{{hProv2}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"hProv2\", \"MTN-\" + Date.now() + \"-\" + Math.floor(Math.random() * 1e6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H12 Permit at 100% paid",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/enrolments/{{hEnrolmentId}}/permit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "enrolments",
+            "{{hEnrolmentId}}",
+            "permit"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"issued (201)\", () => pm.response.to.have.status(201));",
+              "pm.test(\"permit number format\", () => pm.expect((pm.response.json().data || pm.response.json()).permitNumber).to.match(/^CP-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"hPermitNumber\", (pm.response.json().data || pm.response.json()).permitNumber);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H13 Ask again",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/enrolments/{{hEnrolmentId}}/permit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "enrolments",
+            "{{hEnrolmentId}}",
+            "permit"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"same permit returned (200)\", () => pm.response.to.have.status(200));",
+              "pm.test(\"same number\", () => pm.expect((pm.response.json().data || pm.response.json()).permitNumber).to.eql(pm.variables.get(\"hPermitNumber\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H14 Storekeeper verifies the permit",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/permits/verify/{{hPermitNumber}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "permits",
+            "verify",
+            "{{hPermitNumber}}"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"valid\", () => pm.expect((pm.response.json().data || pm.response.json()).valid).to.eql(true));",
+              "pm.test(\"no problems\", () => pm.expect((pm.response.json().data || pm.response.json()).problems).to.be.empty);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H15 Farmer tries to verify",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/permits/verify/{{hPermitNumber}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "permits",
+            "verify",
+            "{{hPermitNumber}}"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"staff only (403)\", () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H16 Unknown permit number",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/permits/verify/CP-AAAA-AAAA-AAAA",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "permits",
+            "verify",
+            "CP-AAAA-AAAA-AAAA"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"not found (404)\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H17 Farmer: my permits",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/me/permits",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "me",
+            "permits"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"contains the permit\", () => pm.expect((pm.response.json().data || pm.response.json()).content.map(p => p.permitNumber)).to.include(pm.variables.get(\"hPermitNumber\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H18 Permit for an enrolment that does not exist",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/enrolments/999999999/permit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "enrolments",
+            "999999999",
+            "permit"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"not found (404), and recorded\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H19 Every attempt for this enrolment is on record",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/permits/attempts?enrolmentId={{hEnrolmentId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "permits",
+            "attempts"
+          ],
+          "query": [
+            {
+              "key": "enrolmentId",
+              "value": "{{hEnrolmentId}}"
+            }
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"refused, issued, already issued\", () => pm.expect((pm.response.json().data || pm.response.json()).content.map(a => a.outcome)).to.have.members([\"REFUSED\",\"ISSUED\",\"ALREADY_ISSUED\"]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "H20 Farmer tries to read the attempts",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/permits/attempts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "permits",
+            "attempts"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Registrar and Admin only (403)\", () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "registrarUsername",
+      "value": "registrar1"
+    },
+    {
+      "key": "registrarPassword",
+      "value": ""
+    },
+    {
+      "key": "farmerUsername",
+      "value": "aline"
+    },
+    {
+      "key": "farmerPassword",
+      "value": ""
+    },
+    {
+      "key": "ownDistrictId",
+      "value": "1"
+    },
+    {
+      "key": "ownFarmerId",
+      "value": "1"
+    },
+    {
+      "key": "officerUserId",
+      "value": "2"
+    },
+    {
+      "key": "financeUsername",
+      "value": "finance1"
+    },
+    {
+      "key": "financePassword",
+      "value": ""
+    }
+  ]
+}

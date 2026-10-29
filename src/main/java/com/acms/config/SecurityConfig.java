@@ -23,6 +23,10 @@ import static com.acms.security.Permission.OFFERING_READ;
 import static com.acms.security.Permission.OFFERING_READ_ASSIGNED;
 import static com.acms.security.Permission.PAYMENT_MANAGE;
 import static com.acms.security.Permission.PERMISSION_MATRIX_READ;
+import static com.acms.security.Permission.PERMIT_ATTEMPT_READ;
+import static com.acms.security.Permission.PERMIT_GENERATE;
+import static com.acms.security.Permission.PERMIT_READ_OWN;
+import static com.acms.security.Permission.PERMIT_VERIFY;
 import static com.acms.security.Permission.PROFILE_READ_OWN;
 import static com.acms.security.Permission.REFERENCE_MANAGE;
 import static com.acms.security.Permission.REFERENCE_READ;
@@ -178,6 +182,12 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/me/results").hasAuthority(can(RESULT_READ_OWN))
                 .requestMatchers(HttpMethod.GET, "/api/results/*", "/api/results/*/corrections",
                     "/api/farmers/*/results").hasAuthority(can(RESULT_READ))
+
+                // ---- Collection permits (ownership and the 100% rule are checked in PermitService) ----
+                .requestMatchers(HttpMethod.POST, "/api/enrolments/*/permit").hasAuthority(can(PERMIT_GENERATE))
+                .requestMatchers(HttpMethod.GET, "/api/me/permits").hasAuthority(can(PERMIT_READ_OWN))
+                .requestMatchers(HttpMethod.GET, "/api/permits/verify/*").hasAuthority(can(PERMIT_VERIFY))
+                .requestMatchers(HttpMethod.GET, "/api/permits/attempts").hasAuthority(can(PERMIT_ATTEMPT_READ))
 
                 // ---- Farmers ----
                 .requestMatchers(HttpMethod.GET, "/api/farmers").hasAuthority(can(FARMER_LIST))

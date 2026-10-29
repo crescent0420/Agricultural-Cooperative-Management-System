@@ -40,6 +40,10 @@ A ✔ means the role holds the permission. Holding a permission opens the **func
 | Inspections and results | `RESULT_CORRECT` | Correct a published result of my district, with a reason |  |  | ✔ |  |  |  |
 | Inspections and results | `RESULT_READ` | Read one result and its corrections (farmers: their own published results only) | ✔ | ✔ | ✔ | ✔ |  | ✔ |
 | Inspections and results | `RESULT_READ_OWN` | Read my own published results | ✔ |  |  |  |  |  |
+| Collection permits | `PERMIT_GENERATE` | Obtain the collection permit of my own enrolment | ✔ |  |  |  |  |  |
+| Collection permits | `PERMIT_READ_OWN` | Read my own collection permits | ✔ |  |  |  |  |  |
+| Collection permits | `PERMIT_VERIFY` | Verify a permit number at the store (is it valid right now?) |  | ✔ | ✔ | ✔ | ✔ | ✔ |
+| Collection permits | `PERMIT_ATTEMPT_READ` | Read the record of every permit attempt, issued or refused |  |  |  | ✔ |  | ✔ |
 | Administration | `USER_MANAGE` | Create accounts, change roles, enable/disable, reset passwords |  |  |  |  |  | ✔ |
 | Administration | `AUDIT_LOG_READ` | Read the audit log |  |  |  |  |  | ✔ |
 | Administration | `PERMISSION_MATRIX_READ` | Read this permission matrix | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |

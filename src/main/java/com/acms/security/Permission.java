@@ -56,6 +56,12 @@ public enum Permission {
     RESULT_READ("Inspections and results", "Read one result and its corrections (farmers: their own published results only)"),
     RESULT_READ_OWN("Inspections and results", "Read my own published results"),
 
+    // ---- Collection permits ----
+    PERMIT_GENERATE("Collection permits", "Obtain the collection permit of my own enrolment"),
+    PERMIT_READ_OWN("Collection permits", "Read my own collection permits"),
+    PERMIT_VERIFY("Collection permits", "Verify a permit number at the store (is it valid right now?)"),
+    PERMIT_ATTEMPT_READ("Collection permits", "Read the record of every permit attempt, issued or refused"),
+
     // ---- Administration ----
     USER_MANAGE("Administration", "Create accounts, change roles, enable/disable, reset passwords"),
     AUDIT_LOG_READ("Administration", "Read the audit log"),
