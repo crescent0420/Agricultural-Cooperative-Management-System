@@ -39,4 +39,16 @@ class PermissionMatrixTest {
                 .contains(Permission.PROFILE_READ_OWN, Permission.ENROLMENT_READ_OWN, Permission.CONTRIBUTION_READ_OWN)
                 .doesNotContain(Permission.FARMER_LIST, Permission.PAYMENT_MANAGE, Permission.USER_MANAGE);
     }
+
+    @Test
+    @DisplayName("Results: Field Officers enter, only District Agronomists approve and correct, farmers read their own")
+    void resultWorkflowPermissions() {
+        assertThat(PermissionMatrix.rolesWith(Permission.RESULT_ENTER)).containsExactly(Role.FIELD_OFFICER);
+        assertThat(PermissionMatrix.rolesWith(Permission.INSPECTION_MANAGE)).containsExactly(Role.FIELD_OFFICER);
+        assertThat(PermissionMatrix.rolesWith(Permission.RESULT_APPROVE)).containsExactly(Role.DISTRICT_AGRONOMIST);
+        assertThat(PermissionMatrix.rolesWith(Permission.RESULT_CORRECT)).containsExactly(Role.DISTRICT_AGRONOMIST);
+        assertThat(PermissionMatrix.rolesWith(Permission.RESULT_READ_OWN)).containsExactly(Role.FARMER);
+        assertThat(PermissionMatrix.permissionsOf(Role.FINANCE_OFFICER))
+                .doesNotContain(Permission.RESULT_ENTER, Permission.RESULT_APPROVE, Permission.RESULT_CORRECT);
+    }
 }

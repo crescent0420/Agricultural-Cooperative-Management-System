@@ -45,6 +45,17 @@ public enum Permission {
     TRAINING_RECORD_READ("Training records", "Read a farmer's completed trainings and missing prerequisites"),
     TRAINING_RECORD_MANAGE("Training records", "Record a completed training for a farmer"),
 
+    // ---- Inspections and results ----
+    GRADING_SCALE_READ("Inspections and results", "Read the grading scale"),
+    GRADING_SCALE_MANAGE("Inspections and results", "Replace the grading scale"),
+    INSPECTION_READ("Inspections and results", "Read an offering's inspections and results (own offering or district)"),
+    INSPECTION_MANAGE("Inspections and results", "Define the inspections (max score, weight) of my own offering"),
+    RESULT_ENTER("Inspections and results", "Enter scores and submit results for my own offering"),
+    RESULT_APPROVE("Inspections and results", "Approve (publish) or return submitted results of my district"),
+    RESULT_CORRECT("Inspections and results", "Correct a published result of my district, with a reason"),
+    RESULT_READ("Inspections and results", "Read one result and its corrections (farmers: their own published results only)"),
+    RESULT_READ_OWN("Inspections and results", "Read my own published results"),
+
     // ---- Administration ----
     USER_MANAGE("Administration", "Create accounts, change roles, enable/disable, reset passwords"),
     AUDIT_LOG_READ("Administration", "Read the audit log"),

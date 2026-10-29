@@ -7,7 +7,6 @@ import com.acms.dto.TrainingRequest;
 import com.acms.dto.TrainingResponse;
 import com.acms.service.TrainingService;
 import jakarta.validation.Valid;
-import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

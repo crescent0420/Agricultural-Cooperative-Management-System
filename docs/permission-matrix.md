@@ -31,6 +31,15 @@ A ✔ means the role holds the permission. Holding a permission opens the **func
 | Farmers | `PROFILE_READ_OWN` | Read my own farmer profile | ✔ |  |  |  |  |  |
 | Training records | `TRAINING_RECORD_READ` | Read a farmer's completed trainings and missing prerequisites | ✔ | ✔ | ✔ | ✔ |  |  |
 | Training records | `TRAINING_RECORD_MANAGE` | Record a completed training for a farmer |  |  |  | ✔ |  |  |
+| Inspections and results | `GRADING_SCALE_READ` | Read the grading scale | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
+| Inspections and results | `GRADING_SCALE_MANAGE` | Replace the grading scale |  |  |  | ✔ |  |  |
+| Inspections and results | `INSPECTION_READ` | Read an offering's inspections and results (own offering or district) |  | ✔ | ✔ | ✔ |  | ✔ |
+| Inspections and results | `INSPECTION_MANAGE` | Define the inspections (max score, weight) of my own offering |  | ✔ |  |  |  |  |
+| Inspections and results | `RESULT_ENTER` | Enter scores and submit results for my own offering |  | ✔ |  |  |  |  |
+| Inspections and results | `RESULT_APPROVE` | Approve (publish) or return submitted results of my district |  |  | ✔ |  |  |  |
+| Inspections and results | `RESULT_CORRECT` | Correct a published result of my district, with a reason |  |  | ✔ |  |  |  |
+| Inspections and results | `RESULT_READ` | Read one result and its corrections (farmers: their own published results only) | ✔ | ✔ | ✔ | ✔ |  | ✔ |
+| Inspections and results | `RESULT_READ_OWN` | Read my own published results | ✔ |  |  |  |  |  |
 | Administration | `USER_MANAGE` | Create accounts, change roles, enable/disable, reset passwords |  |  |  |  |  | ✔ |
 | Administration | `AUDIT_LOG_READ` | Read the audit log |  |  |  |  |  | ✔ |
 | Administration | `PERMISSION_MATRIX_READ` | Read this permission matrix | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
