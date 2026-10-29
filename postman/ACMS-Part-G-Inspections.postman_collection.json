@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "c6214e7e-8dd1-4396-a822-de010ee0c620",
     "name": "ACMS - Part G Inspections and results",
-    "description": "Run in order with the ACMS-Local environment. Needs: the Field Officer (officerUserId) and a District Agronomist (agronomistUsername; agronomistPassword in the environment) of ownDistrictId, the farmer (ownFarmerId, in ownDistrictId), otherFarmerId = any other farmer, and the Finance Officer from Part F. Each run creates its own season, programme and offering, so it can be run again. Every answer is {success, message, data | error, timestamp}: the tests read data.",
+    "description": "Run in order with the ACMS-Local environment. Needs: the Field Officer (officerUserId) and a District Agronomist (agronomistUsername; agronomistPassword in the environment) of ownDistrictId, the farmer (ownFarmerId, in ownDistrictId), otherFarmerId = any other farmer, and the Finance Officer from Part F. Each run creates its own season, programme and offering, so it can be run again. Every answer is {success, message, data | error, timestamp}: the tests read data. G00a-G00g fail with a clear message when an account still uses its one-time password or is in another district than ownDistrictId.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -50,7 +50,8 @@
               "if (pm.response.code === 200) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
               "    store.set(\"registrarToken\", (pm.response.json().data || pm.response.json()).accessToken);",
-              "}"
+              "}",
+              "pm.test(\"Union Registrar has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
             ]
           }
         }
@@ -100,7 +101,8 @@
               "if (pm.response.code === 200) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
               "    store.set(\"officerToken\", (pm.response.json().data || pm.response.json()).accessToken);",
-              "}"
+              "}",
+              "pm.test(\"Field Officer has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
             ]
           }
         }
@@ -150,7 +152,8 @@
               "if (pm.response.code === 200) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
               "    store.set(\"agronomistToken\", (pm.response.json().data || pm.response.json()).accessToken);",
-              "}"
+              "}",
+              "pm.test(\"District Agronomist has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
             ]
           }
         }
@@ -200,7 +203,8 @@
               "if (pm.response.code === 200) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
               "    store.set(\"farmerToken\", (pm.response.json().data || pm.response.json()).accessToken);",
-              "}"
+              "}",
+              "pm.test(\"Farmer has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
             ]
           }
         }
@@ -250,7 +254,90 @@
               "if (pm.response.code === 200) {",
               "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
               "    store.set(\"financeToken\", (pm.response.json().data || pm.response.json()).accessToken);",
-              "}"
+              "}",
+              "pm.test(\"Finance Officer has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G00f Check: the Field Officer is in your district",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "me"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"is a FIELD_OFFICER\", () => pm.expect((pm.response.json().data || pm.response.json()).role).to.eql(\"FIELD_OFFICER\"));",
+              "pm.test(\"belongs to ownDistrictId\", () => pm.expect(String((pm.response.json().data || pm.response.json()).districtId), \"this account is in district \" + (pm.response.json().data || pm.response.json()).districtId + \"; set it to ownDistrictId with PATCH /api/users/{id}/role\").to.eql(String(pm.variables.get(\"ownDistrictId\"))));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G00g Check: the District Agronomist is in your district",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "me"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{agronomistToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"is a DISTRICT_AGRONOMIST\", () => pm.expect((pm.response.json().data || pm.response.json()).role).to.eql(\"DISTRICT_AGRONOMIST\"));",
+              "pm.test(\"belongs to ownDistrictId\", () => pm.expect(String((pm.response.json().data || pm.response.json()).districtId), \"this account is in district \" + (pm.response.json().data || pm.response.json()).districtId + \"; set it to ownDistrictId with PATCH /api/users/{id}/role\").to.eql(String(pm.variables.get(\"ownDistrictId\"))));"
             ]
           }
         }

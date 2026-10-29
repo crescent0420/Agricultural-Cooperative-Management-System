@@ -51,4 +51,13 @@ class PermissionMatrixTest {
         assertThat(PermissionMatrix.permissionsOf(Role.FINANCE_OFFICER))
                 .doesNotContain(Permission.RESULT_ENTER, Permission.RESULT_APPROVE, Permission.RESULT_CORRECT);
     }
+
+    @Test
+    @DisplayName("Permits: only farmers obtain them, staff verify them, Registrar and Admin read every attempt")
+    void permitPermissions() {
+        assertThat(PermissionMatrix.rolesWith(Permission.PERMIT_GENERATE)).containsExactly(Role.FARMER);
+        assertThat(PermissionMatrix.permissionsOf(Role.FARMER)).doesNotContain(Permission.PERMIT_VERIFY);
+        assertThat(PermissionMatrix.rolesWith(Permission.PERMIT_ATTEMPT_READ))
+                .containsExactlyInAnyOrder(Role.UNION_REGISTRAR, Role.SYSTEM_ADMIN);
+    }
 }
