@@ -1,0 +1,274 @@
+erDiagram
+    districts |o--o{ app_users : "district_id"
+    farmers |o--o| app_users : "farmer_id"
+    enrolments ||--o| collection_permits : "enrolment_id"
+    farmers ||--o{ collection_permits : "farmer_id"
+    contribution_obligations ||--o{ contribution_adjustments : "obligation_id"
+    farmers ||--o{ contribution_obligations : "farmer_id"
+    seasons ||--o{ contribution_obligations : "season_id"
+    districts ||--o{ cooperatives : "district_id"
+    districts ||--o{ crop_programmes : "district_id"
+    provinces |o--o{ districts : "province_id"
+    app_users ||--o{ email_verification_tokens : "user_id"
+    seasons ||--o{ enrolment_windows : "season_id"
+    farmers ||--o{ enrolments : "farmer_id"
+    programme_offerings ||--o{ enrolments : "offering_id"
+    farmers ||--o{ farmer_trainings : "farmer_id"
+    trainings ||--o{ farmer_trainings : "training_id"
+    cooperatives ||--o{ farmers : "cooperative_id"
+    enrolments ||--o| inspection_results : "enrolment_id"
+    inspections ||--o{ inspection_scores : "inspection_id"
+    inspection_results ||--o{ inspection_scores : "result_id"
+    programme_offerings ||--o{ inspections : "offering_id"
+    contribution_obligations ||--o{ payments : "obligation_id"
+    app_users ||--o{ programme_offerings : "field_officer_id"
+    crop_programmes ||--o{ programme_offerings : "programme_id"
+    seasons ||--o{ programme_offerings : "season_id"
+    crop_programmes ||--o{ programme_prerequisites : "programme_id"
+    trainings ||--o{ programme_prerequisites : "training_id"
+    inspections ||--o{ result_corrections : "inspection_id"
+    inspection_results ||--o{ result_corrections : "result_id"
+    app_users {
+        bigint id PK
+        varchar username UK
+        varchar password_hash
+        varchar role
+        boolean enabled
+        timestamptz created_at
+        timestamptz updated_at
+        timestamptz password_changed_at
+        bigint district_id FK
+        bigint farmer_id FK,UK
+        bigint token_version
+        varchar email UK
+        boolean email_verified
+        boolean must_change_password
+    }
+    audit_log {
+        bigint id PK
+        timestamptz occurred_at
+        varchar event_type
+        boolean success
+        bigint actor_user_id
+        varchar actor_username
+        varchar target_type
+        bigint target_id
+        varchar details
+        varchar ip_address
+    }
+    collection_permits {
+        bigint id PK
+        varchar permit_number UK
+        bigint enrolment_id FK,UK
+        bigint farmer_id FK
+        bigint issued_by FK
+        timestamptz issued_at
+    }
+    contribution_adjustments {
+        bigint id PK
+        bigint obligation_id FK
+        numeric old_amount
+        numeric new_amount
+        varchar reason
+        bigint adjusted_by FK
+        timestamptz adjusted_at
+    }
+    contribution_obligations {
+        bigint id PK
+        bigint farmer_id FK
+        bigint season_id FK
+        numeric amount_due
+        bigint created_by FK
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    cooperatives {
+        bigint id PK
+        varchar name
+        bigint district_id FK
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    crop_programmes {
+        bigint id PK
+        varchar name
+        bigint district_id FK
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    districts {
+        bigint id PK
+        varchar name
+        timestamptz created_at
+        timestamptz updated_at
+        bigint province_id FK
+    }
+    email_verification_tokens {
+        bigint id PK
+        bigint user_id FK
+        varchar token_hash UK
+        timestamptz expires_at
+        timestamptz used_at
+        timestamptz created_at
+    }
+    enrolment_windows {
+        bigint id PK
+        bigint season_id FK
+        varchar status
+        timestamptz opened_at
+        bigint opened_by FK
+        timestamptz closed_at
+        bigint closed_by FK
+    }
+    enrolments {
+        bigint id PK
+        bigint offering_id FK
+        bigint farmer_id FK
+        varchar status
+        numeric hectares
+        timestamptz enrolled_at
+        bigint enrolled_by FK
+        timestamptz cancelled_at
+        bigint cancelled_by FK
+        varchar cancellation_reason
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    farmer_trainings {
+        bigint id PK
+        bigint farmer_id FK
+        bigint training_id FK
+        date completed_on
+        timestamptz recorded_at
+        bigint recorded_by FK
+    }
+    farmers {
+        bigint id PK
+        varchar membership_number UK
+        varchar national_id UK
+        varchar full_name
+        varchar phone_number
+        bigint cooperative_id FK
+        varchar status
+        timestamptz created_at
+        timestamptz updated_at
+        bigint version
+    }
+    grading_bands {
+        bigint id PK
+        varchar grade
+        numeric min_score UK
+        varchar description
+    }
+    inspection_results {
+        bigint id PK
+        bigint enrolment_id FK,UK
+        varchar status
+        numeric final_score
+        varchar grade
+        bigint created_by FK
+        bigint submitted_by FK
+        timestamptz submitted_at
+        bigint published_by FK
+        timestamptz published_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    inspection_scores {
+        bigint id PK
+        bigint result_id FK
+        bigint inspection_id FK
+        numeric score
+        bigint entered_by FK
+        timestamptz entered_at
+    }
+    inspections {
+        bigint id PK
+        bigint offering_id FK
+        varchar name
+        numeric max_score
+        numeric weight
+        bigint created_by FK
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    payments {
+        bigint id PK
+        bigint obligation_id FK
+        varchar transaction_reference UK
+        numeric amount
+        varchar method
+        varchar status
+        varchar provider_reference UK
+        bigint requested_by FK
+        timestamptz requested_at
+        bigint confirmed_by FK
+        timestamptz confirmed_at
+        bigint failed_by FK
+        timestamptz failed_at
+        varchar failure_reason
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    permit_attempts {
+        bigint id PK
+        bigint enrolment_id
+        bigint farmer_id
+        bigint user_id
+        varchar username
+        varchar outcome
+        varchar reason
+        bigint permit_id
+        timestamptz attempted_at
+    }
+    programme_offerings {
+        bigint id PK
+        bigint programme_id FK
+        bigint season_id FK
+        bigint field_officer_id FK
+        numeric hectares_per_participant
+        int max_participants
+        int enrolled_count
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    programme_prerequisites {
+        bigint programme_id PK,FK
+        bigint training_id PK,FK
+    }
+    provinces {
+        bigint id PK
+        varchar name
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    result_corrections {
+        bigint id PK
+        bigint result_id FK
+        bigint inspection_id FK
+        numeric original_score
+        numeric corrected_score
+        numeric original_final_score
+        numeric corrected_final_score
+        varchar original_grade
+        varchar corrected_grade
+        varchar reason
+        bigint corrected_by FK
+        timestamptz corrected_at
+    }
+    seasons {
+        bigint id PK
+        varchar name
+        date starts_on
+        date ends_on
+        numeric max_land_hectares
+        date distribution_date
+        timestamptz created_at
+        timestamptz updated_at
+    }
+    trainings {
+        bigint id PK
+        varchar name
+        timestamptz created_at
+        timestamptz updated_at
+    }

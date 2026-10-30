@@ -190,6 +190,8 @@ them empty tables. Emails are replaced by a mock, so nothing is sent.
 | `AuthorizationRulesTest` | Function-level security: each role can only call its own endpoints |
 | `PermissionMatrixTest` | The permission matrix itself: every permission has a role; separation of duties (money only for Finance, field data never for Finance) |
 | `ResponseEnvelopeTest` | Successes and errors use the same envelope; the matrix and `/api/auth/me` endpoints |
+| `FarmerTest` | Registration with a unique membership number; duplicate national id (409) and validation (400); search by name, number, cooperative and status with paging and sorting; district scope; status changes (a retired farmer can never be reactivated, 422) and their audit |
+| `FarmerStatusTest` | (unit) all 16 possible status changes: which are allowed and which are refused |
 | `RwandaReferenceDataTest` | The 5 provinces and 30 districts are seeded, and districts cannot be created through the API |
 | `SeasonAndWindowTest` | Seasons and enrolment windows: validation, open/close history, and two registrars opening the same window at once (concurrency) |
 | `ProgrammeOfferingTest` | Offerings: business rules, validation, district scope, and what can no longer change once farmers are enrolled |
@@ -274,6 +276,8 @@ database/                         database creation script and SQL exports
 
 ## 11. Documentation
 
+* [`docs/endpoints.md`](docs/endpoints.md): every endpoint with its method, URI, purpose, roles, success and error codes
+* [`docs/erd.md`](docs/erd.md): the entity-relationship diagram (images: `docs/erd-core.png`, `docs/erd-full.png`)
 * [`docs/permission-matrix.md`](docs/permission-matrix.md): which role holds which permission
 * [`docs/reports.md`](docs/reports.md): the data and the calculation behind each management report
 * [`README.Docker.md`](README.Docker.md): running with Docker
