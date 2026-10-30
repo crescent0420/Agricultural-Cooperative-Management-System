@@ -1,6 +1,7 @@
 package com.acms.entity;
 
-import com.acms.common.AuditableEntity;
+import com.acms.common.BaseEntity;
+import com.acms.enums.FarmerStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,7 +14,7 @@ import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "farmers")
-public class Farmer extends AuditableEntity {
+public class Farmer extends BaseEntity {
 
     @Column(name = "membership_number", nullable = false, updatable = false, length = 20)
     private String membershipNumber;

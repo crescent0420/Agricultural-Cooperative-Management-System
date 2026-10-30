@@ -1,6 +1,7 @@
 package com.acms.entity;
 
-import com.acms.common.AuditableEntity;
+import com.acms.common.BaseEntity;
+import com.acms.enums.EnrolmentStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -20,7 +21,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "enrolments")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Enrolment extends AuditableEntity {
+public class Enrolment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "offering_id", nullable = false, updatable = false)

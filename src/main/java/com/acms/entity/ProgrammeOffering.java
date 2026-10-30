@@ -1,6 +1,6 @@
 package com.acms.entity;
 
-import com.acms.common.AuditableEntity;
+import com.acms.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "programme_offerings")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProgrammeOffering extends AuditableEntity {
+public class ProgrammeOffering extends BaseEntity {
 
     // updatable = false: a different programme or season would be a different offering.
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

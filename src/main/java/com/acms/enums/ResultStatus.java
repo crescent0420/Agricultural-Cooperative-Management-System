@@ -1,4 +1,4 @@
-package com.acms.entity;
+package com.acms.enums;
 
 /** DRAFT -> SUBMITTED -> PUBLISHED (and SUBMITTED -> DRAFT when the District Agronomist returns it). */
 public enum ResultStatus {

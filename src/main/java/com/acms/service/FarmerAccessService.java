@@ -3,7 +3,7 @@ package com.acms.service;
 import com.acms.common.BaseService;
 import com.acms.entity.AppUser;
 import com.acms.entity.Farmer;
-import com.acms.entity.Role;
+import com.acms.enums.Role;
 import com.acms.exception.ResourceNotFoundException;
 import com.acms.repository.AppUserRepository;
 import com.acms.repository.FarmerRepository;

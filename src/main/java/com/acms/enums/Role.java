@@ -1,4 +1,4 @@
-package com.acms.entity;
+package com.acms.enums;
 public enum Role {
     FARMER,
     FIELD_OFFICER,

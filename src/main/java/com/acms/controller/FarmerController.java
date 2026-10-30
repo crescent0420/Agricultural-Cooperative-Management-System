@@ -7,7 +7,7 @@ import com.acms.dto.FarmerResponse;
 import com.acms.dto.FarmerStatusChangeRequest;
 import com.acms.dto.FarmerSummaryResponse;
 import com.acms.dto.FarmerUpdateRequest;
-import com.acms.entity.FarmerStatus;
+import com.acms.enums.FarmerStatus;
 import com.acms.service.FarmerService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

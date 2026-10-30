@@ -1,7 +1,7 @@
 package com.acms.security;
 
 import com.acms.entity.AppUser;
-import com.acms.entity.AuditEventType;
+import com.acms.enums.AuditEventType;
 import com.acms.exception.GlobalExceptionHandler;
 import com.acms.repository.AppUserRepository;
 import com.acms.service.AuditLogService;

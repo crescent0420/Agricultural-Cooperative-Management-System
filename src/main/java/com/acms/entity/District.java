@@ -1,6 +1,6 @@
 package com.acms.entity;
 
-import com.acms.common.CreatedEntity;
+import com.acms.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "districts")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class District extends CreatedEntity {
+public class District extends BaseEntity {
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -28,6 +28,17 @@ public class District extends CreatedEntity {
 
     public District(String name) {
         this.name = name;
+    }
+
+    /** Used by ReferenceDataSeeder for an official district missing from the database. */
+    public District(String name, Province province) {
+        this.name = name;
+        this.province = province;
+    }
+
+    /** Gives a district typed in by hand (no province yet) its official province. */
+    public void assignProvince(Province province) {
+        this.province = province;
     }
 
     public void setName(String name) {

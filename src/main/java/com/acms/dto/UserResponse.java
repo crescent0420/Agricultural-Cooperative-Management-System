@@ -1,6 +1,6 @@
 package com.acms.dto;
 
-import com.acms.entity.Role;
+import com.acms.enums.Role;
 import java.time.Instant;
 
 /** Deliberately has no password, hash or token-version field. */

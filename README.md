@@ -168,7 +168,7 @@ the API. Every demo account has the password `DEMO_SEED_PASSWORD`, a verified em
 
 Seeded data: *Huye Maize Growers Cooperative* (Aline Uwase, Jean Habimana, Claudine Mukamana) and
 *Musanze Potato Growers Cooperative* (Eric Niyonzima). The 5 provinces and 30 districts of Rwanda are always present
-(they come with the migrations). Put `DB_NAME` back to your own database after the demonstration.
+(read from `src/main/resources/seed/rwanda-districts.csv` at every start-up). Put `DB_NAME` back to your own database after the demonstration.
 
 ---
 
@@ -202,6 +202,10 @@ them empty tables. Emails are replaced by a mock, so nothing is sent.
 | `ReportTest` | The four reports' numbers, totals and rounding, and that district staff see only their own district |
 | `ReportMathTest` | (unit) the rounding rules of the reports, which match a farmer's own balance |
 | `DemoDataSeederTest` | The demo accounts: only on an empty system, the admin first, all usable at once, never twice |
+| `ReferenceDataSeederTest` | At start-up a missing district is added back from the data file, a district without a province gets its province, and a second run changes nothing |
+| `ReferenceDataFileTest` | (unit) the data file lists the 30 districts in 5 provinces; a broken file stops the start-up with the line number |
+| `EntityTimestampsTest` | `created_at` and `updated_at` are set on create, only `updated_at` moves on update, and every entity table has both |
+| `ProjectStructureTest` | (unit) every entity extends `BaseEntity`, and every status or type enum is in `com.acms.enums` |
 
 ---
 
@@ -243,6 +247,11 @@ Environment variables (keep the passwords as type **secret**; the environment fi
 * **Migrations:** `src/main/resources/db/migration`, named `V<yyyyMMddHHmmss>__<description>.sql`. Create a new one
   with `scripts\new-migration.bat <description>`. A migration that has been applied is **never edited**; a change is
   always a new migration. Hibernate runs with `ddl-auto=validate`: it checks the tables but never changes them.
+* **Reference data:** Rwanda's 5 provinces and 30 districts are listed in
+  `src/main/resources/seed/rwanda-districts.csv`. At every start-up `ReferenceDataSeeder` adds whatever is missing
+  and changes nothing that exists; to add or correct an entry, edit the file and restart.
+* **Timestamps:** every entity extends `BaseEntity` (`common/`), which sets `created_at` and `updated_at`
+  automatically; every entity table has both columns.
 * **Rules in the database itself:** constraints, unique indexes and triggers protect what must never be lost:
   payments, contribution changes, published results and their corrections, permits and permit attempts cannot be
   deleted or rewritten, not even with direct SQL.
@@ -258,15 +267,17 @@ Environment variables (keep the passwords as type **secret**; the environment fi
 ```
 src/main/java/com/acms
   common/       base classes (BaseEntity, BaseService, BaseController...), the response envelope, paging
-  config/       security, JWT, OpenAPI, demo data
+  config/       security, JWT, OpenAPI, reference data and demo data seeders
   controller/   the REST endpoints
   dto/          request and response objects (entities never leave the services)
-  entity/       JPA entities
+  entity/       JPA entities (all extend BaseEntity)
+  enums/        statuses and types: FarmerStatus, PaymentStatus, ResultStatus, WindowStatus, Role...
   exception/    business exceptions, mapped to HTTP status codes in one handler
   repository/   Spring Data repositories and the report queries
   security/     the Permission list and the PermissionMatrix
   service/      business rules, district and ownership checks, transactions
 src/main/resources/db/migration   Flyway migrations
+src/main/resources/seed           reference data read at start-up (provinces and districts)
 src/test/java/com/acms            automated tests
 docs/                             permission matrix, reports
 postman/                          API test collections

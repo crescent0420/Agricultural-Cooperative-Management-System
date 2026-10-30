@@ -4,7 +4,7 @@ import com.acms.common.BaseService;
 import com.acms.dto.LoginRequest;
 import com.acms.dto.LoginResponse;
 import com.acms.entity.AppUser;
-import com.acms.entity.AuditEventType;
+import com.acms.enums.AuditEventType;
 import com.acms.exception.BusinessRuleException;
 import com.acms.repository.AppUserRepository;
 import lombok.RequiredArgsConstructor;

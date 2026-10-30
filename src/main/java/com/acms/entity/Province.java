@@ -17,4 +17,9 @@ public class Province extends BaseEntity {
 
     @Column(nullable = false, length = 100)
     private String name;
+
+    /** Used by ReferenceDataSeeder for a province missing from the database. */
+    public Province(String name) {
+        this.name = name;
+    }
 }

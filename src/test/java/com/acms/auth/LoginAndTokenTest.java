@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.acms.config.JwtProperties;
 import com.acms.entity.AppUser;
-import com.acms.entity.Role;
+import com.acms.enums.Role;
 import com.acms.support.IntegrationTestBase;
 import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;

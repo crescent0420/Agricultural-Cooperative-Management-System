@@ -1,6 +1,7 @@
 package com.acms.entity;
 
-import com.acms.common.AuditableEntity;
+import com.acms.common.BaseEntity;
+import com.acms.enums.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "app_users")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)   // JPA needs an empty constructor; nobody else should use it
-public class AppUser extends AuditableEntity {
+public class AppUser extends BaseEntity {
 
     @Column(name = "username", nullable = false, unique = true, length = 100)
     private String username;
@@ -71,7 +72,7 @@ public class AppUser extends AuditableEntity {
         this.mustChangePassword = true;
     }
 
-    /** created_at and updated_at are set by AuditableEntity; only the password timestamp is set here. */
+    /** created_at and updated_at are set by BaseEntity; only the password timestamp is set here. */
     @PrePersist
     void initPasswordChangedAt() {
         Instant now = Instant.now();

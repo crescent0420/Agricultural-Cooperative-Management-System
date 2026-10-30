@@ -2,7 +2,7 @@ package com.acms.service;
 
 import com.acms.entity.AppUser;
 import com.acms.entity.ProgrammeOffering;
-import com.acms.entity.Role;
+import com.acms.enums.Role;
 import org.springframework.security.access.AccessDeniedException;
 
 /**

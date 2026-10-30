@@ -1,0 +1,34 @@
+# Rwanda's provinces and districts (administrative structure in force since 2006: Kigali City, 4 provinces, 30 districts).
+# Read at every start-up by ReferenceDataSeeder: whatever is missing is added, nothing existing is changed.
+# To add or correct an entry, edit this file and restart the application.
+province,district
+Kigali City,Gasabo
+Kigali City,Kicukiro
+Kigali City,Nyarugenge
+Northern Province,Burera
+Northern Province,Gakenke
+Northern Province,Gicumbi
+Northern Province,Musanze
+Northern Province,Rulindo
+Southern Province,Gisagara
+Southern Province,Huye
+Southern Province,Kamonyi
+Southern Province,Muhanga
+Southern Province,Nyamagabe
+Southern Province,Nyanza
+Southern Province,Nyaruguru
+Southern Province,Ruhango
+Eastern Province,Bugesera
+Eastern Province,Gatsibo
+Eastern Province,Kayonza
+Eastern Province,Kirehe
+Eastern Province,Ngoma
+Eastern Province,Nyagatare
+Eastern Province,Rwamagana
+Western Province,Karongi
+Western Province,Ngororero
+Western Province,Nyabihu
+Western Province,Nyamasheke
+Western Province,Rubavu
+Western Province,Rusizi
+Western Province,Rutsiro

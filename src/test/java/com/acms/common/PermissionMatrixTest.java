@@ -2,7 +2,7 @@ package com.acms.common;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.acms.entity.Role;
+import com.acms.enums.Role;
 import com.acms.security.Permission;
 import com.acms.security.PermissionMatrix;
 import org.junit.jupiter.api.DisplayName;

@@ -1,8 +1,8 @@
 package com.acms.dto;
 
 import com.acms.entity.Payment;
-import com.acms.entity.PaymentMethod;
-import com.acms.entity.PaymentStatus;
+import com.acms.enums.PaymentMethod;
+import com.acms.enums.PaymentStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 

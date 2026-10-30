@@ -2,7 +2,7 @@ package com.acms.repository;
 
 import com.acms.common.BaseRepository;
 import com.acms.entity.InspectionResult;
-import com.acms.entity.ResultStatus;
+import com.acms.enums.ResultStatus;
 import jakarta.persistence.LockModeType;
 import java.util.Collection;
 import java.util.Optional;

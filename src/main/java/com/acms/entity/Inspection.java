@@ -1,6 +1,6 @@
 package com.acms.entity;
 
-import com.acms.common.AuditableEntity;
+import com.acms.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "inspections")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Inspection extends AuditableEntity {
+public class Inspection extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "offering_id", nullable = false, updatable = false)

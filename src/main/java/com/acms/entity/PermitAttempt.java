@@ -1,6 +1,7 @@
 package com.acms.entity;
 
 import com.acms.common.BaseEntity;
+import com.acms.enums.PermitOutcome;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
