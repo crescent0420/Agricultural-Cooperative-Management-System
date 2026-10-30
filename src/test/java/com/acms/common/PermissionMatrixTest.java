@@ -60,4 +60,15 @@ class PermissionMatrixTest {
         assertThat(PermissionMatrix.rolesWith(Permission.PERMIT_ATTEMPT_READ))
                 .containsExactlyInAnyOrder(Role.UNION_REGISTRAR, Role.SYSTEM_ADMIN);
     }
+
+    @Test
+    void reportPermissions() {
+        // money reports: Finance and the Registrar only; agricultural reports: no Finance Officer, no farmer
+        assertThat(PermissionMatrix.rolesWith(Permission.REPORT_OUTSTANDING_CONTRIBUTIONS))
+                .containsExactlyInAnyOrder(Role.FINANCE_OFFICER, Role.UNION_REGISTRAR);
+        assertThat(PermissionMatrix.rolesWith(Permission.REPORT_GRADE_DISTRIBUTION))
+                .doesNotContain(Role.FINANCE_OFFICER, Role.FARMER);
+        assertThat(PermissionMatrix.permissionsOf(Role.FARMER))
+                .noneMatch(permission -> permission.name().startsWith("REPORT_"));
+    }
 }

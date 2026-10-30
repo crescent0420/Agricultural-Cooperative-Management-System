@@ -34,8 +34,12 @@ class FirstUserRegistrationTest extends IntegrationTestBase {
     @BeforeAll
     void emptyTheUsersTable() {
         // TRUNCATE ... CASCADE also empties tables that point at app_users (verification links,
-        // training records). Safe only because the base class has checked this is acms_test.
-        new JdbcTemplate(dataSource).execute("TRUNCATE TABLE app_users RESTART IDENTITY CASCADE");
+        // training records, enrolments, permits...). Safe only because the base class has checked this is acms_test.
+        // RESTART IDENTITY makes their ids start again at 1, so the tables that hold ids WITHOUT a foreign key
+        // (permit attempts, audit log) are emptied too: otherwise their old rows would point at the NEW rows
+        // that reuse those ids (enrolment 30 of this run would "have" the attempts of enrolment 30 of the last run).
+        new JdbcTemplate(dataSource).execute(
+                "TRUNCATE TABLE app_users, permit_attempts, audit_log RESTART IDENTITY CASCADE");
     }
 
     @Test

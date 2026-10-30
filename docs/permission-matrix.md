@@ -44,6 +44,10 @@ A ✔ means the role holds the permission. Holding a permission opens the **func
 | Collection permits | `PERMIT_READ_OWN` | Read my own collection permits | ✔ |  |  |  |  |  |
 | Collection permits | `PERMIT_VERIFY` | Verify a permit number at the store (is it valid right now?) |  | ✔ | ✔ | ✔ | ✔ | ✔ |
 | Collection permits | `PERMIT_ATTEMPT_READ` | Read the record of every permit attempt, issued or refused |  |  |  | ✔ |  | ✔ |
+| Management reports | `REPORT_FARMERS_PER_COOPERATIVE` | Farmers per cooperative report (district staff: own district only) |  | ✔ | ✔ | ✔ |  | ✔ |
+| Management reports | `REPORT_OFFERING_CAPACITY` | Enrolments and capacity per offering report (Field Officers: own offerings only) |  | ✔ | ✔ | ✔ |  | ✔ |
+| Management reports | `REPORT_OUTSTANDING_CONTRIBUTIONS` | Outstanding contributions per season report |  |  |  | ✔ | ✔ |  |
+| Management reports | `REPORT_GRADE_DISTRIBUTION` | Grade distribution per offering report (Field Officers: own offerings only) |  | ✔ | ✔ | ✔ |  | ✔ |
 | Administration | `USER_MANAGE` | Create accounts, change roles, enable/disable, reset passwords |  |  |  |  |  | ✔ |
 | Administration | `AUDIT_LOG_READ` | Read the audit log |  |  |  |  |  | ✔ |
 | Administration | `PERMISSION_MATRIX_READ` | Read this permission matrix | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ |
