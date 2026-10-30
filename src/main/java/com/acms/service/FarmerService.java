@@ -14,7 +14,7 @@ import com.acms.entity.Cooperative;
 import com.acms.entity.Farmer;
 import com.acms.entity.FarmerStatus;
 import com.acms.entity.Role;
-import com.acms.exception.BadRequestException;
+import com.acms.exception.BusinessRuleException;
 import com.acms.exception.ConflictException;
 import com.acms.exception.ResourceNotFoundException;
 import com.acms.repository.CooperativeRepository;
@@ -147,11 +147,13 @@ public class FarmerService extends BaseService {
         try {
             farmer.changeStatus(request.status());
         } catch (IllegalStateException ex) {
-            throw new BadRequestException(ex.getMessage());
+            // A valid request that breaks a business rule (for example reactivating a retired farmer): 422.
+            throw new BusinessRuleException(ex.getMessage());
         }
 
         if (previousStatus != farmer.getStatus()) {
-            auditLogService.record(
+            // Part of this transaction: the audit row is saved only if the status change itself is saved.
+            auditLogService.recordInCurrentTransaction(
                     AuditEventType.FARMER_STATUS_CHANGED,
                     true,
                     currentUser.getId(),
