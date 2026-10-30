@@ -1,0 +1,1365 @@
+{
+  "info": {
+    "_postman_id": "ce1924bb-9435-45cc-be94-2b46e2cccf17",
+    "name": "ACMS - Part I Management reports",
+    "description": "Run in order with the ACMS-Local environment. Needs the registrar, Finance Officer, farmer, Field Officer and District Agronomist accounts (ownFarmerId and the two staff in ownDistrictId) and officerUserId. Run Part G before I19. Each run creates its own season, so it can be run again.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "I00a Login as Union Registrar",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{registrarUsername}}\",\n  \"password\": \"{{registrarPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"registrarToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"Union Registrar has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I00b Login as Finance Officer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{financeUsername}}\",\n  \"password\": \"{{financePassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"financeToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"Finance Officer has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I00c Login as Farmer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{farmerUsername}}\",\n  \"password\": \"{{farmerPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"farmerToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"Farmer has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I00d Login as Field Officer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{officerUsername}}\",\n  \"password\": \"{{officerPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"officerToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"Field Officer has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I00e Login as District Agronomist",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{agronomistUsername}}\",\n  \"password\": \"{{agronomistPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"agronomistToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"District Agronomist has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I01 Setup: season (its own, so the numbers below are known)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/seasons",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seasons"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Report season {{iStamp}}\",\n  \"startsOn\": \"{{today}}\",\n  \"endsOn\": \"{{in90days}}\",\n  \"maxLandHectares\": 2.5,\n  \"distributionDate\": \"{{in30days}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const d = n => { const x = new Date(); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };",
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"today\", d(0)); store.set(\"in30days\", d(30)); store.set(\"in90days\", d(90)); store.set(\"iStamp\", Date.now());",
+              "// any district that is not yours, for the 403 checks",
+              "store.set(\"otherDistrictId\", Number(pm.variables.get(\"ownDistrictId\")) === 1 ? 2 : 1);"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"iSeasonId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I02 Setup: programme in your district",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/programmes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "programmes"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Report sorghum {{iStamp}}\",\n  \"districtId\": {{ownDistrictId}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"iProgrammeId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I03 Setup: offering with 4 places",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/offerings",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "offerings"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"programmeId\": {{iProgrammeId}},\n  \"seasonId\": {{iSeasonId}},\n  \"fieldOfficerId\": {{officerUserId}},\n  \"hectaresPerParticipant\": 1.0,\n  \"maxParticipants\": 4\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"iOfferingId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I04 Setup: open the enrolment window",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/seasons/{{iSeasonId}}/windows/open",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seasons",
+            "{{iSeasonId}}",
+            "windows",
+            "open"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"window opened (201)\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I05 Setup: contribution of 1 000",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/contributions",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "contributions"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"farmerId\": {{ownFarmerId}},\n  \"seasonId\": {{iSeasonId}},\n  \"amountDue\": 1000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"iContributionId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I06 Setup: payment of 400",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transactionReference\": \"{{iTx1}}\",\n  \"contributionId\": {{iContributionId}},\n  \"amount\": 400,\n  \"method\": \"MOBILE_MONEY\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"iTx1\", \"TX-\" + Date.now() + \"-\" + Math.floor(Math.random() * 1e6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"iPay1\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I07 Setup: confirm it (40% paid)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/{{iPay1}}/confirm",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "{{iPay1}}",
+            "confirm"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"providerReference\": \"{{iProv1}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"iProv1\", \"MTN-\" + Date.now() + \"-\" + Math.floor(Math.random() * 1e6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"confirmed (200)\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I08 Setup: payment of 100, left PENDING",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transactionReference\": \"{{iTx2}}\",\n  \"contributionId\": {{iContributionId}},\n  \"amount\": 100,\n  \"method\": \"MOBILE_MONEY\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"iTx2\", \"TX-\" + Date.now() + \"-\" + Math.floor(Math.random() * 1e6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"iPay2\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I09 Setup: farmer enrols",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/offerings/{{iOfferingId}}/enrolments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "offerings",
+            "{{iOfferingId}}",
+            "enrolments"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"iEnrolmentId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I10 Registrar: farmers per cooperative (whole Union)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/farmers-per-cooperative",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "farmers-per-cooperative"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"report (200)\", () => pm.response.to.have.status(200));",
+              "pm.test(\"report envelope: basis, scope, rows, totals\", () => {",
+              "    const d = (pm.response.json().data || pm.response.json());",
+              "    pm.expect(d.basis).to.be.a(\"string\").and.not.empty;",
+              "    pm.expect(d.rows).to.be.an(\"array\");",
+              "    pm.expect(d.totals).to.be.an(\"object\");",
+              "});",
+              "pm.test(\"totals.total = the sum of the rows\", () => {",
+              "    const d = (pm.response.json().data || pm.response.json());",
+              "    pm.expect(d.totals.total).to.eql(d.rows.reduce((s, r) => s + r.total, 0));",
+              "    pm.expect(d.totals.cooperatives).to.eql(d.rows.length);",
+              "});",
+              "pm.test(\"each row: the statuses add up to the total\", () => {",
+              "    const d = (pm.response.json().data || pm.response.json());",
+              "    d.rows.forEach(r => pm.expect(r.active + r.suspended + r.withdrawn + r.retired).to.eql(r.total));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I11 Agronomist: farmers per cooperative (own district only)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/farmers-per-cooperative",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "farmers-per-cooperative"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{agronomistToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"report (200)\", () => pm.response.to.have.status(200));",
+              "pm.test(\"pinned to the own district\", () => {",
+              "    const d = (pm.response.json().data || pm.response.json());",
+              "    pm.expect(d.scope.districtId).to.eql(Number(pm.variables.get(\"ownDistrictId\")));",
+              "    d.rows.forEach(r => pm.expect(r.districtId).to.eql(Number(pm.variables.get(\"ownDistrictId\"))));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I12 Agronomist asks for another district",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/farmers-per-cooperative?districtId={{otherDistrictId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "farmers-per-cooperative"
+          ],
+          "query": [
+            {
+              "key": "districtId",
+              "value": "{{otherDistrictId}}"
+            }
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{agronomistToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"refused (403)\", () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I13 Finance Officer: farmers report (not allowed)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/farmers-per-cooperative",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "farmers-per-cooperative"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"refused (403)\", () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I14 Registrar: enrolments and capacity of the season",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/offering-capacity?seasonId={{iSeasonId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "offering-capacity"
+          ],
+          "query": [
+            {
+              "key": "seasonId",
+              "value": "{{iSeasonId}}"
+            }
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"report (200)\", () => pm.response.to.have.status(200));",
+              "pm.test(\"report envelope: basis, scope, rows, totals\", () => {",
+              "    const d = (pm.response.json().data || pm.response.json());",
+              "    pm.expect(d.basis).to.be.a(\"string\").and.not.empty;",
+              "    pm.expect(d.rows).to.be.an(\"array\");",
+              "    pm.expect(d.totals).to.be.an(\"object\");",
+              "});",
+              "pm.test(\"1 of 4 places taken = 25%\", () => {",
+              "    const d = (pm.response.json().data || pm.response.json());",
+              "    const r = d.rows.find(x => x.offeringId === Number(pm.variables.get(\"iOfferingId\")));",
+              "    pm.expect(r, \"the offering of I03\").to.be.an(\"object\");",
+              "    pm.expect(r.maxParticipants).to.eql(4); pm.expect(r.enrolled).to.eql(1); pm.expect(r.placesLeft).to.eql(3);",
+              "    pm.expect(Number(r.capacityUsedPercent)).to.eql(25); pm.expect(r.full).to.eql(false);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I15 Field Officer: capacity (only their own offerings)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/offering-capacity?seasonId={{iSeasonId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "offering-capacity"
+          ],
+          "query": [
+            {
+              "key": "seasonId",
+              "value": "{{iSeasonId}}"
+            }
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"report (200)\", () => pm.response.to.have.status(200));",
+              "pm.test(\"only offerings assigned to this officer\", () => {",
+              "    const d = (pm.response.json().data || pm.response.json());",
+              "    pm.expect(d.scope.fieldOfficerId).to.eql(Number(pm.variables.get(\"officerUserId\")));",
+              "    d.rows.forEach(r => pm.expect(r.fieldOfficerId).to.eql(Number(pm.variables.get(\"officerUserId\"))));",
+              "    pm.expect(d.rows.map(r => r.offeringId)).to.include(Number(pm.variables.get(\"iOfferingId\")));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I16 Finance Officer: outstanding contributions of the season",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/outstanding-contributions?seasonId={{iSeasonId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "outstanding-contributions"
+          ],
+          "query": [
+            {
+              "key": "seasonId",
+              "value": "{{iSeasonId}}"
+            }
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"report (200)\", () => pm.response.to.have.status(200));",
+              "pm.test(\"report envelope: basis, scope, rows, totals\", () => {",
+              "    const d = (pm.response.json().data || pm.response.json());",
+              "    pm.expect(d.basis).to.be.a(\"string\").and.not.empty;",
+              "    pm.expect(d.rows).to.be.an(\"array\");",
+              "    pm.expect(d.totals).to.be.an(\"object\");",
+              "});",
+              "pm.test(\"only CONFIRMED payments count: 400 of 1 000 paid, 600 outstanding, 100 pending\", () => {",
+              "    const d = (pm.response.json().data || pm.response.json());",
+              "    pm.expect(d.rows.length).to.eql(1);",
+              "    const r = d.rows[0];",
+              "    pm.expect(Number(r.amountDue)).to.eql(1000); pm.expect(Number(r.confirmedPaid)).to.eql(400);",
+              "    pm.expect(Number(r.pendingPayments)).to.eql(100); pm.expect(Number(r.outstanding)).to.eql(600);",
+              "    pm.expect(Number(r.collectedPercent)).to.eql(40);",
+              "    pm.expect(r.partlyPaid).to.eql(1); pm.expect(r.fullyPaid).to.eql(0); pm.expect(r.unpaid).to.eql(0);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I17 Agronomist: outstanding contributions (not allowed)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/outstanding-contributions",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "outstanding-contributions"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{agronomistToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"refused (403)\", () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I18 Agronomist: grade distribution of the season (nothing published yet)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/grade-distribution?seasonId={{iSeasonId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "grade-distribution"
+          ],
+          "query": [
+            {
+              "key": "seasonId",
+              "value": "{{iSeasonId}}"
+            }
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{agronomistToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"report (200)\", () => pm.response.to.have.status(200));",
+              "pm.test(\"report envelope: basis, scope, rows, totals\", () => {",
+              "    const d = (pm.response.json().data || pm.response.json());",
+              "    pm.expect(d.basis).to.be.a(\"string\").and.not.empty;",
+              "    pm.expect(d.rows).to.be.an(\"array\");",
+              "    pm.expect(d.totals).to.be.an(\"object\");",
+              "});",
+              "pm.test(\"1 active enrolment, 0 published, no average yet\", () => {",
+              "    const d = (pm.response.json().data || pm.response.json());",
+              "    const r = d.rows.find(x => x.offeringId === Number(pm.variables.get(\"iOfferingId\")));",
+              "    pm.expect(r.activeEnrolments).to.eql(1); pm.expect(r.published).to.eql(0); pm.expect(r.notYetPublished).to.eql(1);",
+              "    pm.expect(r.averageFinalScore == null).to.eql(true);",
+              "    r.grades.forEach(g => pm.expect(g.count).to.eql(0));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I19 Registrar: grade distribution of the Part G season (run Part G first)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/grade-distribution?seasonId={{gSeasonId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "grade-distribution"
+          ],
+          "query": [
+            {
+              "key": "seasonId",
+              "value": "{{gSeasonId}}"
+            }
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"report (200)\", () => pm.response.to.have.status(200));",
+              "pm.test(\"the grade counts add up to the published results\", () => {",
+              "    const d = (pm.response.json().data || pm.response.json());",
+              "    pm.expect(d.totals.published, \"Part G publishes a result\").to.be.above(0);",
+              "    pm.expect(d.totals.grades.reduce((s, g) => s + g.count, 0)).to.eql(d.totals.published);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I20 Unknown season",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/offering-capacity?seasonId=999999999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "offering-capacity"
+          ],
+          "query": [
+            {
+              "key": "seasonId",
+              "value": "999999999"
+            }
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"not found (404)\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "I21 Farmer: any report (not allowed)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/reports/offering-capacity",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "reports",
+            "offering-capacity"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"refused (403)\", () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

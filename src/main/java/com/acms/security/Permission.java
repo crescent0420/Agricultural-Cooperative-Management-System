@@ -62,6 +62,12 @@ public enum Permission {
     PERMIT_VERIFY("Collection permits", "Verify a permit number at the store (is it valid right now?)"),
     PERMIT_ATTEMPT_READ("Collection permits", "Read the record of every permit attempt, issued or refused"),
 
+    // ---- Management reports ----
+    REPORT_FARMERS_PER_COOPERATIVE("Management reports", "Farmers per cooperative report (district staff: own district only)"),
+    REPORT_OFFERING_CAPACITY("Management reports", "Enrolments and capacity per offering report (Field Officers: own offerings only)"),
+    REPORT_OUTSTANDING_CONTRIBUTIONS("Management reports", "Outstanding contributions per season report"),
+    REPORT_GRADE_DISTRIBUTION("Management reports", "Grade distribution per offering report (Field Officers: own offerings only)"),
+
     // ---- Administration ----
     USER_MANAGE("Administration", "Create accounts, change roles, enable/disable, reset passwords"),
     AUDIT_LOG_READ("Administration", "Read the audit log"),

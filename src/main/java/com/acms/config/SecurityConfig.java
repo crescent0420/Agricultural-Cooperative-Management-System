@@ -30,6 +30,10 @@ import static com.acms.security.Permission.PERMIT_VERIFY;
 import static com.acms.security.Permission.PROFILE_READ_OWN;
 import static com.acms.security.Permission.REFERENCE_MANAGE;
 import static com.acms.security.Permission.REFERENCE_READ;
+import static com.acms.security.Permission.REPORT_FARMERS_PER_COOPERATIVE;
+import static com.acms.security.Permission.REPORT_GRADE_DISTRIBUTION;
+import static com.acms.security.Permission.REPORT_OFFERING_CAPACITY;
+import static com.acms.security.Permission.REPORT_OUTSTANDING_CONTRIBUTIONS;
 import static com.acms.security.Permission.RESULT_APPROVE;
 import static com.acms.security.Permission.RESULT_CORRECT;
 import static com.acms.security.Permission.RESULT_ENTER;
@@ -188,6 +192,14 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/me/permits").hasAuthority(can(PERMIT_READ_OWN))
                 .requestMatchers(HttpMethod.GET, "/api/permits/verify/*").hasAuthority(can(PERMIT_VERIFY))
                 .requestMatchers(HttpMethod.GET, "/api/permits/attempts").hasAuthority(can(PERMIT_ATTEMPT_READ))
+
+                // ---- Management reports (district staff are pinned to their own district in ReportService) ----
+                .requestMatchers(HttpMethod.GET, "/api/reports/farmers-per-cooperative")
+                    .hasAuthority(can(REPORT_FARMERS_PER_COOPERATIVE))
+                .requestMatchers(HttpMethod.GET, "/api/reports/offering-capacity").hasAuthority(can(REPORT_OFFERING_CAPACITY))
+                .requestMatchers(HttpMethod.GET, "/api/reports/outstanding-contributions")
+                    .hasAuthority(can(REPORT_OUTSTANDING_CONTRIBUTIONS))
+                .requestMatchers(HttpMethod.GET, "/api/reports/grade-distribution").hasAuthority(can(REPORT_GRADE_DISTRIBUTION))
 
                 // ---- Farmers ----
                 .requestMatchers(HttpMethod.GET, "/api/farmers").hasAuthority(can(FARMER_LIST))
