@@ -9,7 +9,7 @@ import com.acms.dto.ResultCorrectionResponse;
 import com.acms.dto.ResultResponse;
 import com.acms.dto.ResultSummaryResponse;
 import com.acms.dto.ReturnResultRequest;
-import com.acms.entity.ResultStatus;
+import com.acms.enums.ResultStatus;
 import com.acms.service.ResultService;
 import jakarta.validation.Valid;
 import java.util.List;

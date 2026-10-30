@@ -3,7 +3,7 @@ package com.acms.service;
 import com.acms.common.BaseService;
 import com.acms.entity.AppUser;
 import com.acms.entity.PermitAttempt;
-import com.acms.entity.PermitOutcome;
+import com.acms.enums.PermitOutcome;
 import com.acms.repository.PermitAttemptRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

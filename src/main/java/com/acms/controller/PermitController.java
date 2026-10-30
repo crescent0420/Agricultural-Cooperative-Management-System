@@ -6,7 +6,7 @@ import com.acms.common.PagedResponse;
 import com.acms.dto.CollectionPermitResponse;
 import com.acms.dto.PermitAttemptResponse;
 import com.acms.dto.PermitVerificationResponse;
-import com.acms.entity.PermitOutcome;
+import com.acms.enums.PermitOutcome;
 import com.acms.service.PermitService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

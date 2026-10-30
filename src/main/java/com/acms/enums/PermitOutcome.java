@@ -1,4 +1,4 @@
-package com.acms.entity;
+package com.acms.enums;
 
 /** What happened to one attempt to obtain a collection permit. */
 public enum PermitOutcome {

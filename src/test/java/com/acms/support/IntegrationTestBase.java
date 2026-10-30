@@ -7,7 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.acms.entity.AppUser;
-import com.acms.entity.Role;
+import com.acms.enums.Role;
 import com.acms.repository.AppUserRepository;
 import com.acms.repository.DistrictRepository;
 import com.acms.repository.FarmerRepository;

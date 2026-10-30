@@ -2,10 +2,10 @@ package com.acms.config;
 
 import com.acms.dto.FarmerRegistrationRequest;
 import com.acms.entity.AppUser;
-import com.acms.entity.AuditEventType;
 import com.acms.entity.Cooperative;
 import com.acms.entity.District;
-import com.acms.entity.Role;
+import com.acms.enums.AuditEventType;
+import com.acms.enums.Role;
 import com.acms.repository.AppUserRepository;
 import com.acms.repository.CooperativeRepository;
 import com.acms.repository.FarmerRepository;
@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -46,6 +47,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * for examples) and do not have to change their password at the first login, so the demo can start at once.
  */
 @Component
+@Order(2)   // after ReferenceDataSeeder: the demo accounts need the districts
 public class DemoDataSeeder implements ApplicationRunner {
 
     public static final String EMAIL_DOMAIN = "acms.example";

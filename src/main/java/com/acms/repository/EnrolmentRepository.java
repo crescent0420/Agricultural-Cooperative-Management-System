@@ -2,7 +2,7 @@ package com.acms.repository;
 
 import com.acms.common.BaseRepository;
 import com.acms.entity.Enrolment;
-import com.acms.entity.EnrolmentStatus;
+import com.acms.enums.EnrolmentStatus;
 import jakarta.persistence.LockModeType;
 import java.math.BigDecimal;
 import java.util.Optional;

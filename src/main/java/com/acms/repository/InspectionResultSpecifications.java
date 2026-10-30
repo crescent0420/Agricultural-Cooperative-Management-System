@@ -1,7 +1,7 @@
 package com.acms.repository;
 
 import com.acms.entity.InspectionResult;
-import com.acms.entity.ResultStatus;
+import com.acms.enums.ResultStatus;
 import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;

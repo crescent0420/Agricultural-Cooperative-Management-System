@@ -73,6 +73,8 @@ erDiagram
         bigint target_id
         varchar details
         varchar ip_address
+        timestamptz created_at
+        timestamptz updated_at
     }
     collection_permits {
         bigint id PK
@@ -81,6 +83,8 @@ erDiagram
         bigint farmer_id FK
         bigint issued_by FK
         timestamptz issued_at
+        timestamptz created_at
+        timestamptz updated_at
     }
     contribution_adjustments {
         bigint id PK
@@ -90,6 +94,8 @@ erDiagram
         varchar reason
         bigint adjusted_by FK
         timestamptz adjusted_at
+        timestamptz created_at
+        timestamptz updated_at
     }
     contribution_obligations {
         bigint id PK
@@ -128,6 +134,7 @@ erDiagram
         timestamptz expires_at
         timestamptz used_at
         timestamptz created_at
+        timestamptz updated_at
     }
     enrolment_windows {
         bigint id PK
@@ -137,6 +144,8 @@ erDiagram
         bigint opened_by FK
         timestamptz closed_at
         bigint closed_by FK
+        timestamptz created_at
+        timestamptz updated_at
     }
     enrolments {
         bigint id PK
@@ -159,6 +168,8 @@ erDiagram
         date completed_on
         timestamptz recorded_at
         bigint recorded_by FK
+        timestamptz created_at
+        timestamptz updated_at
     }
     farmers {
         bigint id PK
@@ -177,6 +188,8 @@ erDiagram
         varchar grade
         numeric min_score UK
         varchar description
+        timestamptz created_at
+        timestamptz updated_at
     }
     inspection_results {
         bigint id PK
@@ -199,6 +212,8 @@ erDiagram
         numeric score
         bigint entered_by FK
         timestamptz entered_at
+        timestamptz created_at
+        timestamptz updated_at
     }
     inspections {
         bigint id PK
@@ -238,6 +253,8 @@ erDiagram
         varchar reason
         bigint permit_id
         timestamptz attempted_at
+        timestamptz created_at
+        timestamptz updated_at
     }
     programme_offerings {
         bigint id PK
@@ -273,6 +290,8 @@ erDiagram
         varchar reason
         bigint corrected_by FK
         timestamptz corrected_at
+        timestamptz created_at
+        timestamptz updated_at
     }
     seasons {
         bigint id PK

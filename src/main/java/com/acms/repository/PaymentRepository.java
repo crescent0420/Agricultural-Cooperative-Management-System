@@ -2,7 +2,7 @@ package com.acms.repository;
 
 import com.acms.common.BaseRepository;
 import com.acms.entity.Payment;
-import com.acms.entity.PaymentStatus;
+import com.acms.enums.PaymentStatus;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.List;

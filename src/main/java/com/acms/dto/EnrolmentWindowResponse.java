@@ -1,7 +1,7 @@
 package com.acms.dto;
 
 import com.acms.entity.EnrolmentWindow;
-import com.acms.entity.WindowStatus;
+import com.acms.enums.WindowStatus;
 import java.time.Instant;
 
 public record EnrolmentWindowResponse(

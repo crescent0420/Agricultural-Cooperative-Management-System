@@ -2,7 +2,7 @@
 package com.acms.dto;
 
 import com.acms.entity.Farmer;
-import com.acms.entity.FarmerStatus;
+import com.acms.enums.FarmerStatus;
 
 public record FarmerResponse(
         Long id,

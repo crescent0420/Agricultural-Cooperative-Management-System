@@ -1,4 +1,4 @@
-package com.acms.entity;
+package com.acms.enums;
 
 public enum AuditEventType {
     LOGIN_SUCCESS,

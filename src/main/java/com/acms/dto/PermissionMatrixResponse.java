@@ -1,6 +1,6 @@
 package com.acms.dto;
 
-import com.acms.entity.Role;
+import com.acms.enums.Role;
 import com.acms.security.Permission;
 import com.acms.security.PermissionMatrix;
 import java.util.Arrays;

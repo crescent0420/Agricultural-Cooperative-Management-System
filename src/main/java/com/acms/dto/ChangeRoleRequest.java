@@ -1,7 +1,7 @@
 
 package com.acms.dto;
 
-import com.acms.entity.Role;
+import com.acms.enums.Role;
 import jakarta.validation.constraints.NotNull;
 
 public record ChangeRoleRequest(

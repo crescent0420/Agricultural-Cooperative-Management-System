@@ -1,7 +1,7 @@
 package com.acms.dto;
 
 import com.acms.entity.Enrolment;
-import com.acms.entity.EnrolmentStatus;
+import com.acms.enums.EnrolmentStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 

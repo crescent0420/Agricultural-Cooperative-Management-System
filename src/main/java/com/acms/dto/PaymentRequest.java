@@ -1,6 +1,6 @@
 package com.acms.dto;
 
-import com.acms.entity.PaymentMethod;
+import com.acms.enums.PaymentMethod;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;

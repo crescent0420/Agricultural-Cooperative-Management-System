@@ -1,14 +1,14 @@
 package com.acms.security;
 
-import static com.acms.entity.Role.DISTRICT_AGRONOMIST;
-import static com.acms.entity.Role.FARMER;
-import static com.acms.entity.Role.FIELD_OFFICER;
-import static com.acms.entity.Role.FINANCE_OFFICER;
-import static com.acms.entity.Role.SYSTEM_ADMIN;
-import static com.acms.entity.Role.UNION_REGISTRAR;
+import static com.acms.enums.Role.DISTRICT_AGRONOMIST;
+import static com.acms.enums.Role.FARMER;
+import static com.acms.enums.Role.FIELD_OFFICER;
+import static com.acms.enums.Role.FINANCE_OFFICER;
+import static com.acms.enums.Role.SYSTEM_ADMIN;
+import static com.acms.enums.Role.UNION_REGISTRAR;
 import static com.acms.security.Permission.*;
 
-import com.acms.entity.Role;
+import com.acms.enums.Role;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;

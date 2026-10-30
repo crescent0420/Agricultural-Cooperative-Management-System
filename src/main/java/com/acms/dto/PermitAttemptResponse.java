@@ -1,7 +1,7 @@
 package com.acms.dto;
 
 import com.acms.entity.PermitAttempt;
-import com.acms.entity.PermitOutcome;
+import com.acms.enums.PermitOutcome;
 import java.time.Instant;
 
 public record PermitAttemptResponse(

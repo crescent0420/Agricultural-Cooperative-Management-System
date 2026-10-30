@@ -24,4 +24,7 @@ public interface DistrictRepository extends BaseRepository<District> {
     @Override
     @EntityGraph(attributePaths = "province")
     Optional<District> findById(Long id);
+
+    /** District names are unique whatever their case (uq_districts_name_lower). */
+    Optional<District> findByNameIgnoreCase(String name);
 }

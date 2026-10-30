@@ -1,6 +1,6 @@
   package com.acms.dto;
 
-  import com.acms.entity.AuditEventType;
+  import com.acms.enums.AuditEventType;
   import com.acms.entity.AuditLog;
   import java.time.Instant;
 

@@ -14,7 +14,7 @@ import com.acms.dto.report.OutstandingContributionTotals;
 import com.acms.dto.report.ReportResponse;
 import com.acms.dto.report.ReportScope;
 import com.acms.entity.AppUser;
-import com.acms.entity.Role;
+import com.acms.enums.Role;
 import com.acms.repository.DistrictRepository;
 import com.acms.repository.ReportQueries;
 import com.acms.repository.SeasonRepository;

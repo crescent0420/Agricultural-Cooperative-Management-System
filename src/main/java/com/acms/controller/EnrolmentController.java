@@ -5,7 +5,7 @@ import com.acms.common.BaseController;
 import com.acms.common.PagedResponse;
 import com.acms.dto.CancelEnrolmentRequest;
 import com.acms.dto.EnrolmentResponse;
-import com.acms.entity.EnrolmentStatus;
+import com.acms.enums.EnrolmentStatus;
 import com.acms.service.EnrolmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -4,7 +4,7 @@ import com.acms.common.ApiError;
 import com.acms.common.ApiException;
 import com.acms.common.ApiResponse;
 import com.acms.entity.AppUser;
-import com.acms.entity.AuditEventType;
+import com.acms.enums.AuditEventType;
 import com.acms.repository.AppUserRepository;
 import com.acms.service.AuditLogService;
 import jakarta.servlet.http.HttpServletRequest;

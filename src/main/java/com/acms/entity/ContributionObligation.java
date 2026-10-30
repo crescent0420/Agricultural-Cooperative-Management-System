@@ -1,6 +1,6 @@
 package com.acms.entity;
 
-import com.acms.common.AuditableEntity;
+import com.acms.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "contribution_obligations")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ContributionObligation extends AuditableEntity {
+public class ContributionObligation extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "farmer_id", nullable = false, updatable = false)

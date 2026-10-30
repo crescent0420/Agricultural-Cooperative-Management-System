@@ -9,7 +9,7 @@ import com.acms.dto.CooperativeResponse;
 import com.acms.entity.AppUser;
 import com.acms.entity.Cooperative;
 import com.acms.entity.District;
-import com.acms.entity.Role;
+import com.acms.enums.Role;
 import com.acms.exception.ConflictException;
 import com.acms.exception.ResourceNotFoundException;
 import com.acms.repository.CooperativeRepository;

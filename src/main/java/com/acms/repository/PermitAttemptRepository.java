@@ -2,7 +2,7 @@ package com.acms.repository;
 
 import com.acms.common.BaseRepository;
 import com.acms.entity.PermitAttempt;
-import com.acms.entity.PermitOutcome;
+import com.acms.enums.PermitOutcome;
 import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;

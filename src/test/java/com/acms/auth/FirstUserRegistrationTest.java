@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.acms.dto.RegisterRequest;
 import com.acms.entity.AppUser;
-import com.acms.entity.Role;
+import com.acms.enums.Role;
 import com.acms.service.AccountOnboardingService;
 import com.acms.support.IntegrationTestBase;
 import java.util.ArrayList;

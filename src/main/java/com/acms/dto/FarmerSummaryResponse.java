@@ -1,6 +1,6 @@
 package com.acms.dto;
 import com.acms.entity.Farmer;
-import com.acms.entity.FarmerStatus;
+import com.acms.enums.FarmerStatus;
 import java.time.Instant;
 public record FarmerSummaryResponse(
         Long id,

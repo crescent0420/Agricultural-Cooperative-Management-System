@@ -1,7 +1,7 @@
 package com.acms.dto;
 
 import com.acms.entity.InspectionResult;
-import com.acms.entity.ResultStatus;
+import com.acms.enums.ResultStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;

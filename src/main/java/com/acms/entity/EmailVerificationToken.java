@@ -1,6 +1,6 @@
 package com.acms.entity;
 
-import com.acms.common.CreatedEntity;
+import com.acms.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "email_verification_tokens")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class EmailVerificationToken extends CreatedEntity {
+public class EmailVerificationToken extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
