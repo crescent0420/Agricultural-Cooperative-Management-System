@@ -276,6 +276,7 @@ database/                         database creation script and SQL exports
 
 ## 11. Documentation
 
+* [`docs/demo-plan.md`](docs/demo-plan.md): the 15-minute demonstration, step by step
 * [`docs/endpoints.md`](docs/endpoints.md): every endpoint with its method, URI, purpose, roles, success and error codes
 * [`docs/erd.md`](docs/erd.md): the entity-relationship diagram (images: `docs/erd-core.png`, `docs/erd-full.png`)
 * [`docs/permission-matrix.md`](docs/permission-matrix.md): which role holds which permission

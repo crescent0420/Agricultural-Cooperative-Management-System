@@ -84,7 +84,7 @@ Lists marked *(paged)* accept `page`, `size`, `sortBy`, `direction` and answer a
 
 | Method | URI | Purpose | Roles | Success | Errors (besides 401/403) |
 |---|---|---|---|---|---|
-| POST | `/api/offerings/{offeringId}/enrolments` | Farmer enrols (window open, active, prerequisites, land limit, ≥30% paid, place left) | Farmer ★ | 201 | 404, 409 already enrolled, 422 window closed / not Active / training missing / land limit / under 30% paid / no place left |
+| POST | `/api/offerings/{offeringId}/enrolments` | Farmer enrols (window open, active, prerequisites, land limit, ≥30% paid, place left) | Farmer ★ | 201 | 404, 409 already enrolled / offering full, 422 window closed / not Active / training missing / land limit / under 30% paid |
 | GET | `/api/offerings/{offeringId}/enrolments` | Farmers enrolled in an offering *(paged)* | Field Officer, Agronomist, Registrar, Admin ★ | 200 | 404 |
 | GET | `/api/me/enrolments` | The farmer's own enrolments *(paged)* | Farmer | 200 | — |
 | GET | `/api/enrolments/{id}` | One enrolment | Farmer, Field Officer, Agronomist, Registrar, Admin ★ | 200 | 404 |
