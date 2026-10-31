@@ -1,0 +1,18 @@
+# Never send secrets or local data into the image build.
+.env
+.env.*
+!.env.example
+postman/
+database/backups/
+set-env.ps1
+helpers.ps1
+login.json
+body.json
+*.log
+
+# Not needed to build (keeps the build fast)
+.git/
+target/
+.idea/
+.vscode/
+*.iml

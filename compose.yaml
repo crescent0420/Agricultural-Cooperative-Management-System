@@ -1,0 +1,37 @@
+# ACMS in Docker:  docker compose up -d --build      Stop:  docker compose down
+#   app      the Spring Boot API on http://localhost:8081 (SERVER_PORT from .env)
+#   mailpit  catches every email: inbox at http://localhost:8025
+# PostgreSQL is NOT in Docker: the app uses your existing Windows database (acms_db) through
+# host.docker.internal, so all your data stays where it is.
+services:
+  app:
+    build: .
+    image: acms
+    container_name: acms-app
+    # Your .env is read when the container starts. It is never copied into the image.
+    env_file: .env
+    # These replace the matching values from .env, only inside the container:
+    environment:
+      DB_HOST: host.docker.internal        # "localhost" inside a container is the container itself
+      MAIL_HOST: mailpit                    # the mailpit service below
+      MAIL_PORT: "1025"
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_SMTP_AUTH: "false"
+      MAIL_SMTP_STARTTLS: "false"
+      APP_BASE_URL: http://localhost:${SERVER_PORT:-8081}
+    ports:
+      - "${SERVER_PORT:-8081}:${SERVER_PORT:-8081}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - mailpit
+    restart: unless-stopped
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: acms-mailpit
+    ports:
+      - "8025:8025"   # web inbox (also used by the Postman Part D requests)
+      - "1025:1025"   # SMTP
+    restart: unless-stopped

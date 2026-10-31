@@ -1,0 +1,1829 @@
+{
+  "info": {
+    "_postman_id": "c6214e7e-8dd1-4396-a822-de010ee0c620",
+    "name": "ACMS - Part G Inspections and results",
+    "description": "Run in order with the ACMS-Local environment. Needs: the Field Officer (officerUserId) and a District Agronomist (agronomistUsername; agronomistPassword in the environment) of ownDistrictId, the farmer (ownFarmerId, in ownDistrictId), otherFarmerId = any other farmer, and the Finance Officer from Part F. Each run creates its own season, programme and offering, so it can be run again. Every answer is {success, message, data | error, timestamp}: the tests read data. G00a-G00g fail with a clear message when an account still uses its one-time password or is in another district than ownDistrictId.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "G00a Login as Union Registrar",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{registrarUsername}}\",\n  \"password\": \"{{registrarPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"registrarToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"Union Registrar has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G00b Login as Field Officer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{officerUsername}}\",\n  \"password\": \"{{officerPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"officerToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"Field Officer has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G00c Login as District Agronomist",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{agronomistUsername}}\",\n  \"password\": \"{{agronomistPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"agronomistToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"District Agronomist has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G00d Login as Farmer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{farmerUsername}}\",\n  \"password\": \"{{farmerPassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"farmerToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"Farmer has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G00e Login as Finance Officer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "auth": {
+          "type": "noauth"
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"{{financeUsername}}\",\n  \"password\": \"{{financePassword}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"login succeeded (200)\", () => pm.response.to.have.status(200));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"financeToken\", (pm.response.json().data || pm.response.json()).accessToken);",
+              "}",
+              "pm.test(\"Finance Officer has replaced the one-time password\", () => pm.expect((pm.response.json().data || pm.response.json()).mustChangePassword, \"log in once with the emailed password and call POST /api/auth/change-password\").to.eql(false));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G00f Check: the Field Officer is in your district",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "me"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"is a FIELD_OFFICER\", () => pm.expect((pm.response.json().data || pm.response.json()).role).to.eql(\"FIELD_OFFICER\"));",
+              "pm.test(\"belongs to ownDistrictId\", () => pm.expect(String((pm.response.json().data || pm.response.json()).districtId), \"this account is in district \" + (pm.response.json().data || pm.response.json()).districtId + \"; set it to ownDistrictId with PATCH /api/users/{id}/role\").to.eql(String(pm.variables.get(\"ownDistrictId\"))));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G00g Check: the District Agronomist is in your district",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/me",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "me"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{agronomistToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"is a DISTRICT_AGRONOMIST\", () => pm.expect((pm.response.json().data || pm.response.json()).role).to.eql(\"DISTRICT_AGRONOMIST\"));",
+              "pm.test(\"belongs to ownDistrictId\", () => pm.expect(String((pm.response.json().data || pm.response.json()).districtId), \"this account is in district \" + (pm.response.json().data || pm.response.json()).districtId + \"; set it to ownDistrictId with PATCH /api/users/{id}/role\").to.eql(String(pm.variables.get(\"ownDistrictId\"))));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G01 Setup: season",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/seasons",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seasons"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Inspection season {{gStamp}}\",\n  \"startsOn\": \"{{today}}\",\n  \"endsOn\": \"{{in90days}}\",\n  \"maxLandHectares\": 2.5,\n  \"distributionDate\": \"{{in30days}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const d = n => { const x = new Date(); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };",
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"today\", d(0)); store.set(\"in30days\", d(30)); store.set(\"in90days\", d(90)); store.set(\"gStamp\", Date.now());"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"gSeasonId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G02 Setup: programme in your district",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/programmes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "programmes"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Inspection maize {{gStamp}}\",\n  \"districtId\": {{ownDistrictId}}\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"gProgrammeId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G03 Setup: offering run by your Field Officer",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/offerings",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "offerings"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"programmeId\": {{gProgrammeId}},\n  \"seasonId\": {{gSeasonId}},\n  \"fieldOfficerId\": {{officerUserId}},\n  \"hectaresPerParticipant\": 1.0,\n  \"maxParticipants\": 10\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"gOfferingId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G04 Setup: open the enrolment window",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/seasons/{{gSeasonId}}/windows/open",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "seasons",
+            "{{gSeasonId}}",
+            "windows",
+            "open"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G05 Setup: contribution of 1 000",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/contributions",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "contributions"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"farmerId\": {{ownFarmerId}},\n  \"seasonId\": {{gSeasonId}},\n  \"amountDue\": 1000\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"gContributionId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G06 Setup: payment of 1 000",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transactionReference\": \"{{gTx}}\",\n  \"contributionId\": {{gContributionId}},\n  \"amount\": 1000,\n  \"method\": \"MOBILE_MONEY\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"gTx\", \"TX-\" + Date.now() + \"-\" + Math.floor(Math.random() * 1e6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"gPaymentId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G07 Setup: confirm the payment",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/payments/{{gPaymentId}}/confirm",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "payments",
+            "{{gPaymentId}}",
+            "confirm"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{financeToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"providerReference\": \"{{gProv}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "store.set(\"gProv\", \"MTN-\" + Date.now() + \"-\" + Math.floor(Math.random() * 1e6));"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G08 Setup: farmer enrols",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/offerings/{{gOfferingId}}/enrolments",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "offerings",
+            "{{gOfferingId}}",
+            "enrolments"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"gEnrolmentId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G09 Inspection: soil and land preparation (20 pts, 25%)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/offerings/{{gOfferingId}}/inspections",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "offerings",
+            "{{gOfferingId}}",
+            "inspections"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Soil and land preparation\",\n  \"maxScore\": 20,\n  \"weight\": 25\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"soilId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G10 Inspection: pest and disease control (10 pts, 25%)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/offerings/{{gOfferingId}}/inspections",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "offerings",
+            "{{gOfferingId}}",
+            "inspections"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Pest and disease control\",\n  \"maxScore\": 10,\n  \"weight\": 25\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"pestId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G11 Inspection: crop husbandry (50 pts, 30%)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/offerings/{{gOfferingId}}/inspections",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "offerings",
+            "{{gOfferingId}}",
+            "inspections"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Crop husbandry\",\n  \"maxScore\": 50,\n  \"weight\": 30\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"husbandryId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G12 Inspection with weight 30% (would make 110%)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/offerings/{{gOfferingId}}/inspections",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "offerings",
+            "{{gOfferingId}}",
+            "inspections"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Too heavy\",\n  \"maxScore\": 100,\n  \"weight\": 30\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"weights above 100% refused (422)\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G13 Inspection: post-harvest handling (100 pts, 20%)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/offerings/{{gOfferingId}}/inspections",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "offerings",
+            "{{gOfferingId}}",
+            "inspections"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Post-harvest handling\",\n  \"maxScore\": 100,\n  \"weight\": 20\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 201\", () => pm.response.to.have.status(201));",
+              "if (pm.response.code === 201) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"postHarvestId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G14 The offering's inspections",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/offerings/{{gOfferingId}}/inspections",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "offerings",
+            "{{gOfferingId}}",
+            "inspections"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{agronomistToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"weights total 100%\", () => pm.expect((pm.response.json().data || pm.response.json()).totalWeight).to.eql(100));",
+              "pm.test(\"complete\", () => pm.expect((pm.response.json().data || pm.response.json()).weightsComplete).to.eql(true));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G15 Score above the maximum (25 of 20)",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/enrolments/{{gEnrolmentId}}/scores",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "enrolments",
+            "{{gEnrolmentId}}",
+            "scores"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"scores\": [ { \"inspectionId\": {{soilId}}, \"score\": 25 } ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"score above max refused (422)\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G16 Field Officer enters the four scores",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/enrolments/{{gEnrolmentId}}/scores",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "enrolments",
+            "{{gEnrolmentId}}",
+            "scores"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"scores\": [\n    { \"inspectionId\": {{soilId}}, \"score\": 16 },\n    { \"inspectionId\": {{pestId}}, \"score\": 7 },\n    { \"inspectionId\": {{husbandryId}}, \"score\": 40 },\n    { \"inspectionId\": {{postHarvestId}}, \"score\": 75 }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"DRAFT\", () => pm.expect((pm.response.json().data || pm.response.json()).status).to.eql(\"DRAFT\"));",
+              "if (pm.response.code === 200) {",
+              "    const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "    store.set(\"gResultId\", (pm.response.json().data || pm.response.json()).id);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G17 Field Officer submits (76.50 = B)",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/results/{{gResultId}}/submit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "results",
+            "{{gResultId}}",
+            "submit"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"SUBMITTED\", () => pm.expect((pm.response.json().data || pm.response.json()).status).to.eql(\"SUBMITTED\"));",
+              "pm.test(\"final score 76.50\", () => pm.expect((pm.response.json().data || pm.response.json()).finalScore).to.eql(76.5));",
+              "pm.test(\"grade B\", () => pm.expect((pm.response.json().data || pm.response.json()).grade).to.eql(\"B\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G18 Farmer looks before publication",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/results/{{gResultId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "results",
+            "{{gResultId}}"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"not published yet (403)\", () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G19 Field Officer tries to approve",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/results/{{gResultId}}/approve",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "results",
+            "{{gResultId}}",
+            "approve"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"only the Agronomist (403)\", () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G20 Field Officer edits the SUBMITTED result",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/enrolments/{{gEnrolmentId}}/scores",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "enrolments",
+            "{{gEnrolmentId}}",
+            "scores"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"scores\": [ { \"inspectionId\": {{soilId}}, \"score\": 18 } ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"only while DRAFT (409)\", () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G21 District Agronomist approves = publishes",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/results/{{gResultId}}/approve",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "results",
+            "{{gResultId}}",
+            "approve"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{agronomistToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"PUBLISHED\", () => pm.expect((pm.response.json().data || pm.response.json()).status).to.eql(\"PUBLISHED\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G22 Farmer: my published results",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/me/results",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "me",
+            "results"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"contains the result\", () => pm.expect((pm.response.json().data || pm.response.json()).content.map(r => r.id)).to.include(Number(pm.variables.get(\"gResultId\"))));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G23 Field Officer edits the PUBLISHED result",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/enrolments/{{gEnrolmentId}}/scores",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "enrolments",
+            "{{gEnrolmentId}}",
+            "scores"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"scores\": [ { \"inspectionId\": {{soilId}}, \"score\": 20 } ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"only through a correction (409)\", () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G24 Agronomist corrects pest control 7 -> 9 (81.50 = A)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/results/{{gResultId}}/corrections",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "results",
+            "{{gResultId}}",
+            "corrections"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{agronomistToken}}",
+              "type": "string"
+            }
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"inspectionId\": {{pestId}},\n  \"correctedScore\": 9,\n  \"reason\": \"Second visit: pests under control\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"final score 81.50\", () => pm.expect((pm.response.json().data || pm.response.json()).finalScore).to.eql(81.5));",
+              "pm.test(\"grade A\", () => pm.expect((pm.response.json().data || pm.response.json()).grade).to.eql(\"A\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G25 Correction history",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/results/{{gResultId}}/corrections",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "results",
+            "{{gResultId}}",
+            "corrections"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"original value kept\", () => pm.expect((pm.response.json().data || pm.response.json())[0].originalScore).to.eql(7));",
+              "pm.test(\"corrected value\", () => pm.expect((pm.response.json().data || pm.response.json())[0].correctedScore).to.eql(9));",
+              "pm.test(\"original grade\", () => pm.expect((pm.response.json().data || pm.response.json())[0].originalGrade).to.eql(\"B\"));",
+              "pm.test(\"who and when\", () => { pm.expect((pm.response.json().data || pm.response.json())[0].correctedByUsername).to.be.a(\"string\"); pm.expect((pm.response.json().data || pm.response.json())[0].correctedAt).to.be.a(\"string\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G26 Farmer changes the farmer id in the URL (IDOR)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/farmers/{{otherFarmerId}}/results",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "farmers",
+            "{{otherFarmerId}}",
+            "results"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"another farmer's results refused (403)\", () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G27 Farmer reads their own results by id",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/farmers/{{ownFarmerId}}/results",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "farmers",
+            "{{ownFarmerId}}",
+            "results"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "G28 The grading scale",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/grading-scale",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "grading-scale"
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{farmerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"status 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081"
+    },
+    {
+      "key": "registrarUsername",
+      "value": "registrar1"
+    },
+    {
+      "key": "registrarPassword",
+      "value": ""
+    },
+    {
+      "key": "officerUsername",
+      "value": "fieldofficer_test"
+    },
+    {
+      "key": "officerPassword",
+      "value": ""
+    },
+    {
+      "key": "farmerUsername",
+      "value": "aline"
+    },
+    {
+      "key": "farmerPassword",
+      "value": ""
+    },
+    {
+      "key": "ownDistrictId",
+      "value": "1"
+    },
+    {
+      "key": "ownFarmerId",
+      "value": "1"
+    },
+    {
+      "key": "otherFarmerId",
+      "value": "2"
+    },
+    {
+      "key": "officerUserId",
+      "value": "2"
+    },
+    {
+      "key": "financeUsername",
+      "value": "finance1"
+    },
+    {
+      "key": "financePassword",
+      "value": ""
+    },
+    {
+      "key": "agronomistUsername",
+      "value": "agronomist1"
+    },
+    {
+      "key": "agronomistPassword",
+      "value": ""
+    }
+  ]
+}
