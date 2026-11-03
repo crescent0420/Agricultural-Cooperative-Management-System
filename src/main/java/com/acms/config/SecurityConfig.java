@@ -151,6 +151,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/offerings", "/api/offerings/*").hasAuthority(can(OFFERING_READ))
                 .requestMatchers(HttpMethod.POST, "/api/offerings").hasAuthority(can(OFFERING_MANAGE))
                 .requestMatchers(HttpMethod.PUT, "/api/offerings/*").hasAuthority(can(OFFERING_MANAGE))
+                .requestMatchers(HttpMethod.GET, "/api/field-officers").hasAuthority(can(OFFERING_MANAGE))
 
                 // ---- Enrolment (ownership and district are checked in EnrolmentService) ----
                 .requestMatchers(HttpMethod.POST, "/api/offerings/*/enrolments").hasAuthority(can(ENROLMENT_CREATE))

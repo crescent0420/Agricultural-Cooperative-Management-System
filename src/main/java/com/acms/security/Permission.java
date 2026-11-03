@@ -18,7 +18,7 @@ public enum Permission {
     // ---- Programme offerings ----
     OFFERING_READ("Programme offerings", "Read programme offerings (own district only for farmers, officers and agronomists)"),
     OFFERING_READ_ASSIGNED("Programme offerings", "Read the offerings assigned to me"),
-    OFFERING_MANAGE("Programme offerings", "Create and change programme offerings"),
+    OFFERING_MANAGE("Programme offerings", "Create and change programme offerings, and list the Field Officers to assign"),
 
     // ---- Enrolment ----
     ENROLMENT_CREATE("Enrolment", "Enrol myself in an offering"),

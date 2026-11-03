@@ -13,7 +13,7 @@ A ✔ means the role holds the permission. Holding a permission opens the **func
 | Seasons | `SEASON_MANAGE` | Create and change seasons; open and close enrolment windows |  |  |  | ✔ |  |  |
 | Programme offerings | `OFFERING_READ` | Read programme offerings (own district only for farmers, officers and agronomists) | ✔ | ✔ | ✔ | ✔ |  | ✔ |
 | Programme offerings | `OFFERING_READ_ASSIGNED` | Read the offerings assigned to me |  | ✔ |  |  |  |  |
-| Programme offerings | `OFFERING_MANAGE` | Create and change programme offerings |  |  |  | ✔ |  |  |
+| Programme offerings | `OFFERING_MANAGE` | Create and change programme offerings, and list the Field Officers to assign |  |  |  | ✔ |  |  |
 | Enrolment | `ENROLMENT_CREATE` | Enrol myself in an offering | ✔ |  |  |  |  |  |
 | Enrolment | `ENROLMENT_READ_OWN` | Read my own enrolments | ✔ |  |  |  |  |  |
 | Enrolment | `ENROLMENT_READ` | Read one enrolment (own, or within my offerings or district) | ✔ | ✔ | ✔ | ✔ |  | ✔ |

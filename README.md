@@ -195,6 +195,7 @@ them empty tables. Emails are replaced by a mock, so nothing is sent.
 | `RwandaReferenceDataTest` | The 5 provinces and 30 districts are seeded, and districts cannot be created through the API |
 | `SeasonAndWindowTest` | Seasons and enrolment windows: validation, open/close history, and two registrars opening the same window at once (concurrency) |
 | `ProgrammeOfferingTest` | Offerings: business rules, validation, district scope, and what can no longer change once farmers are enrolled |
+| `FieldOfficerLookupTest` | The Registrar's Field Officer list: enabled officers only, one district or all, sorted by username, no email; every other role 403 |
 | `EnrolmentTest` | Every enrolment rule (window, status, prerequisites, land limit, district), and eight farmers competing for the last place: exactly one gets it (concurrency) |
 | `ContributionPaymentTest` | Only confirmed payments count; a repeated payment request creates nothing new, even six at the same moment (idempotency, concurrency); no overpayment; history cannot be rewritten |
 | `InspectionResultTest` | Weights total 100%; score limits; Draft → Submitted → Published with the grade; return for rework; authorised corrections keep the original; the database refuses direct changes; IDOR (403) |

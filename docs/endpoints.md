@@ -1,6 +1,6 @@
 # ACMS endpoint table
 
-Generated from the controllers (`@GetMapping`... ), the URL rules in `SecurityConfig` and the `PermissionMatrix`: the roles column is exactly what the application enforces. 92 endpoints. Interactive documentation of every request and response body: Swagger UI at `/swagger-ui.html`.
+Generated from the controllers (`@GetMapping`... ), the URL rules in `SecurityConfig` and the `PermissionMatrix`: the roles column is exactly what the application enforces. 93 endpoints. Interactive documentation of every request and response body: Swagger UI at `/swagger-ui.html`.
 
 **Every answer** uses the envelope `{success, message, data | error, timestamp}` (see the README).
 
@@ -72,6 +72,7 @@ Lists marked *(paged)* accept `page`, `size`, `sortBy`, `direction` and answer a
 | GET | `/api/offerings/assigned-to-me` | The calling Field Officer's offerings *(paged)* | Field Officer | 200 | — |
 | GET | `/api/offerings/{id}` | One offering with places left | Farmer, Field Officer, Agronomist, Registrar, Admin ★ | 200 | 404 |
 | PUT | `/api/offerings/{id}` | Change places or Field Officer | Registrar | 200 | 400, 404, 409 fewer places than enrolled / land change after enrolment, 422 officer or land rules |
+| GET | `/api/field-officers` | Enabled Field Officers to assign to an offering, by username; `?districtId=` (optional) limits to one district; id, username and district only | Registrar | 200 | 400 districtId not a number, 404 unknown district |
 | POST | `/api/seasons` | Create a season (dates, land limit, distribution day) | Registrar | 201 | 400 dates, 409 duplicate name |
 | GET | `/api/seasons` | List seasons *(paged)* | all roles | 200 | — |
 | GET | `/api/seasons/{id}` | One season with its window status | all roles | 200 | 404 |
