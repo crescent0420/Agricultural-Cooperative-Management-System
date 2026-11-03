@@ -1,0 +1,45 @@
+@import 'tailwindcss';
+
+/*
+ * ACMS design tokens, defined once; components use them as Tailwind classes
+ * (bg-brand-700, text-ink, border-line ...).
+ *
+ * Colour reference: the MINAGRI AMIS platform (dev-amis.minagri.gov.rw), read on 3 Nov 2026.
+ * "observed" = measured on that platform; "derived" = a shade filled in between observed values.
+ *
+ * Contrast rule (WCAG AA, URD NFR-08):
+ *   - white text on brand-500 is only 4.3:1, so brand-500 is for large text, icons, borders and bands;
+ *   - buttons and other normal-size white text use brand-700 (6.5:1), hover brand-800;
+ *   - links and green text on white use brand-600 (6.0:1).
+ * Colour is never the only signal: every status badge also carries its text.
+ */
+@theme {
+  --font-sans: 'Inter Variable', Inter, system-ui, 'Segoe UI', Roboto, Arial, sans-serif;
+
+  --color-brand-50: #eaf4f2;  /* observed: tinted panels */
+  --color-brand-100: #d5ebe6; /* derived */
+  --color-brand-200: #c5d8d4; /* observed: tinted borders */
+  --color-brand-500: #008a75; /* observed: primary / theme colour */
+  --color-brand-600: #00705f; /* observed: green text and links */
+  --color-brand-700: #006a5a; /* observed: dark green backgrounds; buttons */
+  --color-brand-800: #005446; /* derived: button hover */
+  --color-brand-900: #003d33; /* derived */
+
+  --color-accent-500: #f5a623; /* observed: amber highlight, used with accent-ink text */
+  --color-accent-ink: #1b1a10; /* observed: text on amber (8.6:1) */
+
+  --color-ink: #13241f;     /* observed: main text (16:1 on white) */
+  --color-muted: #51655f;   /* observed: secondary text (6.2:1 on white) */
+  --color-line: #e5e7eb;    /* observed: borders */
+  --color-surface: #f8f8f8; /* observed: page background */
+
+  --color-success: #00705f; /* brand-600 */
+  --color-warning: #a15c07; /* 5.2:1 on white */
+  --color-danger: #b42318;  /* 6.6:1 on white */
+
+  --radius-lg: 8px; /* observed: corner radius */
+}
+
+body {
+  @apply bg-surface font-sans text-ink antialiased;
+}

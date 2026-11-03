@@ -16,3 +16,5 @@ target/
 .idea/
 .vscode/
 *.iml
+# The React app is built separately
+frontend/
