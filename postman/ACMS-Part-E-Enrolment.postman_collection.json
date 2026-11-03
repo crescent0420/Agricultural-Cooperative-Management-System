@@ -281,6 +281,99 @@
       ]
     },
     {
+      "name": "E02a Registrar lists your district's Field Officers",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/field-officers?districtId={{ownDistrictId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "field-officers"
+          ],
+          "query": [
+            {
+              "key": "districtId",
+              "value": "{{ownDistrictId}}"
+            }
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{registrarToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Field Officer list (200)\", () => pm.response.to.have.status(200));",
+              "const officers = pm.response.json().data || [];",
+              "const store = pm.environment.name ? pm.environment : pm.collectionVariables;",
+              "pm.test(\"your Field Officer is offered\", () => pm.expect(officers.map(o => String(o.id))).to.include(String(store.get(\"officerUserId\"))));",
+              "pm.test(\"only your district\", () => officers.forEach(o => pm.expect(String(o.districtId)).to.eql(String(store.get(\"ownDistrictId\")))));",
+              "pm.test(\"no email addresses\", () => officers.forEach(o => pm.expect(o).to.not.have.property(\"email\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "E02b Field Officer tries to list Field Officers",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/field-officers?districtId={{ownDistrictId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "field-officers"
+          ],
+          "query": [
+            {
+              "key": "districtId",
+              "value": "{{ownDistrictId}}"
+            }
+          ]
+        },
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{officerToken}}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"only the Registrar (403)\", () => pm.response.to.have.status(403));"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "E03 Create an offering: 1 ha, ONE place, your Field Officer",
       "request": {
         "method": "POST",

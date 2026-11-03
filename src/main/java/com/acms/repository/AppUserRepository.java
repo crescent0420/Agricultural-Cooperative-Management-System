@@ -4,6 +4,9 @@ import com.acms.common.BaseRepository;
 import com.acms.entity.AppUser;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.Query;
+import com.acms.enums.Role;
+import java.util.List;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 public interface AppUserRepository extends BaseRepository<AppUser> {
 
@@ -16,6 +19,14 @@ public interface AppUserRepository extends BaseRepository<AppUser> {
     Optional<AppUser> findByFarmerId(Long farmerId);
 
     boolean existsByFarmerId(Long farmerId);
+
+        /** Enabled users of one role, by username; the district is loaded in the same query (no N+1). */
+    @EntityGraph(attributePaths = "district")
+    List<AppUser> findByRoleAndEnabledTrueOrderByUsernameAsc(Role role);
+
+    /** The same, limited to one district. */
+    @EntityGraph(attributePaths = "district")
+    List<AppUser> findByRoleAndEnabledTrueAndDistrictIdOrderByUsernameAsc(Role role, Long districtId);
 
     /**
      * Takes a PostgreSQL "advisory lock" that is released automatically when the transaction ends.
