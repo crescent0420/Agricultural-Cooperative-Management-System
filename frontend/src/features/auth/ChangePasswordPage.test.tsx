@@ -2,18 +2,21 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as authApi from '../../api/auth'
+import * as referenceApi from '../../api/reference'
 import { ApiError } from '../../api/errors'
 import { saveSession } from '../../auth/tokenStore'
 import { renderRoute } from '../../test/renderRoute'
 import { loginAnswer, newOfficer } from '../../test/users'
 
 vi.mock('../../api/auth')
+vi.mock('../../api/reference')
 
 describe('ChangePasswordPage (forced, after a one-time password)', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     saveSession('one-time-token', 1800)
     vi.mocked(authApi.getCurrentUser).mockResolvedValue(newOfficer)
+    vi.mocked(referenceApi.getDistrict).mockResolvedValue({ id: 15, name: 'Huye', provinceId: 4, provinceName: 'Southern Province' })
   })
 
   it('sends a user who must change the password there, whatever page they open', async () => {
