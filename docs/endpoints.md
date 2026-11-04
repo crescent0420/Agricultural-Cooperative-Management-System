@@ -24,7 +24,7 @@ Lists marked *(paged)* accept `page`, `size`, `sortBy`, `direction` and answer a
 | PATCH | `/api/users/{id}/role` | Change a role (and its district or farmer) | Admin | 200 | 404, 400 district/farmer does not fit the role, 409 own role / farmer already has an account |
 | PATCH | `/api/users/{id}/enabled` | Enable or disable an account | Admin | 200 | 400, 404, 409 own account |
 | POST | `/api/users/{id}/reset-password` | Email a new one-time password | Admin | 200 | 404, 422 no email address / account disabled |
-| POST | `/api/auth/change-password` | Replace the (one-time) password | any logged-in user | 200 | 400 wrong current password / weak or unchanged password |
+| POST | `/api/auth/change-password` | Replace the (one-time) password; the current token stops working, so log in again | any logged-in user | 204 | 400 wrong current password / weak or unchanged password |
 
 ## Reference data
 
@@ -211,6 +211,7 @@ For reference, the permission each URL rule requires (see `docs/permission-matri
 | GET | `/api/offerings/assigned-to-me` | `OFFERING_READ_ASSIGNED` |
 | GET | `/api/offerings/{id}` | `OFFERING_READ` |
 | PUT | `/api/offerings/{id}` | `OFFERING_MANAGE` |
+| GET | `/api/field-officers` | `OFFERING_MANAGE` |
 | GET | `/api/provinces` | `REFERENCE_READ` |
 | GET | `/api/reports/farmers-per-cooperative` | `REPORT_FARMERS_PER_COOPERATIVE` |
 | GET | `/api/reports/offering-capacity` | `REPORT_OFFERING_CAPACITY` |

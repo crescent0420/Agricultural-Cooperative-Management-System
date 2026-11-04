@@ -190,6 +190,7 @@ them empty tables. Emails are replaced by a mock, so nothing is sent.
 | `AuthorizationRulesTest` | Function-level security: each role can only call its own endpoints |
 | `PermissionMatrixTest` | The permission matrix itself: every permission has a role; separation of duties (money only for Finance, field data never for Finance) |
 | `ResponseEnvelopeTest` | Successes and errors use the same envelope; the matrix and `/api/auth/me` endpoints |
+| `OpenApiDocumentationTest` | Swagger documentation is complete: every endpoint has one of the 13 tags, a summary and a description; login, register and verify-email need no token; `docs/endpoints.md` lists every endpoint in both tables |
 | `FarmerTest` | Registration with a unique membership number; duplicate national id (409) and validation (400); search by name, number, cooperative and status with paging and sorting; district scope; status changes (a retired farmer can never be reactivated, 422) and their audit |
 | `FarmerStatusTest` | (unit) all 16 possible status changes: which are allowed and which are refused |
 | `RwandaReferenceDataTest` | The 5 provinces and 30 districts are seeded, and districts cannot be created through the API |
