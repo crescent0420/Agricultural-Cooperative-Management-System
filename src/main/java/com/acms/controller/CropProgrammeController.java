@@ -3,11 +3,14 @@ package com.acms.controller;
 import com.acms.common.ApiResponse;
 import com.acms.common.BaseController;
 import com.acms.common.PagedResponse;
+import com.acms.config.ApiTags;
 import com.acms.dto.CropProgrammeRenameRequest;
 import com.acms.dto.CropProgrammeRequest;
 import com.acms.dto.CropProgrammeResponse;
 import com.acms.dto.PrerequisiteRequest;
 import com.acms.service.CropProgrammeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = ApiTags.REFERENCE_DATA)
 @RestController
 @RequestMapping("/api/programmes")
 public class CropProgrammeController extends BaseController {
@@ -31,6 +35,15 @@ public class CropProgrammeController extends BaseController {
         this.programmeService = programmeService;
     }
 
+    @Operation(
+            summary = "Create a crop programme in a district",
+            description = """
+                    Create a crop programme in a district.
+
+                    - **Permission:** `REFERENCE_MANAGE` (Registrar)
+                    - **Success:** 201
+                    - **Errors** (besides 401/403): 400, 409 duplicate name
+                    """)
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<CropProgrammeResponse> create(
@@ -38,6 +51,16 @@ public class CropProgrammeController extends BaseController {
         return created(programmeService.create(request));
     }
 
+    @Operation(
+            summary = "List crop programmes",
+            description = """
+                    List crop programmes (district staff: own district).
+
+                    - **Permission:** `REFERENCE_READ` (all roles)
+                    - **Scope:** results are limited to the caller's own district, offerings or records
+                    - **Paged:** `page` (from 0), `size` (1-100, default 20), `sortBy` (one of id, name, createdAt; default name), `direction` (asc or desc; default asc)
+                    - **Success:** 200
+                    """)
     @GetMapping
     public ApiResponse<PagedResponse<CropProgrammeResponse>> list(@RequestParam(required = false) Long districtId,
                                                     @RequestParam(defaultValue = "0") int page,
@@ -47,11 +70,30 @@ public class CropProgrammeController extends BaseController {
         return ok(programmeService.findAll(districtId, page, size, sortBy, direction));
     }
 
+    @Operation(
+            summary = "One crop programme with its prerequisites",
+            description = """
+                    One crop programme with its prerequisites.
+
+                    - **Permission:** `REFERENCE_READ` (all roles)
+                    - **Scope:** only the caller's own district, offerings or records; any other record gives 403
+                    - **Success:** 200
+                    - **Errors** (besides 401/403): 404
+                    """)
     @GetMapping("/{id}")
     public ApiResponse<CropProgrammeResponse> get(@PathVariable Long id) {
         return ok(programmeService.findById(id));
     }
 
+    @Operation(
+            summary = "Rename a crop programme",
+            description = """
+                    Rename a crop programme.
+
+                    - **Permission:** `REFERENCE_MANAGE` (Registrar)
+                    - **Success:** 200
+                    - **Errors** (besides 401/403): 400, 404, 409 duplicate name
+                    """)
     @PutMapping("/{id}")
     public ApiResponse<CropProgrammeResponse> rename(
             @PathVariable Long id,
@@ -59,6 +101,15 @@ public class CropProgrammeController extends BaseController {
         return ok(programmeService.rename(id, request));
     }
 
+    @Operation(
+            summary = "Add a prerequisite training",
+            description = """
+                    Add a prerequisite training.
+
+                    - **Permission:** `REFERENCE_MANAGE` (Registrar)
+                    - **Success:** 201
+                    - **Errors** (besides 401/403): 400, 404, 409 already a prerequisite / farmers actively enrolled
+                    """)
     @PostMapping("/{id}/prerequisites")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<CropProgrammeResponse> addPrerequisite(
@@ -67,6 +118,15 @@ public class CropProgrammeController extends BaseController {
         return created(programmeService.addPrerequisite(id, request));
     }
 
+    @Operation(
+            summary = "Remove a prerequisite training",
+            description = """
+                    Remove a prerequisite training.
+
+                    - **Permission:** `REFERENCE_MANAGE` (Registrar)
+                    - **Success:** 200
+                    - **Errors** (besides 401/403): 404, 409 farmers actively enrolled
+                    """)
     @DeleteMapping("/{id}/prerequisites/{trainingId}")
     public ApiResponse<CropProgrammeResponse> removePrerequisite(
             @PathVariable Long id,
