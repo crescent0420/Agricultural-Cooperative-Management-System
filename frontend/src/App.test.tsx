@@ -1,19 +1,11 @@
 import { render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import App from './App'
 
 describe('App', () => {
-  afterEach(() => {
-    vi.unstubAllGlobals()
-  })
-
-  it('shows the ACMS title', () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status: 401 })))
-
+  it('opens the login page when nobody is logged in', async () => {
     render(<App />)
-
-    expect(
-      screen.getByRole('heading', { level: 1, name: /agricultural cooperative management system/i }),
-    ).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Log in' })).toBeInTheDocument()
+    expect(screen.getByText('Agricultural Cooperative Management System')).toBeInTheDocument()
   })
 })
