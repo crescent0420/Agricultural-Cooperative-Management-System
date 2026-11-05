@@ -19,7 +19,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
               <li key={item.to}>
                 <NavLink
                   to={item.to}
-                  end
+                  end={item.to === '/'}
                   onClick={onNavigate}
                   className={({ isActive }) =>
                     `block rounded-lg px-3 py-2 text-sm font-medium transition-colors ${

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState } from 'react'
 import type { ApiError } from './api/errors'
 import { AuthProvider } from './auth/AuthProvider'
+import { ToastProvider } from './components/toast/ToastProvider'
 import { AppRouter } from './routes/AppRouter'
 
 /** Retry a failed read once, and only when the server was unreachable or failed (never 4xx answers). */
@@ -23,7 +24,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <AppRouter />
+        <ToastProvider>
+          <AppRouter />
+        </ToastProvider>
       </AuthProvider>
     </QueryClientProvider>
   )

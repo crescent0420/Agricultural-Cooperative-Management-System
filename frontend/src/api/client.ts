@@ -56,6 +56,18 @@ export async function apiPost<T>(url: string, body?: unknown): Promise<T> {
   return (response.data ? response.data.data : undefined) as T
 }
 
+/** PUT and return `data` from the envelope. */
+export async function apiPut<T>(url: string, body?: unknown): Promise<T> {
+  const response = await apiClient.put<ApiResponse<T>>(url, body)
+  return response.data.data as T
+}
+
+/** DELETE and return `data` from the envelope (undefined for 204 No Content). */
+export async function apiDelete<T>(url: string): Promise<T> {
+  const response = await apiClient.delete<ApiResponse<T>>(url)
+  return (response.data ? response.data.data : undefined) as T
+}
+
 /** POST and return the envelope's `message`, for answers that carry no data (e.g. register). */
 export async function apiPostForMessage(url: string, body?: unknown): Promise<string> {
   const response = await apiClient.post<ApiResponse<null>>(url, body)
