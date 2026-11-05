@@ -37,3 +37,11 @@ export interface PagedResponse<T> {
   hasPrevious: boolean
   sort: string
 }
+
+/** ?page=&size=&sortBy=&direction= accepted by every paged list. sortBy must be one the endpoint allows. */
+export interface PageParams {
+  page: number
+  size: number
+  sortBy: string
+  direction: 'asc' | 'desc'
+}

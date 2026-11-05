@@ -21,5 +21,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
     css: true,
+    // Generous limits so the same tests pass on slower machines (e.g. Windows with antivirus scanning),
+    // where setting up the simulated browser can take 10-15x longer than on a fast one.
+    testTimeout: 20_000,
+    hookTimeout: 20_000,
   },
 })
