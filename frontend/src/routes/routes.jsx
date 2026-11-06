@@ -28,6 +28,11 @@ import { MyOfferingsPage } from '../features/offerings/MyOfferingsPage'
 import { NewOfferingPage } from '../features/offerings/NewOfferingPage'
 import { OfferingPage } from '../features/offerings/OfferingPage'
 import { OfferingsListPage } from '../features/offerings/OfferingsListPage'
+import { OfferingOverviewTab } from '../features/offerings/OfferingOverviewTab'
+import { EnrolmentPage } from '../features/enrolment/EnrolmentPage'
+import { MyEnrolmentsPage } from '../features/enrolment/MyEnrolmentsPage'
+import { OfferingEnrolmentsTab } from '../features/enrolment/OfferingEnrolmentsTab'
+import { OfferingsForMePage } from '../features/enrolment/OfferingsForMePage'
 import { SeasonPage } from '../features/seasons/SeasonPage'
 import { SeasonsListPage } from '../features/seasons/SeasonsListPage'
 import { RequireAuth } from './RequireAuth'
@@ -83,7 +88,17 @@ const moduleRoutes = [
   { path: '/offerings', element: guarded(['OFFERING_READ', 'ENROLMENT_LIST_FOR_OFFERING'], <OfferingsListPage />) },
   { path: '/offerings/mine', element: guarded(['OFFERING_READ_ASSIGNED'], <MyOfferingsPage />) },
   { path: '/offerings/new', element: guarded(['OFFERING_MANAGE'], <NewOfferingPage />) },
-  { path: '/offerings/:id', element: guarded(['OFFERING_READ', 'ENROLMENT_LIST_FOR_OFFERING'], <OfferingPage />) },
+  {
+    path: '/offerings/:id',
+    element: guarded(['OFFERING_READ', 'ENROLMENT_LIST_FOR_OFFERING'], <OfferingPage />),
+    children: [
+      { index: true, element: <OfferingOverviewTab /> },
+      { path: 'enrolments', element: guarded(['ENROLMENT_LIST_FOR_OFFERING'], <OfferingEnrolmentsTab />) },
+    ],
+  },
+  { path: '/my/offerings', element: guarded(['ENROLMENT_CREATE'], <OfferingsForMePage />) },
+  { path: '/my/enrolments', element: guarded(['ENROLMENT_READ_OWN'], <MyEnrolmentsPage />) },
+  { path: '/enrolments/:id', element: guarded(['ENROLMENT_READ'], <EnrolmentPage />) },
   { path: '/my/profile', element: guarded(['PROFILE_READ_OWN'], <MyProfilePage />) },
   {
     path: '/grading-scale',
