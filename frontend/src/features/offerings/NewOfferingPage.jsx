@@ -104,10 +104,12 @@ export function NewOfferingPage() {
             label="Crop programme"
             disabled={districtId == null}
             error={errors.programmeId?.message}
-            hint={
-              districtId != null && programmes.data?.content.length === 0
-                ? 'This district has no crop programmes yet (Reference data).'
-                : undefined
+            warning={
+              districtId == null
+                ? 'Choose a district first.'
+                : programmes.data?.content.length === 0
+                  ? 'This district has no crop programmes yet (Reference data).'
+                  : undefined
             }
             {...register('programmeId', { required: 'Choose a crop programme.' })}
           >
@@ -136,11 +138,14 @@ export function NewOfferingPage() {
             label="Field Officer"
             disabled={districtId == null}
             error={errors.fieldOfficerId?.message}
-            hint={
-              noOfficers
-                ? 'This district has no enabled Field Officer. Ask the administrator to create one.'
-                : 'Enabled Field Officers of the chosen district.'
+            warning={
+              districtId == null
+                ? 'Choose a district first.'
+                : noOfficers
+                  ? 'This district has no enabled Field Officer. Ask the administrator to create one.'
+                  : undefined
             }
+            hint={districtId != null && !noOfficers ? 'Enabled Field Officers of the chosen district.' : undefined}
             {...register('fieldOfficerId', { required: 'Choose a Field Officer.' })}
           >
             <option value="">{districtId == null ? 'Choose a district first' : 'Choose a Field Officer…'}</option>

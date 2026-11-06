@@ -127,7 +127,10 @@ export function SeasonPage() {
           ))}
         </dl>
         {canManage && hasWindows && (
-          <p className="mt-4 text-sm text-muted">
+          <p className="mt-4 flex items-start gap-1 text-sm font-medium text-warning">
+            <span aria-hidden="true" className="text-accent-500">
+              ⚠
+            </span>
             These details can no longer be edited: an enrolment window has been opened for this season, and
             farmers&apos; enrolments depend on them.
           </p>

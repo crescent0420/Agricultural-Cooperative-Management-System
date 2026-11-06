@@ -112,10 +112,12 @@ export function RegisterFarmerPage() {
             label="Cooperative"
             disabled={!districtId}
             error={errors.cooperativeId?.message}
-            hint={
-              districtId && cooperatives.data?.content.length === 0
-                ? 'This district has no cooperatives yet (Reference data).'
-                : undefined
+            warning={
+              !districtId
+                ? 'Choose a district first.'
+                : cooperatives.data?.content.length === 0
+                  ? 'This district has no cooperatives yet (Reference data).'
+                  : undefined
             }
             {...register('cooperativeId', { required: 'Choose a cooperative.' })}
           >

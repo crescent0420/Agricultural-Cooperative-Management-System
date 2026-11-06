@@ -128,7 +128,7 @@ export function FarmersListPage() {
           label="Cooperative"
           value={filters.cooperativeId}
           disabled={districtId == null}
-          hint={districtId == null ? 'Choose a district first.' : undefined}
+          warning={districtId == null ? 'Choose a district first.' : undefined}
           onChange={(e) => list.setFilter('cooperativeId', e.target.value)}
         >
           <option value="">All cooperatives</option>
