@@ -15,13 +15,23 @@ import { ProgrammeDetailPage } from '../features/reference/ProgrammeDetailPage'
 import { ProgrammesTab } from '../features/reference/ProgrammesTab'
 import { ReferencePage } from '../features/reference/ReferencePage'
 import { TrainingsTab } from '../features/reference/TrainingsTab'
+import { FarmerDetailPage } from '../features/farmers/FarmerDetailPage'
+import { FarmerDetailsTab } from '../features/farmers/FarmerDetailsTab'
+import { FarmerResultsTab } from '../features/farmers/FarmerResultsTab'
+import { FarmersListPage } from '../features/farmers/FarmersListPage'
+import { FarmerStatusTab } from '../features/farmers/FarmerStatusTab'
+import { FarmerTrainingsTab } from '../features/farmers/FarmerTrainingsTab'
+import { MissingPrerequisitesTab } from '../features/farmers/MissingPrerequisitesTab'
+import { MyProfilePage } from '../features/farmers/MyProfilePage'
+import { RegisterFarmerPage } from '../features/farmers/RegisterFarmerPage'
 import { RequireAuth } from './RequireAuth'
 import { RequirePermission } from './RequirePermission'
 
-/**
- * Module pages not built yet: one placeholder per menu item, guarded by the same permissions as the item.
- * Each feature branch replaces its placeholders with real pages.
- */
+/** A page that opens only for users holding every listed permission (the backend still checks each call). */
+const guarded = (permissions, element) => (
+  <RequirePermission requires={{ allOf: permissions }}>{element}</RequirePermission>
+)
+
 /** Module pages already built; every other menu item still opens its placeholder. */
 const moduleRoutes = [
   {
@@ -47,6 +57,21 @@ const moduleRoutes = [
       </RequirePermission>
     ),
   },
+  { path: '/farmers', element: guarded(['FARMER_LIST'], <FarmersListPage />) },
+  { path: '/farmers/new', element: guarded(['FARMER_MANAGE'], <RegisterFarmerPage />) },
+  {
+    path: '/farmers/:id',
+    element: guarded(['FARMER_READ'], <FarmerDetailPage />),
+    children: [
+      { index: true, element: <Navigate to="details" replace /> },
+      { path: 'details', element: <FarmerDetailsTab /> },
+      { path: 'status', element: <FarmerStatusTab /> },
+      { path: 'trainings', element: guarded(['TRAINING_RECORD_READ'], <FarmerTrainingsTab />) },
+      { path: 'prerequisites', element: guarded(['TRAINING_RECORD_READ'], <MissingPrerequisitesTab />) },
+      { path: 'results', element: guarded(['RESULT_READ'], <FarmerResultsTab />) },
+    ],
+  },
+  { path: '/my/profile', element: guarded(['PROFILE_READ_OWN'], <MyProfilePage />) },
   {
     path: '/grading-scale',
     element: (
