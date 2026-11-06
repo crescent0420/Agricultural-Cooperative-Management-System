@@ -7,6 +7,21 @@ export function formatDate(value) {
   return Number.isNaN(date.getTime()) ? value : DATE.format(date)
 }
 
+const DATE_TIME = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+})
+
+/** An ISO instant → "6 Nov 2026, 10:51" in this computer's time zone. */
+export function formatDateTime(value) {
+  if (!value) return '—'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : DATE_TIME.format(date)
+}
+
 /** Today's date on this computer as "YYYY-MM-DD", for date inputs that may not be in the future. */
 export function todayIso() {
   const now = new Date()
