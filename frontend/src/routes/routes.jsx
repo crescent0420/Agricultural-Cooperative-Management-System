@@ -24,6 +24,12 @@ import { FarmerTrainingsTab } from '../features/farmers/FarmerTrainingsTab'
 import { MissingPrerequisitesTab } from '../features/farmers/MissingPrerequisitesTab'
 import { MyProfilePage } from '../features/farmers/MyProfilePage'
 import { RegisterFarmerPage } from '../features/farmers/RegisterFarmerPage'
+import { MyOfferingsPage } from '../features/offerings/MyOfferingsPage'
+import { NewOfferingPage } from '../features/offerings/NewOfferingPage'
+import { OfferingPage } from '../features/offerings/OfferingPage'
+import { OfferingsListPage } from '../features/offerings/OfferingsListPage'
+import { SeasonPage } from '../features/seasons/SeasonPage'
+import { SeasonsListPage } from '../features/seasons/SeasonsListPage'
 import { RequireAuth } from './RequireAuth'
 import { RequirePermission } from './RequirePermission'
 
@@ -71,6 +77,13 @@ const moduleRoutes = [
       { path: 'results', element: guarded(['RESULT_READ'], <FarmerResultsTab />) },
     ],
   },
+  { path: '/seasons', element: guarded(['SEASON_READ'], <SeasonsListPage />) },
+  { path: '/seasons/:id', element: guarded(['SEASON_READ'], <SeasonPage />) },
+  // Staff pages: farmers also hold OFFERING_READ but browse offerings in "Offerings for me" (enrolment module).
+  { path: '/offerings', element: guarded(['OFFERING_READ', 'ENROLMENT_LIST_FOR_OFFERING'], <OfferingsListPage />) },
+  { path: '/offerings/mine', element: guarded(['OFFERING_READ_ASSIGNED'], <MyOfferingsPage />) },
+  { path: '/offerings/new', element: guarded(['OFFERING_MANAGE'], <NewOfferingPage />) },
+  { path: '/offerings/:id', element: guarded(['OFFERING_READ', 'ENROLMENT_LIST_FOR_OFFERING'], <OfferingPage />) },
   { path: '/my/profile', element: guarded(['PROFILE_READ_OWN'], <MyProfilePage />) },
   {
     path: '/grading-scale',
