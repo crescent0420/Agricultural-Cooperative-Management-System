@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, NavLink, Outlet, useParams } from 'react-router'
 import { toApiError } from '../../api/errors'
 import { getOffering, updateOffering } from '../../api/offerings'
 import { useAuth } from '../../auth/useAuth'
@@ -11,11 +11,15 @@ import { Button } from '../../components/ui/Button'
 import { Spinner } from '../../components/ui/Spinner'
 import { ForbiddenPage } from '../errors/ForbiddenPage'
 import { EditOfferingDialog } from './EditOfferingDialog'
-import { PlacesCell } from './OfferingsTable'
+
+/** The tabs of URD section 15; Inspections and Results arrive with the inspections-and-results module. */
+const TABS = [
+  { to: '.', label: 'Overview', permission: 'OFFERING_READ' },
+  { to: 'enrolments', label: 'Enrolments', permission: 'ENROLMENT_LIST_FOR_OFFERING' },
+]
 
 /**
- * /offerings/:id: one offering (URD FR-OFF-04, FR-OFF-05). This branch builds the Overview; the Enrolments,
- * Inspections and Results tabs arrive with the enrolment and the inspections-and-results modules.
+ * /offerings/:id: one offering with its tabs (URD FR-OFF-04, FR-OFF-05).
  * The backend answers 403 for an offering outside a district user's own district.
  */
 export function OfferingPage() {
@@ -49,23 +53,6 @@ export function OfferingPage() {
   }
 
   const o = offering.data
-  const rows = [
-    { label: 'Crop programme', value: o.programmeName },
-    {
-      label: 'Season',
-      value: (
-        <Link to={`/seasons/${o.seasonId}`} className="font-medium text-brand-700 hover:underline">
-          {o.seasonName}
-        </Link>
-      ),
-    },
-    { label: 'District', value: o.districtName },
-    { label: 'Field Officer', value: o.fieldOfficerUsername },
-    { label: 'Hectares per participant', value: `${o.hectaresPerParticipant} ha` },
-    { label: 'Enrolled / maximum', value: <PlacesCell offering={o} /> },
-    { label: 'Places left', value: o.remainingPlaces },
-  ]
-
   return (
     <>
       <Link to="/offerings" className="mb-3 inline-block text-sm font-semibold text-brand-600 hover:underline">
@@ -82,17 +69,23 @@ export function OfferingPage() {
           )
         }
       />
-      <section className="rounded-lg border border-line bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold">Overview</h2>
-        <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-          {rows.map(({ label, value }) => (
-            <div key={label}>
-              <dt className="text-xs font-semibold tracking-wide text-muted uppercase">{label}</dt>
-              <dd className="mt-1 text-ink">{value}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+      <nav aria-label="Offering" className="mb-5 flex gap-1 overflow-x-auto border-b border-line">
+        {TABS.filter((tab) => hasPermission(tab.permission)).map((tab) => (
+          <NavLink
+            key={tab.label}
+            to={tab.to}
+            end
+            className={({ isActive }) =>
+              `-mb-px border-b-2 px-4 py-2 text-sm font-semibold whitespace-nowrap ${
+                isActive ? 'border-brand-600 text-brand-700' : 'border-transparent text-muted hover:text-ink'
+              }`
+            }
+          >
+            {tab.label}
+          </NavLink>
+        ))}
+      </nav>
+      <Outlet context={o} />
       {editing && <EditOfferingDialog offering={o} onSave={save.mutateAsync} onClose={() => setEditing(false)} />}
     </>
   )
