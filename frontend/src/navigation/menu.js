@@ -21,7 +21,7 @@ export const MENU = [
   {
     label: 'My area',
     items: [
-      { label: 'My profile', to: '/my/profile', requires: { allOf: ['PROFILE_READ_OWN'] }, arrivesIn: 'enrolment' },
+      { label: 'My profile', to: '/my/profile', requires: { allOf: ['PROFILE_READ_OWN'] }, arrivesIn: 'farmers' },
       {
         label: 'Offerings for me',
         to: '/my/offerings',

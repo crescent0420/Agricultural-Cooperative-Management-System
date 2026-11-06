@@ -49,6 +49,8 @@ export function usePagedList(defaults, sortable) {
     })
   const filter = (name) => search.get(name) ?? ''
   const setFilter = (name, value) => update({ [name]: value, page: 0 })
+  /** Several filters at once, e.g. { name: 'Uwase', status: '' } ('' removes a filter). */
+  const setFilters = (values) => update({ ...values, page: 0 })
 
-  return { params, setPage, setSize, toggleSort, filter, setFilter }
+  return { params, setPage, setSize, toggleSort, filter, setFilter, setFilters }
 }

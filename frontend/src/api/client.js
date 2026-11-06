@@ -61,6 +61,12 @@ export async function apiPut(url, body) {
   return response.data.data
 }
 
+/** PATCH and return `data` from the envelope. */
+export async function apiPatch(url, body) {
+  const response = await apiClient.patch(url, body)
+  return response.data.data
+}
+
 /** DELETE and return `data` from the envelope (undefined for 204 No Content). */
 export async function apiDelete(url) {
   const response = await apiClient.delete(url)

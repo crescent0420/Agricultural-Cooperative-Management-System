@@ -16,8 +16,12 @@ Requirements: see the URD; design: see the Frontend Architecture document.
 | `npm run dev` | Start the development server on http://localhost:5173 |
 | `npm run test` | Run the component tests and watch for changes (`npm run test:run` runs once) |
 | `npm run lint` | Check the code with oxlint |
-| `npm run build` | Type-check and build the production files into `dist/` |
+| `npm run build` | Build the production files into `dist/` |
 | `npm run preview` | Serve the built `dist/` locally |
+
+Run the tests from this folder inside the repository: `farmerStatus.test.js` reads the backend's
+`../src/main/java/com/acms/enums/FarmerStatus.java` to check that the status dropdown offers exactly the
+changes the backend allows.
 
 ## How the frontend reaches the API
 
