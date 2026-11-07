@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { uwase } from '../../test/farmers'
 import { contribution2026B } from '../../test/enrolments'
 import { fullOffering, maizeOffering, season2026B } from '../../test/seasons'
-import { eligibilityChecklist } from './eligibility'
+import { eligibilityChecklist, rankOfferings } from './eligibility'
 
 const ready = {
   offering: maizeOffering,
@@ -55,5 +55,25 @@ describe('eligibilityChecklist (FR-ENR-01)', () => {
     })
     const loading = eligibilityChecklist({ offering: maizeOffering })
     expect(loading.slice(0, 4).every((i) => i.ok === null)).toBe(true)
+  })
+})
+
+describe('rankOfferings (Offerings for me order, 7 Nov 2026)', () => {
+  const row = (id, oks, enrolled = false) => ({
+    offering: { id },
+    enrolled,
+    items: oks.map((ok) => ({ ok })),
+  })
+
+  it('puts offerings meeting every requirement first, then by how many are met, enrolled ones last', () => {
+    const ranked = rankOfferings([
+      row(1, [true, false, false, true, true]), // 3 met
+      row(2, [true, true, true, true, true], true), // enrolled
+      row(3, [true, true, true, true, true]), // all met
+      row(4, [true, true, true, true, false]), // 4 met
+      row(5, [true, null, false, true, true]), // 3 met (unknown is not met), after 1: same count, later in the list
+    ])
+    expect(ranked.map((r) => r.offering.id)).toEqual([3, 4, 1, 5, 2])
+    expect(ranked.map((r) => r.met)).toEqual([5, 4, 3, 3, 5])
   })
 })
