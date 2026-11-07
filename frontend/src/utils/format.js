@@ -28,3 +28,10 @@ export function todayIso() {
   const pad = (n) => String(n).padStart(2, '0')
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
+
+const AMOUNT = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+
+/** 50000 → "50,000"; 1234.5 → "1,234.5". The backend sends plain amounts; the value itself is never changed. */
+export function formatAmount(value) {
+  return value == null ? '—' : AMOUNT.format(Number(value))
+}

@@ -33,6 +33,9 @@ import { EnrolmentPage } from '../features/enrolment/EnrolmentPage'
 import { MyEnrolmentsPage } from '../features/enrolment/MyEnrolmentsPage'
 import { OfferingEnrolmentsTab } from '../features/enrolment/OfferingEnrolmentsTab'
 import { OfferingsForMePage } from '../features/enrolment/OfferingsForMePage'
+import { ContributionPage } from '../features/contributions/ContributionPage'
+import { ContributionsListPage } from '../features/contributions/ContributionsListPage'
+import { MyContributionsPage } from '../features/contributions/MyContributionsPage'
 import { OfferingInspectionsTab } from '../features/inspections/OfferingInspectionsTab'
 import { MyResultsPage } from '../features/results/MyResultsPage'
 import { OfferingResultsTab } from '../features/results/OfferingResultsTab'
@@ -109,6 +112,9 @@ const moduleRoutes = [
   { path: '/enrolments/:id/scores', element: guarded(['RESULT_ENTER'], <ScoreEntryPage />) },
   { path: '/results/:id', element: guarded(['RESULT_READ'], <ResultPage />) },
   { path: '/my/results', element: guarded(['RESULT_READ_OWN'], <MyResultsPage />) },
+  { path: '/contributions', element: guarded(['CONTRIBUTION_LIST'], <ContributionsListPage />) },
+  { path: '/contributions/:id', element: guarded(['CONTRIBUTION_READ'], <ContributionPage />) },
+  { path: '/my/contributions', element: guarded(['CONTRIBUTION_READ_OWN'], <MyContributionsPage />) },
   { path: '/my/profile', element: guarded(['PROFILE_READ_OWN'], <MyProfilePage />) },
   {
     path: '/grading-scale',
