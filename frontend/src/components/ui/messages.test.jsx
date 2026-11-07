@@ -43,3 +43,29 @@ describe('message colours', () => {
     expect(error).toHaveTextContent('✕')
   })
 })
+
+describe('warnings on attempt (project rule, 7 Nov 2026)', () => {
+  it('shows a blocked field’s warning only after the user tries it, and lets Tab move on', async () => {
+    const { userEvent } = await import('@testing-library/user-event')
+    const user = userEvent.setup()
+    render(
+      <>
+        <Select label="Programme" blockedReason="Choose a district first.">
+          <option value="">Choose a programme…</option>
+        </Select>
+        <TextField label="Next" />
+      </>,
+    )
+    const select = screen.getByLabelText('Programme')
+    expect(select).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.queryByText('Choose a district first.')).not.toBeInTheDocument()
+
+    await user.click(select)
+    expect(screen.getByText('Choose a district first.').closest('p')).toHaveClass('text-warning')
+    expect(select).toHaveAccessibleDescription('Choose a district first.')
+
+    select.focus()
+    await user.tab()
+    expect(screen.getByLabelText('Next')).toHaveFocus()
+  })
+})

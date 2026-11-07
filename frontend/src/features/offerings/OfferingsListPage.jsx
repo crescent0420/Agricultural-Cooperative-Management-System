@@ -62,8 +62,7 @@ export function OfferingsListPage() {
         <Select
           label="Programme"
           value={programmeId}
-          disabled={districtId == null}
-          warning={districtId == null ? 'Choose a district first.' : undefined}
+          blockedReason={districtId == null ? 'Choose a district first.' : undefined}
           onChange={(e) => list.setFilter('programmeId', e.target.value)}
         >
           <option value="">All programmes</option>

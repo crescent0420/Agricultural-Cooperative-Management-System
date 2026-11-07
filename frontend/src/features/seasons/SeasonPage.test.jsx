@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '../../api/errors'
@@ -75,13 +75,18 @@ describe('SeasonPage (FR-SEA-02..04)', () => {
     expect(seasonsApi.closeWindow).toHaveBeenCalledWith(3)
   })
 
-  it('offers no Edit once a window has been opened, and says why (S1)', async () => {
+  it('warns, when Edit is tried, that a season with a window can no longer change (S1)', async () => {
     given({ ...season2026B, enrolmentOpen: false }, [{ ...openWindowRow, status: 'CLOSED' }])
     logInAs(USERS.registrar)
     renderRoute('/seasons/3')
-    expect(await screen.findByText(/can no longer be edited/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Open enrolment window' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    const edit = await screen.findByRole('button', { name: 'Edit' })
+    await waitFor(() => expect(edit).toBeEnabled())
+    // No warning before the attempt (project rule).
+    expect(screen.queryByText(/can no longer be edited/)).not.toBeInTheDocument()
+    await userEvent.setup().click(edit)
+    expect(screen.getByRole('alert')).toHaveTextContent('can no longer be edited')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(seasonsApi.updateSeason).not.toHaveBeenCalled()
   })
 
   it('lets the Registrar edit a season that has no window yet', async () => {

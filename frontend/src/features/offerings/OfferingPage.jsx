@@ -12,10 +12,12 @@ import { Spinner } from '../../components/ui/Spinner'
 import { ForbiddenPage } from '../errors/ForbiddenPage'
 import { EditOfferingDialog } from './EditOfferingDialog'
 
-/** The tabs of URD section 15; Inspections and Results arrive with the inspections-and-results module. */
+/** The tabs of URD section 15. */
 const TABS = [
   { to: '.', label: 'Overview', permission: 'OFFERING_READ' },
   { to: 'enrolments', label: 'Enrolments', permission: 'ENROLMENT_LIST_FOR_OFFERING' },
+  { to: 'inspections', label: 'Inspections', permission: 'INSPECTION_READ' },
+  { to: 'results', label: 'Results', permission: 'INSPECTION_READ' },
 ]
 
 /**

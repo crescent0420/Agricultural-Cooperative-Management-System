@@ -48,10 +48,10 @@ describe('RegisterFarmerPage', () => {
 
   it('asks for the district first, then lists only its cooperatives', async () => {
     renderRoute('/farmers/new')
-    expect(await screen.findByLabelText('Cooperative')).toBeDisabled()
+    expect(await screen.findByLabelText('Cooperative')).toHaveAttribute('aria-disabled', 'true')
     await screen.findByRole('option', { name: 'Huye' })
     await userEvent.setup().selectOptions(screen.getByLabelText('District'), 'Huye')
-    await waitFor(() => expect(screen.getByLabelText('Cooperative')).toBeEnabled())
+    await waitFor(() => expect(screen.getByLabelText('Cooperative')).not.toHaveAttribute('aria-disabled'))
     expect(referenceApi.listCooperatives).toHaveBeenCalledWith(expect.anything(), 15)
   })
 

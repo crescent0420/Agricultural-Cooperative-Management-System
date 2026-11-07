@@ -32,7 +32,9 @@ describe('Offering page, Enrolments tab (FR-ENR-05)', () => {
       'ENROLLED',
     )
     const tabs = within(screen.getByRole('navigation', { name: 'Offering' })).getAllByRole('link')
-    expect(tabs.map((t) => t.textContent)).toEqual(['Overview', 'Enrolments'])
+    expect(tabs.map((t) => t.textContent)).toEqual(['Overview', 'Enrolments', 'Inspections', 'Results'])
+    // The offering's own Field Officer enters scores from here (FR-RES-01).
+    expect(screen.getByRole('link', { name: 'Scores of Uwase Marie' })).toHaveAttribute('href', '/enrolments/50/scores')
     // Only the Registrar cancels from here.
     expect(screen.queryByRole('button', { name: /Cancel the enrolment/ })).not.toBeInTheDocument()
   })

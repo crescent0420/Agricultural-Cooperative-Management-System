@@ -35,6 +35,7 @@ export function SeasonPage() {
   const queryClient = useQueryClient()
   const list = usePagedList({ sortBy: 'openedAt', direction: 'desc' }, WINDOW_SORTABLE)
   const [editing, setEditing] = useState(false)
+  const [editBlocked, setEditBlocked] = useState(false)
   const [windowAction, setWindowAction] = useState(null) // 'open' | 'close'
   const [windowError, setWindowError] = useState(null)
 
@@ -79,6 +80,8 @@ export function SeasonPage() {
   const s = season.data
   // S1: once any window exists (open or closed) the backend refuses edits with 409.
   const hasWindows = (windows.data?.totalElements ?? 0) > 0
+  // S1, warned on attempt (project rule): the season can no longer change once a window has been opened.
+  const tryEdit = () => (hasWindows ? setEditBlocked(true) : setEditing(true))
   const askWindow = (action) => {
     setWindowError(null)
     setWindowAction(action)
@@ -102,16 +105,22 @@ export function SeasonPage() {
               ) : (
                 <Button onClick={() => askWindow('open')}>Open enrolment window</Button>
               )}
-              {!windows.isPending && !hasWindows && (
-                <Button variant="secondary" onClick={() => setEditing(true)}>
-                  Edit
-                </Button>
-              )}
+              <Button variant="secondary" onClick={tryEdit} disabled={windows.isPending}>
+                Edit
+              </Button>
             </>
           )
         }
       />
 
+      {editBlocked && hasWindows && (
+        <div className="mb-4">
+          <Alert tone="warning">
+            These details can no longer be edited: an enrolment window has been opened for this season, and
+            farmers&apos; enrolments depend on them.
+          </Alert>
+        </div>
+      )}
       <section className="mb-6 rounded-lg border border-line bg-white p-6">
         <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
@@ -126,15 +135,6 @@ export function SeasonPage() {
             </div>
           ))}
         </dl>
-        {canManage && hasWindows && (
-          <p className="mt-4 flex items-start gap-1 text-sm font-medium text-warning">
-            <span aria-hidden="true" className="text-accent-500">
-              ⚠
-            </span>
-            These details can no longer be edited: an enrolment window has been opened for this season, and
-            farmers&apos; enrolments depend on them.
-          </p>
-        )}
       </section>
 
       <section className="space-y-3">

@@ -24,7 +24,7 @@ import { useCancelEnrolment } from './useCancelEnrolment'
  */
 export function OfferingEnrolmentsTab() {
   const offering = useOffering()
-  const { hasPermission } = useAuth()
+  const { user, hasPermission } = useAuth()
   const list = usePagedList({ sortBy: 'enrolledAt', direction: 'asc' }, ENROLMENT_SORTABLE)
   const status = list.filter('status') || 'ENROLLED'
   const { cancel, reasonRequired } = useCancelEnrolment()
@@ -63,6 +63,21 @@ export function OfferingEnrolmentsTab() {
   ]
   if (status === 'CANCELLED') {
     columns.push({ header: 'Reason', cell: (e) => e.cancellationReason ?? '—' })
+  }
+  // FR-RES-01: the offering's own Field Officer enters each farmer's scores.
+  if (status === 'ENROLLED' && hasPermission('RESULT_ENTER') && user?.id === offering.fieldOfficerId) {
+    columns.push({
+      header: 'Scores',
+      cell: (e) => (
+        <Link
+          to={`/enrolments/${e.id}/scores`}
+          aria-label={`Scores of ${e.farmerName}`}
+          className="font-semibold text-brand-700 hover:underline"
+        >
+          Scores
+        </Link>
+      ),
+    })
   }
   if (status === 'ENROLLED' && hasPermission('ENROLMENT_CANCEL')) {
     columns.push({
