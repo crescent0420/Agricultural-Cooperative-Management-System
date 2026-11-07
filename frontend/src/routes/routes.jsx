@@ -36,6 +36,9 @@ import { OfferingsForMePage } from '../features/enrolment/OfferingsForMePage'
 import { ContributionPage } from '../features/contributions/ContributionPage'
 import { ContributionsListPage } from '../features/contributions/ContributionsListPage'
 import { MyContributionsPage } from '../features/contributions/MyContributionsPage'
+import { MyPermitsPage } from '../features/permits/MyPermitsPage'
+import { PermitAttemptsPage } from '../features/permits/PermitAttemptsPage'
+import { VerifyPermitPage } from '../features/permits/VerifyPermitPage'
 import { OfferingInspectionsTab } from '../features/inspections/OfferingInspectionsTab'
 import { MyResultsPage } from '../features/results/MyResultsPage'
 import { OfferingResultsTab } from '../features/results/OfferingResultsTab'
@@ -114,6 +117,9 @@ const moduleRoutes = [
   { path: '/my/results', element: guarded(['RESULT_READ_OWN'], <MyResultsPage />) },
   { path: '/contributions', element: guarded(['CONTRIBUTION_LIST'], <ContributionsListPage />) },
   { path: '/contributions/:id', element: guarded(['CONTRIBUTION_READ'], <ContributionPage />) },
+  { path: '/my/permits', element: guarded(['PERMIT_READ_OWN'], <MyPermitsPage />) },
+  { path: '/permits/verify', element: guarded(['PERMIT_VERIFY'], <VerifyPermitPage />) },
+  { path: '/permits/attempts', element: guarded(['PERMIT_ATTEMPT_READ'], <PermitAttemptsPage />) },
   { path: '/my/contributions', element: guarded(['CONTRIBUTION_READ_OWN'], <MyContributionsPage />) },
   { path: '/my/profile', element: guarded(['PROFILE_READ_OWN'], <MyProfilePage />) },
   {

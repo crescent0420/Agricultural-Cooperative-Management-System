@@ -11,6 +11,7 @@ import { Select } from '../../components/ui/Select'
 import { usePagedList } from '../../hooks/usePagedList'
 import { formatDateTime } from '../../utils/format'
 import { SeasonFilter } from '../offerings/SeasonFilter'
+import { GetPermitDialog } from '../permits/GetPermitDialog'
 import { CancelEnrolmentDialog } from './CancelEnrolmentDialog'
 import { EnrolmentStatusBadge } from './EnrolmentStatusBadge'
 import { ENROLMENT_SORTABLE } from './enrolmentFields'
@@ -24,6 +25,7 @@ export function MyEnrolmentsPage() {
   const status = list.filter('status')
   const { cancel, reasonRequired } = useCancelEnrolment()
   const [cancelling, setCancelling] = useState(null)
+  const [permitFor, setPermitFor] = useState(null)
 
   const enrolments = useQuery({
     queryKey: ['enrolments', 'mine', list.params, seasonId, status],
@@ -57,15 +59,28 @@ export function MyEnrolmentsPage() {
         ),
     },
   ]
-  if (hasPermission('ENROLMENT_CANCEL')) {
+  if (hasPermission('ENROLMENT_CANCEL') || hasPermission('PERMIT_GENERATE')) {
     columns.push({
       header: 'Actions',
       className: 'text-right',
       cell: (e) =>
         e.status === 'ENROLLED' && (
-          <Button variant="link" onClick={() => setCancelling(e)} aria-label={`Cancel ${e.programmeName}`}>
-            Cancel
-          </Button>
+          <span className="inline-flex gap-3">
+            {hasPermission('PERMIT_GENERATE') && (
+              <Button
+                variant="link"
+                onClick={() => setPermitFor(e)}
+                aria-label={`Get the permit for ${e.programmeName}`}
+              >
+                Get permit
+              </Button>
+            )}
+            {hasPermission('ENROLMENT_CANCEL') && (
+              <Button variant="link" onClick={() => setCancelling(e)} aria-label={`Cancel ${e.programmeName}`}>
+                Cancel
+              </Button>
+            )}
+          </span>
         ),
     })
   }
@@ -95,6 +110,7 @@ export function MyEnrolmentsPage() {
         onSort={list.toggleSort}
       />
       <Pagination page={enrolments.data} onPage={list.setPage} onSize={list.setSize} />
+      {permitFor && <GetPermitDialog enrolment={permitFor} onClose={() => setPermitFor(null)} />}
       {cancelling && (
         <CancelEnrolmentDialog
           enrolment={cancelling}
