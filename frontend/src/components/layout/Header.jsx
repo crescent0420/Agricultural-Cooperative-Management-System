@@ -19,7 +19,7 @@ export function Header({ menuOpen, onToggleMenu }) {
   const roleLine = [ROLE_LABELS[user.role], district.data?.name].filter(Boolean).join(' · ')
 
   return (
-    <header className="sticky top-0 z-30 bg-brand-700 text-white">
+    <header className="sticky top-0 z-30 bg-brand-700 text-white print:hidden">
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <div className="flex items-center gap-3">
           <button

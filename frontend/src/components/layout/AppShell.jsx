@@ -32,7 +32,7 @@ export function AppShell() {
       <Header menuOpen={menuOpen} onToggleMenu={() => setMenuOpen(!menuOpen)} />
 
       <div className="flex">
-        <aside className="sticky top-[60px] hidden h-[calc(100vh-60px)] w-64 shrink-0 overflow-y-auto border-r border-line bg-white lg:block">
+        <aside className="sticky top-[60px] hidden h-[calc(100vh-60px)] print:!hidden w-64 shrink-0 overflow-y-auto border-r border-line bg-white lg:block">
           <Sidebar />
         </aside>
 

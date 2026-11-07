@@ -10,6 +10,7 @@ import { Button } from '../../components/ui/Button'
 import { Spinner } from '../../components/ui/Spinner'
 import { formatDateTime } from '../../utils/format'
 import { ForbiddenPage } from '../errors/ForbiddenPage'
+import { GetPermitDialog } from '../permits/GetPermitDialog'
 import { CancelEnrolmentDialog } from './CancelEnrolmentDialog'
 import { EnrolmentStatusBadge } from './EnrolmentStatusBadge'
 import { useCancelEnrolment } from './useCancelEnrolment'
@@ -24,6 +25,7 @@ export function EnrolmentPage() {
   const queryClient = useQueryClient()
   const { cancel, reasonRequired } = useCancelEnrolment()
   const [cancelling, setCancelling] = useState(false)
+  const [gettingPermit, setGettingPermit] = useState(false)
   const enrolment = useQuery({ queryKey: ['enrolments', 'detail', id], queryFn: () => getEnrolment(id) })
 
   if (enrolment.isPending) {
@@ -85,11 +87,15 @@ export function EnrolmentPage() {
         title={`${e.programmeName}, ${e.seasonName}`}
         description={`Enrolment of ${e.farmerName}`}
         actions={
-          hasPermission('ENROLMENT_CANCEL') &&
           e.status === 'ENROLLED' && (
-            <Button variant="secondary" onClick={() => setCancelling(true)}>
-              Cancel enrolment
-            </Button>
+            <>
+              {hasPermission('PERMIT_GENERATE') && <Button onClick={() => setGettingPermit(true)}>Get permit</Button>}
+              {hasPermission('ENROLMENT_CANCEL') && (
+                <Button variant="secondary" onClick={() => setCancelling(true)}>
+                  Cancel enrolment
+                </Button>
+              )}
+            </>
           )
         }
       />
@@ -103,6 +109,7 @@ export function EnrolmentPage() {
           ))}
         </dl>
       </section>
+      {gettingPermit && <GetPermitDialog enrolment={e} onClose={() => setGettingPermit(false)} />}
       {cancelling && (
         <CancelEnrolmentDialog
           enrolment={e}
