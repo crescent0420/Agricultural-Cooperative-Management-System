@@ -94,6 +94,38 @@ describe('OfferingsForMePage (FR-ENR-01, FR-ENR-02)', () => {
     ).toBeInTheDocument()
   })
 
+  it('shows the offerings whose requirements are all met first, then by how many are met', async () => {
+    const beans = { ...maizeOffering, id: 14, programmeId: 31, programmeName: 'Beans', remainingPlaces: 5 }
+    const sorghum = { ...maizeOffering, id: 15, programmeId: 32, programmeName: 'Sorghum', remainingPlaces: 0 }
+    // The backend's order (newest first): Sorghum (2 missing: prerequisite and place), Beans (1), Maize (none).
+    vi.mocked(offeringsApi.listOfferings).mockResolvedValue(paged([sorghum, beans, maizeOffering]))
+    vi.mocked(farmersApi.getMissingPrerequisites).mockImplementation(async (_, programmeId) =>
+      programmeId === 30 ? [] : [{ id: 4, name: 'Pest and disease control' }],
+    )
+    renderRoute('/my/offerings')
+    await screen.findByRole('article', { name: 'Maize, 2026B' })
+    const order = screen.getAllByRole('article').map((a) => a.getAttribute('aria-label'))
+    expect(order).toEqual(['Maize, 2026B', 'Beans, 2026B', 'Sorghum, 2026B'])
+    expect(within(card('Maize, 2026B')).getByText('5 of 5 met')).toBeInTheDocument()
+    expect(within(card('Sorghum, 2026B')).getByText('3 of 5 met')).toBeInTheDocument()
+  })
+
+  it('loads every page of offerings so that all of them are ordered', async () => {
+    vi.mocked(offeringsApi.listOfferings)
+      .mockResolvedValueOnce({ ...paged([fullOffering]), totalPages: 2 })
+      .mockResolvedValueOnce({ ...paged([maizeOffering]), page: 1, totalPages: 2 })
+    renderRoute('/my/offerings')
+    await screen.findByRole('article', { name: 'Maize, 2026B' })
+    expect(screen.getAllByRole('article').map((a) => a.getAttribute('aria-label'))).toEqual([
+      'Maize, 2026B',
+      'Beans, 2026B',
+    ])
+    expect(offeringsApi.listOfferings).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, size: 100 }),
+      expect.anything(),
+    )
+  })
+
   it('is for farmers only', async () => {
     logInAs(USERS.registrar)
     renderRoute('/my/offerings')

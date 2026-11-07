@@ -64,3 +64,18 @@ export function eligibilityChecklist({ offering, season, profile, contribution, 
     },
   ]
 }
+
+/**
+ * Orders the farmer's offerings for "Offerings for me" (requested 7 Nov 2026): first those meeting every
+ * requirement, then by how many are met, most first; offerings the farmer is already enrolled in come last,
+ * as there is nothing left to do there. Ties keep the backend's order (newest first). Ordering only:
+ * the backend still decides every enrolment.
+ *
+ * @param {{ offering: object, items: { ok: boolean | null }[], enrolled: boolean }[]} rows
+ */
+export function rankOfferings(rows) {
+  const met = (row) => row.items.filter((item) => item.ok === true).length
+  return rows
+    .map((row, index) => ({ ...row, met: met(row), index }))
+    .sort((a, b) => Number(a.enrolled) - Number(b.enrolled) || b.met - a.met || a.index - b.index)
+}

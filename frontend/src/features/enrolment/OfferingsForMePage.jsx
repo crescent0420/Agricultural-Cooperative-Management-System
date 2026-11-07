@@ -1,42 +1,51 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { listMyContributions } from '../../api/contributions'
 import { enrol, listMyEnrolments } from '../../api/enrolments'
 import { toApiError } from '../../api/errors'
-import { getMyProfile } from '../../api/farmers'
+import { getMissingPrerequisites, getMyProfile } from '../../api/farmers'
 import { listOfferings } from '../../api/offerings'
 import { listSeasons } from '../../api/seasons'
 import { PageHeader } from '../../components/layout/PageHeader'
 import { useToast } from '../../components/toast/useToast'
 import { Alert } from '../../components/ui/Alert'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
-import { Pagination } from '../../components/ui/Pagination'
 import { Spinner } from '../../components/ui/Spinner'
-import { usePagedList } from '../../hooks/usePagedList'
-import { OFFERING_SORTABLE } from '../offerings/offeringRules'
+import { useSearchParams } from 'react-router'
 import { SeasonFilter } from '../offerings/SeasonFilter'
 import { ALL_SEASONS } from '../seasons/useSeasonOptions'
+import { eligibilityChecklist, rankOfferings } from './eligibility'
 import { OfferingCard } from './OfferingCard'
 
 const ALL = { page: 0, size: 100, sortBy: 'createdAt', direction: 'desc' }
+
+/** Every offering of the farmer's district (100 per request, the API's maximum), so all of them can be ordered. */
+async function listAllOfferings(seasonId) {
+  const first = await listOfferings(ALL, { seasonId })
+  const rest = []
+  for (let page = 1; page < first.totalPages; page += 1) {
+    rest.push(listOfferings({ ...ALL, page }, { seasonId }))
+  }
+  return [...first.content, ...(await Promise.all(rest)).flatMap((p) => p.content)]
+}
 const ALL_ENROLMENTS = { page: 0, size: 100, sortBy: 'enrolledAt', direction: 'desc' }
 
 /**
  * /my/offerings: the offerings of the farmer's district, each with an eligibility checklist and Enrol
- * (URD FR-ENR-01, FR-ENR-02). The backend limits the list to the farmer's district.
+ * (URD FR-ENR-01, FR-ENR-02). The backend limits the list to the farmer's district. The offerings whose
+ * requirements are all met come first, then by how many are met; enrolled ones last (rankOfferings).
  */
 export function OfferingsForMePage() {
   const toast = useToast()
   const queryClient = useQueryClient()
-  const list = usePagedList({ sortBy: 'createdAt', direction: 'desc', size: 10 }, OFFERING_SORTABLE)
-  const seasonId = list.filter('seasonId')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const seasonId = searchParams.get('seasonId') ?? ''
   const [choice, setChoice] = useState(null)
   const [enrolError, setEnrolError] = useState(null)
 
   const offerings = useQuery({
-    queryKey: ['offerings', 'for-me', list.params, seasonId],
-    queryFn: () => listOfferings(list.params, { seasonId: seasonId ? Number(seasonId) : undefined }),
-    placeholderData: keepPreviousData,
+    queryKey: ['offerings', 'for-me', seasonId],
+    queryFn: () => listAllOfferings(seasonId ? Number(seasonId) : undefined),
   })
   const profile = useQuery({ queryKey: ['me', 'profile'], queryFn: getMyProfile })
   // Fresh (not the 5-minute dropdown cache): whether a window is open matters here.
@@ -54,6 +63,41 @@ export function OfferingsForMePage() {
   const contributionFor = (sid) =>
     contributions.data ? (contributions.data.content.find((c) => c.seasonId === sid) ?? null) : undefined
   const enrolledIn = new Set((enrolments.data?.content ?? []).map((e) => e.offeringId))
+
+  // One prerequisites request per programme (offerings of the same programme share it), at page level so
+  // the checklists are complete before the offerings are ordered.
+  const programmeIds = [...new Set((offerings.data ?? []).map((o) => o.programmeId))]
+  const missingQueries = useQueries({
+    queries: programmeIds.map((programmeId) => ({
+      queryKey: ['farmers', 'missing', profile.data?.id, String(programmeId)],
+      queryFn: () => getMissingPrerequisites(profile.data.id, programmeId),
+      enabled: profile.data != null,
+    })),
+  })
+  const missingFor = new Map(programmeIds.map((id, i) => [id, missingQueries[i]?.data]))
+  const ready =
+    offerings.data &&
+    profile.data &&
+    seasons.data &&
+    contributions.data &&
+    enrolments.data &&
+    missingQueries.every((q) => q.data || q.isError) // a failed check shows as unknown, not as a block
+  const loadError = offerings.error ?? profile.error ?? seasons.error ?? contributions.error ?? enrolments.error
+  const ranked = ready
+    ? rankOfferings(
+        offerings.data.map((o) => ({
+          offering: o,
+          enrolled: enrolledIn.has(o.id),
+          items: eligibilityChecklist({
+            offering: o,
+            season: seasonById.get(o.seasonId),
+            profile: profile.data,
+            contribution: contributionFor(o.seasonId),
+            missing: missingFor.get(o.programmeId),
+          }),
+        })),
+      )
+    : []
 
   const doEnrol = useMutation({
     mutationFn: (offering) => enrol(offering.id),
@@ -80,35 +124,38 @@ export function OfferingsForMePage() {
         description="Crop programmes offered in your district. Check what you need, then enrol."
       />
       <div className="mb-4 max-w-xs">
-        <SeasonFilter value={seasonId} onChange={(v) => list.setFilter('seasonId', v)} />
+        <SeasonFilter value={seasonId} onChange={(v) => setSearchParams(v ? { seasonId: v } : {}, { replace: true })} />
       </div>
 
-      {offerings.isPending ? (
-        <div className="py-12 text-center text-brand-700">
-          <Spinner label="Loading the offerings" className="size-8" />
-        </div>
-      ) : offerings.error ? (
-        <Alert tone="error">{toApiError(offerings.error).message}</Alert>
-      ) : offerings.data.content.length === 0 ? (
+      {loadError ? (
+        <Alert tone="error">{toApiError(loadError).message}</Alert>
+      ) : offerings.data?.length === 0 ? (
         <p className="rounded-lg border border-line bg-white px-4 py-8 text-center text-muted">
           No offerings in your district {seasonId ? 'for this season' : 'yet'}.
         </p>
-      ) : (
-        <div className="grid gap-4 lg:grid-cols-2">
-          {offerings.data.content.map((o) => (
-            <OfferingCard
-              key={o.id}
-              offering={o}
-              season={seasonById.get(o.seasonId)}
-              profile={profile.data}
-              contribution={contributionFor(o.seasonId)}
-              enrolled={enrolledIn.has(o.id)}
-              onEnrol={askEnrol}
-            />
-          ))}
+      ) : !ready ? (
+        <div className="py-12 text-center text-brand-700">
+          <Spinner label="Checking the offerings for you" className="size-8" />
         </div>
+      ) : (
+        <>
+          <p className="mb-3 text-sm text-muted">
+            Ordered by how many requirements you meet: those you can enrol in come first.
+          </p>
+          <div className="grid gap-4 lg:grid-cols-2">
+            {ranked.map((row) => (
+              <OfferingCard
+                key={row.offering.id}
+                offering={row.offering}
+                items={row.items}
+                met={row.met}
+                enrolled={row.enrolled}
+                onEnrol={askEnrol}
+              />
+            ))}
+          </div>
+        </>
       )}
-      <Pagination page={offerings.data} onPage={list.setPage} onSize={list.setSize} />
 
       <ConfirmDialog
         open={choice !== null}

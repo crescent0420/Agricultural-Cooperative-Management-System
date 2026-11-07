@@ -1,21 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router'
-import { getMissingPrerequisites } from '../../api/farmers'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { EligibilityChecklist } from './EligibilityChecklist'
-import { eligibilityChecklist } from './eligibility'
 
-/** One offering for the farmer: details, the eligibility checklist, and Enrol (or Enrolled). */
-export function OfferingCard({ offering, season, profile, contribution, enrolled, onEnrol }) {
-  // One request per programme; offerings of the same programme share the answer.
-  const missing = useQuery({
-    queryKey: ['farmers', 'missing', profile?.id, String(offering.programmeId)],
-    queryFn: () => getMissingPrerequisites(profile.id, offering.programmeId),
-    enabled: profile != null,
-  })
-  const items = eligibilityChecklist({ offering, season, profile, contribution, missing: missing.data })
-
+/** One offering for the farmer: details, the eligibility checklist (items), and Enrol (or Enrolled). */
+export function OfferingCard({ offering, items, met, enrolled, onEnrol }) {
   return (
     <article
       aria-label={`${offering.programmeName}, ${offering.seasonName}`}
@@ -28,7 +17,14 @@ export function OfferingCard({ offering, season, profile, contribution, enrolled
             {offering.seasonName} · {offering.hectaresPerParticipant} ha · Field Officer {offering.fieldOfficerUsername}
           </p>
         </div>
-        {offering.remainingPlaces === 0 && <Badge tone="danger">Full</Badge>}
+        <span className="flex shrink-0 items-center gap-1.5">
+          {!enrolled && (
+            <Badge tone={met === items.length ? 'success' : 'neutral'}>
+              {met} of {items.length} met
+            </Badge>
+          )}
+          {offering.remainingPlaces === 0 && <Badge tone="danger">Full</Badge>}
+        </span>
       </div>
       <EligibilityChecklist items={items} />
       <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
