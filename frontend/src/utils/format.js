@@ -35,3 +35,15 @@ const AMOUNT = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 0, maximu
 export function formatAmount(value) {
   return value == null ? '—' : AMOUNT.format(Number(value))
 }
+
+const COUNT = new Intl.NumberFormat('en-GB', { maximumFractionDigits: 0 })
+
+/** 1234 → "1,234". */
+export function formatCount(value) {
+  return value == null ? '—' : COUNT.format(Number(value))
+}
+
+/** 62.5 → "62.5%". The backend has already rounded the value; null (nothing to divide by) → "—". */
+export function formatPercent(value) {
+  return value == null ? '—' : `${AMOUNT.format(Number(value))}%`
+}

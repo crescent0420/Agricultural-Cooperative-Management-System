@@ -46,12 +46,20 @@ import { ResultPage } from '../features/results/ResultPage'
 import { ScoreEntryPage } from '../features/results/ScoreEntryPage'
 import { SeasonPage } from '../features/seasons/SeasonPage'
 import { SeasonsListPage } from '../features/seasons/SeasonsListPage'
+import { REPORT_PERMISSIONS } from '../features/reports/reportTabs'
+import { LazyReportsPage } from '../features/reports/LazyReportsPage'
 import { RequireAuth } from './RequireAuth'
 import { RequirePermission } from './RequirePermission'
 
 /** A page that opens only for users holding every listed permission (the backend still checks each call). */
 const guarded = (permissions, element) => (
   <RequirePermission requires={{ allOf: permissions }}>{element}</RequirePermission>
+)
+
+const reportsPage = (
+  <RequirePermission requires={{ anyOf: REPORT_PERMISSIONS }}>
+    <LazyReportsPage />
+  </RequirePermission>
 )
 
 /** Module pages already built; every other menu item still opens its placeholder. */
@@ -121,6 +129,8 @@ const moduleRoutes = [
   { path: '/permits/verify', element: guarded(['PERMIT_VERIFY'], <VerifyPermitPage />) },
   { path: '/permits/attempts', element: guarded(['PERMIT_ATTEMPT_READ'], <PermitAttemptsPage />) },
   { path: '/my/contributions', element: guarded(['CONTRIBUTION_READ_OWN'], <MyContributionsPage />) },
+  { path: '/reports', element: reportsPage },
+  { path: '/reports/:report', element: reportsPage },
   { path: '/my/profile', element: guarded(['PROFILE_READ_OWN'], <MyProfilePage />) },
   {
     path: '/grading-scale',
