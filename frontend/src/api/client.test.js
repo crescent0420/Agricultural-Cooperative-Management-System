@@ -51,6 +51,19 @@ describe('api client', () => {
     expect(onUnauthorized).toHaveBeenCalledOnce()
   })
 
+  it('reports an expired session when the token ran out in the browser and none was sent (regression)', async () => {
+    saveSession('old-token', 1800)
+    vi.useFakeTimers({ now: Date.now() + 31 * 60 * 1000, toFake: ['Date'] })
+    try {
+      const adapter = answer(401, envelope401)
+      await expect(apiPost('/offerings/12/inspections', {})).rejects.toBeInstanceOf(ApiError)
+      expect(adapter.mock.calls[0][0].headers.get('Authorization')).toBeFalsy()
+      expect(onUnauthorized).toHaveBeenCalledOnce()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
   it('does NOT report an expired session for a wrong password at login', async () => {
     answer(401, { success: false, message: 'Invalid username or password.' })
     await expect(apiPost('/auth/login', {})).rejects.toMatchObject({

@@ -110,9 +110,8 @@ export function RegisterFarmerPage() {
           </Select>
           <Select
             label="Cooperative"
-            disabled={!districtId}
             error={errors.cooperativeId?.message}
-            warning={
+            blockedReason={
               !districtId
                 ? 'Choose a district first.'
                 : cooperatives.data?.content.length === 0
@@ -121,7 +120,7 @@ export function RegisterFarmerPage() {
             }
             {...register('cooperativeId', { required: 'Choose a cooperative.' })}
           >
-            <option value="">{districtId ? 'Choose a cooperative…' : 'Choose a district first'}</option>
+            <option value="">Choose a cooperative…</option>
             {cooperatives.data?.content.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}

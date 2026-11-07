@@ -1,4 +1,5 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { Link } from 'react-router'
 import { listFarmerResults } from '../../api/farmers'
 import { DataTable } from '../../components/ui/DataTable'
 import { Pagination } from '../../components/ui/Pagination'
@@ -30,7 +31,14 @@ export function FarmerResultsTab() {
       <DataTable
         caption="Season results"
         columns={[
-          { header: 'Programme', cell: (r) => <span className="font-medium">{r.programmeName}</span> },
+          {
+            header: 'Programme',
+            cell: (r) => (
+              <Link to={`/results/${r.id}`} className="font-medium text-brand-700 hover:underline">
+                {r.programmeName}
+              </Link>
+            ),
+          },
           { header: 'Season', cell: (r) => r.seasonName },
           { header: 'Status', sortField: 'status', cell: (r) => RESULT_STATUS[r.status] ?? r.status },
           {

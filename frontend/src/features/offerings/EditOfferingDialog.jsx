@@ -97,8 +97,7 @@ export function EditOfferingDialog({ offering, onSave, onClose }) {
             type="number"
             step="0.01"
             inputMode="decimal"
-            readOnly={hectaresLocked}
-            warning={
+            blockedReason={
               hectaresLocked
                 ? `Cannot change: ${offering.enrolledCount} farmer(s) already enrolled with this land size.`
                 : undefined

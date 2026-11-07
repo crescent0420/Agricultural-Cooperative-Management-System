@@ -33,6 +33,11 @@ import { EnrolmentPage } from '../features/enrolment/EnrolmentPage'
 import { MyEnrolmentsPage } from '../features/enrolment/MyEnrolmentsPage'
 import { OfferingEnrolmentsTab } from '../features/enrolment/OfferingEnrolmentsTab'
 import { OfferingsForMePage } from '../features/enrolment/OfferingsForMePage'
+import { OfferingInspectionsTab } from '../features/inspections/OfferingInspectionsTab'
+import { MyResultsPage } from '../features/results/MyResultsPage'
+import { OfferingResultsTab } from '../features/results/OfferingResultsTab'
+import { ResultPage } from '../features/results/ResultPage'
+import { ScoreEntryPage } from '../features/results/ScoreEntryPage'
 import { SeasonPage } from '../features/seasons/SeasonPage'
 import { SeasonsListPage } from '../features/seasons/SeasonsListPage'
 import { RequireAuth } from './RequireAuth'
@@ -94,11 +99,16 @@ const moduleRoutes = [
     children: [
       { index: true, element: <OfferingOverviewTab /> },
       { path: 'enrolments', element: guarded(['ENROLMENT_LIST_FOR_OFFERING'], <OfferingEnrolmentsTab />) },
+      { path: 'inspections', element: guarded(['INSPECTION_READ'], <OfferingInspectionsTab />) },
+      { path: 'results', element: guarded(['INSPECTION_READ'], <OfferingResultsTab />) },
     ],
   },
   { path: '/my/offerings', element: guarded(['ENROLMENT_CREATE'], <OfferingsForMePage />) },
   { path: '/my/enrolments', element: guarded(['ENROLMENT_READ_OWN'], <MyEnrolmentsPage />) },
   { path: '/enrolments/:id', element: guarded(['ENROLMENT_READ'], <EnrolmentPage />) },
+  { path: '/enrolments/:id/scores', element: guarded(['RESULT_ENTER'], <ScoreEntryPage />) },
+  { path: '/results/:id', element: guarded(['RESULT_READ'], <ResultPage />) },
+  { path: '/my/results', element: guarded(['RESULT_READ_OWN'], <MyResultsPage />) },
   { path: '/my/profile', element: guarded(['PROFILE_READ_OWN'], <MyProfilePage />) },
   {
     path: '/grading-scale',

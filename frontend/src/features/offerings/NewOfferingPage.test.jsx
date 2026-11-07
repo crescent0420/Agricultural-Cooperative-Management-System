@@ -72,8 +72,15 @@ describe('NewOfferingPage (FR-OFF-03, G8)', () => {
   it('loads the programmes and Field Officers of the chosen district, and reloads them when it changes', async () => {
     renderRoute('/offerings/new')
     const user = userEvent.setup()
-    expect(await screen.findByLabelText('Field Officer')).toBeDisabled()
+    // Unavailable until a district is chosen; the warning appears only when the user tries it.
+    const officer = await screen.findByLabelText('Field Officer')
+    expect(officer).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.queryByText('Choose a district first.')).not.toBeInTheDocument()
+    await user.click(officer)
+    expect(screen.getByText('Choose a district first.')).toBeInTheDocument()
+
     await choose(user, 'District', 'Huye')
+    expect(screen.queryByText('Choose a district first.')).not.toBeInTheDocument()
     expect(await screen.findByRole('option', { name: 'huye.officer2' })).toBeInTheDocument()
     expect(offeringsApi.listFieldOfficers).toHaveBeenCalledWith(15)
 
@@ -91,6 +98,9 @@ describe('NewOfferingPage (FR-OFF-03, G8)', () => {
     await choose(user, 'Season', '2026B')
     expect(screen.getByText('2026B allows at most 2 ha per farmer.')).toBeInTheDocument()
     await choose(user, 'District', 'Huye')
+    await waitFor(() => expect(offeringsApi.listFieldOfficers).toHaveBeenCalledWith(15))
+    expect(screen.queryByText(/has no enabled Field Officer/)).not.toBeInTheDocument()
+    await user.click(screen.getByLabelText('Field Officer'))
     expect(await screen.findByText(/has no enabled Field Officer/)).toBeInTheDocument()
   })
 

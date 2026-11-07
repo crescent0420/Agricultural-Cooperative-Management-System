@@ -102,9 +102,8 @@ export function NewOfferingPage() {
           </Select>
           <Select
             label="Crop programme"
-            disabled={districtId == null}
             error={errors.programmeId?.message}
-            warning={
+            blockedReason={
               districtId == null
                 ? 'Choose a district first.'
                 : programmes.data?.content.length === 0
@@ -113,7 +112,7 @@ export function NewOfferingPage() {
             }
             {...register('programmeId', { required: 'Choose a crop programme.' })}
           >
-            <option value="">{districtId == null ? 'Choose a district first' : 'Choose a programme…'}</option>
+            <option value="">Choose a programme…</option>
             {programmes.data?.content.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -136,9 +135,8 @@ export function NewOfferingPage() {
           </Select>
           <Select
             label="Field Officer"
-            disabled={districtId == null}
             error={errors.fieldOfficerId?.message}
-            warning={
+            blockedReason={
               districtId == null
                 ? 'Choose a district first.'
                 : noOfficers
@@ -148,7 +146,7 @@ export function NewOfferingPage() {
             hint={districtId != null && !noOfficers ? 'Enabled Field Officers of the chosen district.' : undefined}
             {...register('fieldOfficerId', { required: 'Choose a Field Officer.' })}
           >
-            <option value="">{districtId == null ? 'Choose a district first' : 'Choose a Field Officer…'}</option>
+            <option value="">Choose a Field Officer…</option>
             {officers.data?.map((o) => (
               <option key={o.id} value={o.id}>
                 {o.username}

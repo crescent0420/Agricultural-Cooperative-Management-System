@@ -13,6 +13,9 @@ export const apiClient = axios.create({
 
 let unauthorizedHandler = null
 
+/** Calls made without a session, whose 401 is an ordinary answer (e.g. wrong password), not an expiry. */
+const PUBLIC_CALLS = new Set(['/auth/login', '/auth/register'])
+
 /** AuthProvider registers what happens when a logged-in call answers 401 (the session has expired). */
 export function setUnauthorizedHandler(handler) {
   unauthorizedHandler = handler
@@ -33,11 +36,12 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     const apiError = toApiError(error)
-    if (apiError.status === 401 && axios.isAxiosError(error)) {
-      const sentToken = Boolean(error.config?.headers?.get?.('Authorization'))
-      const isLogin = error.config?.url === '/auth/login'
-      // A 401 from login means "wrong username or password", not "session expired".
-      if (sentToken && !isLogin) notifyUnauthorized()
+    // Any 401 outside the public calls means the session is over: the token was rejected, or it reached its
+    // 30-minute end here first (getToken() then sends none). A 401 from login means "wrong username or
+    // password". Before 7 Nov 2026 only calls that carried a token counted, so a token that expired
+    // in the browser left the user on the page with "Authentication is required…" (found in testing).
+    if (apiError.status === 401 && axios.isAxiosError(error) && !PUBLIC_CALLS.has(error.config?.url)) {
+      notifyUnauthorized()
     }
     return Promise.reject(apiError)
   },

@@ -53,8 +53,12 @@ describe('OfferingPage (FR-OFF-04, FR-OFF-05)', () => {
     renderRoute('/offerings/12')
     const user = userEvent.setup()
     const dialog = await openEdit(user)
-    expect(within(dialog).getByLabelText('Hectares per participant')).toHaveAttribute('readonly')
+    const hectares = within(dialog).getByLabelText('Hectares per participant')
+    expect(hectares).toHaveAttribute('readonly')
+    expect(within(dialog).queryByText(/12 farmer\(s\) already enrolled/)).not.toBeInTheDocument()
+    await user.type(hectares, '9') // the attempt shows the warning and changes nothing
     expect(within(dialog).getByText(/12 farmer\(s\) already enrolled/)).toBeInTheDocument()
+    expect(hectares).toHaveValue(0.5)
     expect(within(dialog).getByLabelText('Field Officer')).toHaveValue('5')
 
     await user.selectOptions(within(dialog).getByLabelText('Field Officer'), 'huye.officer2')
