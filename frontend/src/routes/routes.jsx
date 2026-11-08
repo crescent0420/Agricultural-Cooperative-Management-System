@@ -48,6 +48,11 @@ import { SeasonPage } from '../features/seasons/SeasonPage'
 import { SeasonsListPage } from '../features/seasons/SeasonsListPage'
 import { REPORT_PERMISSIONS } from '../features/reports/reportTabs'
 import { LazyReportsPage } from '../features/reports/LazyReportsPage'
+import { AuditLogPage } from '../features/admin/AuditLogPage'
+import { NewUserPage } from '../features/admin/NewUserPage'
+import { PermissionMatrixPage } from '../features/admin/PermissionMatrixPage'
+import { UserPage } from '../features/admin/UserPage'
+import { UsersListPage } from '../features/admin/UsersListPage'
 import { RequireAuth } from './RequireAuth'
 import { RequirePermission } from './RequirePermission'
 
@@ -131,6 +136,11 @@ const moduleRoutes = [
   { path: '/my/contributions', element: guarded(['CONTRIBUTION_READ_OWN'], <MyContributionsPage />) },
   { path: '/reports', element: reportsPage },
   { path: '/reports/:report', element: reportsPage },
+  { path: '/admin/users', element: guarded(['USER_MANAGE'], <UsersListPage />) },
+  { path: '/admin/users/new', element: guarded(['USER_MANAGE'], <NewUserPage />) },
+  { path: '/admin/users/:id', element: guarded(['USER_MANAGE'], <UserPage />) },
+  { path: '/admin/audit-log', element: guarded(['AUDIT_LOG_READ'], <AuditLogPage />) },
+  { path: '/permissions', element: guarded(['PERMISSION_MATRIX_READ'], <PermissionMatrixPage />) },
   { path: '/my/profile', element: guarded(['PROFILE_READ_OWN'], <MyProfilePage />) },
   {
     path: '/grading-scale',
