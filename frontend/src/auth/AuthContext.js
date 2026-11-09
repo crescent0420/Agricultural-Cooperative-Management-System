@@ -1,8 +1,9 @@
 import { createContext } from 'react'
 
 /**
- * Why the user is on the login page, shown there as a banner.
- * @typedef {'session-expired' | 'password-changed' | null} LoginNotice
+ * Why the user is on the login page. 'session-expired' and 'password-changed' are shown there as a banner;
+ * 'logged-out' (the user chose to log out) shows nothing.
+ * @typedef {'session-expired' | 'password-changed' | 'logged-out' | null} LoginNotice
  */
 
 /**

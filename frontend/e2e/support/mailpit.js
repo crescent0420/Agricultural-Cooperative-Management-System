@@ -1,4 +1,5 @@
 import { request } from '@playwright/test'
+import { Api } from './api'
 import { MAILPIT_URL } from './env'
 
 /**
@@ -18,7 +19,13 @@ export async function latestEmailTo(address, { timeoutMs = 15_000 } = {}) {
       }
       await new Promise((resolve) => setTimeout(resolve, 500))
     }
-    throw new Error(`No email to ${address} arrived in Mailpit within ${timeoutMs / 1000} s`)
+    // Say whether Mailpit answers at all and what it holds, to tell "no email sent" from "Mailpit not reached".
+    const all = await (await context.get(`${MAILPIT_URL}/api/v1/messages`, { params: { limit: 3 } })).json()
+    const newest = (all.messages ?? []).map((m) => m.To?.map((to) => to.Address).join(', ')).join(' | ')
+    throw new Error(
+      `No email to ${address} arrived in Mailpit within ${timeoutMs / 1000} s. Mailpit holds ${all.total ?? 0} ` +
+        `emails; the newest are to: ${newest || 'nobody'}. Check the backend log for mail errors.`,
+    )
   } finally {
     await context.dispose()
   }
@@ -29,4 +36,19 @@ export function oneTimePassword(email) {
   const match = email.text.match(/One-time password: (\S+)/)
   if (!match) throw new Error(`No one-time password in the email "${email.subject}"`)
   return match[1]
+}
+
+/**
+ * Opens the verification link in an account email, as the user would by clicking it. Until then the backend
+ * refuses to log the account in ("Please confirm your email address first").
+ */
+export async function verifyEmail(email) {
+  const match = email.text.match(/verify-email\?token=(\S+)/)
+  if (!match) throw new Error(`No verification link in the email "${email.subject}"`)
+  const anonymous = await Api.anonymous()
+  try {
+    await anonymous.ok('GET', '/auth/verify-email', { params: { token: match[1] } })
+  } finally {
+    await anonymous.dispose()
+  }
 }

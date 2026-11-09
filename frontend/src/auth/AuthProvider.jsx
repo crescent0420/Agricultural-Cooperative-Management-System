@@ -62,7 +62,8 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const logout = useCallback(() => endSession(null), [endSession])
+  // 'logged-out': the next person to log in on this browser starts on their own Dashboard (RequireAuth).
+  const logout = useCallback(() => endSession('logged-out'), [endSession])
 
   const changePassword = useCallback(
     async (currentPassword, newPassword) => {

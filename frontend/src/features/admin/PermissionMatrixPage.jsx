@@ -33,7 +33,9 @@ export function PermissionMatrixPage() {
         title="Permission matrix"
         description={`What each role may do. Your role, ${ROLE_LABELS[user?.role] ?? ''}, holds ${matrix.data.byRole[user?.role]?.length ?? 0} of ${matrix.data.rows.length} permissions.`}
       />
-      <div className="overflow-x-auto rounded-lg border border-line bg-white">
+      {/* relative: the hidden "Yes"/"No" texts are positioned absolutely; without it they escaped the scroll box
+          and made the whole page wider than a phone (found by the responsive end-to-end test). */}
+      <div className="relative overflow-x-auto rounded-lg border border-line bg-white">
         <table className="min-w-full text-left text-sm">
           <caption className="sr-only">Permission matrix</caption>
           <thead className="border-b border-line bg-surface text-xs font-semibold tracking-wide text-muted uppercase">
