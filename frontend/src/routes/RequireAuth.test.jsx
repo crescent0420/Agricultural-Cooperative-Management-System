@@ -23,7 +23,7 @@ describe('RequireAuth', () => {
     saveSession('token', 1800)
     vi.mocked(authApi.getCurrentUser).mockResolvedValue(registrar)
     renderRoute('/')
-    expect(await screen.findByRole('heading', { name: 'Welcome, demo.registrar' })).toBeInTheDocument()
+    expect(await screen.findByText('Welcome, demo.registrar · Union Registrar')).toBeInTheDocument()
   })
 
   it('sends a farmer account without a farmer record to /not-linked', async () => {
@@ -38,7 +38,7 @@ describe('RequireAuth', () => {
     saveSession('token', 1800)
     vi.mocked(authApi.getCurrentUser).mockResolvedValue(registrar)
     renderRoute('/')
-    await screen.findByRole('heading', { name: 'Welcome, demo.registrar' })
+    await screen.findByText('Welcome, demo.registrar · Union Registrar')
 
     act(() => notifyUnauthorized())
 
