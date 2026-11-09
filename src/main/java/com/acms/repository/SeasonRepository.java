@@ -4,11 +4,12 @@ import com.acms.common.BaseRepository;
 import com.acms.entity.Season;
 import jakarta.persistence.LockModeType;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface SeasonRepository extends BaseRepository<Season> {
+public interface SeasonRepository extends BaseRepository<Season>, JpaSpecificationExecutor<Season> {
 
     boolean existsByNameIgnoreCase(String name);
 

@@ -74,7 +74,7 @@ Lists marked *(paged)* accept `page`, `size`, `sortBy`, `direction` and answer a
 | PUT | `/api/offerings/{id}` | Change places or Field Officer | Registrar | 200 | 400, 404, 409 fewer places than enrolled / land change after enrolment, 422 officer or land rules |
 | GET | `/api/field-officers` | Enabled Field Officers to assign to an offering, by username; `?districtId=` (optional) limits to one district; id, username and district only | Registrar | 200 | 400 districtId not a number, 404 unknown district |
 | POST | `/api/seasons` | Create a season (dates, land limit, distribution day) | Registrar | 201 | 400 dates, 409 duplicate name |
-| GET | `/api/seasons` | List seasons *(paged)* | all roles | 200 | — |
+| GET | `/api/seasons` | List seasons *(paged; optional `name`, `enrolmentOpen`)* | all roles | 200 | — |
 | GET | `/api/seasons/{id}` | One season with its window status | all roles | 200 | 404 |
 | PUT | `/api/seasons/{id}` | Change a season before any window opened | Registrar | 200 | 404, 400 dates, 409 a window was already opened / duplicate name |
 | POST | `/api/seasons/{id}/windows/open` | Open the enrolment window | Registrar | 201 | 404, 409 already open, 422 season ended |

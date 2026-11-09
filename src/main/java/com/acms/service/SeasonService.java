@@ -18,6 +18,7 @@ import com.acms.exception.ResourceNotFoundException;
 import com.acms.repository.AppUserRepository;
 import com.acms.repository.EnrolmentWindowRepository;
 import com.acms.repository.SeasonRepository;
+import com.acms.repository.SeasonSpecifications;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
@@ -82,10 +83,12 @@ public class SeasonService extends BaseService {
         return toResponse(season, open);
     }
 
+    /** name: part of the name, any case; enrolmentOpen: true/false = with/without an open window; null = all. */
     @Transactional(readOnly = true)
-    public PagedResponse<SeasonResponse> findAll(int page, int size, String sortBy, String direction) {
+    public PagedResponse<SeasonResponse> findAll(String name, Boolean enrolmentOpen,
+                                                 int page, int size, String sortBy, String direction) {
         Pageable pageable = Paging.of(page, size, sortBy, direction, SEASON_SORT_FIELDS);
-        Page<Season> seasons = seasonRepository.findAll(pageable);
+        Page<Season> seasons = seasonRepository.findAll(SeasonSpecifications.search(name, enrolmentOpen), pageable);
 
         // One extra query for the whole page, instead of one per season.
         List<Long> seasonIds = seasons.map(Season::getId).getContent();

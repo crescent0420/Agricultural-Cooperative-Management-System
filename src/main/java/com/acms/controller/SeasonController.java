@@ -54,15 +54,18 @@ public class SeasonController extends BaseController {
                     List seasons.
 
                     - **Permission:** `SEASON_READ` (all roles)
+                    - **Filters (optional):** `name` (part of the name, any letter case), `enrolmentOpen` (`true` = only seasons with an open enrolment window, `false` = only those without)
                     - **Paged:** `page` (from 0), `size` (1-100, default 20), `sortBy` (one of id, name, startsOn, endsOn, createdAt; default startsOn), `direction` (asc or desc; default desc)
                     - **Success:** 200
                     """)
     @GetMapping
-    public ApiResponse<PagedResponse<SeasonResponse>> list(@RequestParam(defaultValue = "0") int page,
+    public ApiResponse<PagedResponse<SeasonResponse>> list(@RequestParam(required = false) String name,
+                                             @RequestParam(required = false) Boolean enrolmentOpen,
+                                             @RequestParam(defaultValue = "0") int page,
                                              @RequestParam(defaultValue = "20") int size,
                                              @RequestParam(defaultValue = "startsOn") String sortBy,
                                              @RequestParam(defaultValue = "desc") String direction) {
-        return ok(seasonService.findAll(page, size, sortBy, direction));
+        return ok(seasonService.findAll(name, enrolmentOpen, page, size, sortBy, direction));
     }
 
     @Operation(

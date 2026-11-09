@@ -75,6 +75,46 @@ class SeasonAndWindowTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("List filters: part of the name in any case, % taken literally, with or without an open window")
+    void listFilters() throws Exception {
+        String tag = unique("Find");                    // unique per run, so older test seasons never match
+        long open = createSeason(tag + " Open");
+        long closed = createSeason(tag + " Closed");
+        mockMvc.perform(post("/api/seasons/" + open + "/windows/open").header("Authorization", bearer(registrarToken)))
+                .andExpect(status().isCreated());
+
+        // name: part of it, other letter case; both seasons match
+        mockMvc.perform(get("/api/seasons").param("name", tag.toUpperCase())
+                        .header("Authorization", bearer(farmerToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.totalElements").value(2));
+
+        // enrolmentOpen=true: only the season with an open window
+        mockMvc.perform(get("/api/seasons").param("name", tag).param("enrolmentOpen", "true")
+                        .header("Authorization", bearer(farmerToken)))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].id").value(open))
+                .andExpect(jsonPath("$.data.content[0].enrolmentOpen").value(true));
+
+        // enrolmentOpen=false: only the season without one
+        mockMvc.perform(get("/api/seasons").param("name", tag).param("enrolmentOpen", "false")
+                        .header("Authorization", bearer(farmerToken)))
+                .andExpect(jsonPath("$.data.totalElements").value(1))
+                .andExpect(jsonPath("$.data.content[0].id").value(closed))
+                .andExpect(jsonPath("$.data.content[0].enrolmentOpen").value(false));
+
+        // a typed % is a literal character, not "anything"
+        mockMvc.perform(get("/api/seasons").param("name", tag + "%")
+                        .header("Authorization", bearer(farmerToken)))
+                .andExpect(jsonPath("$.data.totalElements").value(0));
+
+        // no filters: the list still works as before
+        mockMvc.perform(get("/api/seasons").header("Authorization", bearer(farmerToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.content").isArray());
+    }
+
+    @Test
     @DisplayName("Invalid seasons are refused: bad dates (400), duplicate name (409), non-registrar (403)")
     void validation() throws Exception {
         LocalDate today = LocalDate.now();

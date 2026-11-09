@@ -43,12 +43,15 @@ public final class FarmerSpecifications {
         };
     }
 
-    private static boolean hasText(String value) {
+    static boolean hasText(String value) {
         return value != null && !value.isBlank();
     }
 
-    /** Builds a "contains" pattern and neutralises the LIKE wildcards % and _ typed by the user. */
-    private static String contains(String input) {
+    /**
+     * Builds a "contains" pattern and neutralises the LIKE wildcards % and _ typed by the user.
+     * Package-private: SeasonSpecifications uses it too. Use it with the escape character '\\'.
+     */
+    static String contains(String input) {
         String escaped = input.trim().toLowerCase(Locale.ROOT)
                 .replace("\\", "\\\\")
                 .replace("%", "\\%")
