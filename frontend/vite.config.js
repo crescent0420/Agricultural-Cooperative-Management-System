@@ -1,7 +1,7 @@
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 // vitest/config's defineConfig is Vite's, plus the `test` section used by Vitest.
-import { defineConfig } from 'vitest/config'
+import { configDefaults, defineConfig } from 'vitest/config'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -20,6 +20,8 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.js'],
+    // e2e/ holds the Playwright tests (npm run e2e); they need the real backend and are not run here.
+    exclude: [...configDefaults.exclude, 'e2e/**'],
     css: true,
     // Generous limits so the same tests pass on slower machines (e.g. Windows with antivirus scanning),
     // where setting up the simulated browser can take 10-15x longer than on a fast one.

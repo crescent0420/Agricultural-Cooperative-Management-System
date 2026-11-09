@@ -5,6 +5,7 @@ import { LoginPage } from '../features/auth/LoginPage'
 import { NotLinkedPage } from '../features/auth/NotLinkedPage'
 import { RegisterPage } from '../features/auth/RegisterPage'
 import { NotFoundPage } from '../features/errors/NotFoundPage'
+import { PageError } from '../features/errors/PageError'
 import { HomePage } from '../features/home/HomePage'
 import { ModulePlaceholder } from '../features/placeholder/ModulePlaceholder'
 import { MENU } from '../navigation/menu'
@@ -168,18 +169,30 @@ const placeholderRoutes = MENU.flatMap((group) => group.items)
 
 /** The route table. Tests render it with a memory router; the app with a browser router (AppRouter). */
 export const routes = [
-  { path: '/login', element: <LoginPage /> },
-  { path: '/register', element: <RegisterPage /> },
   {
-    element: <RequireAuth />,
+    // Anything else that crashes (outside the shell) shows PageError on its own.
+    errorElement: <PageError />,
     children: [
-      { path: '/change-password', element: <ChangePasswordPage /> },
-      { path: '/not-linked', element: <NotLinkedPage /> },
+      { path: '/login', element: <LoginPage /> },
+      { path: '/register', element: <RegisterPage /> },
       {
-        element: <AppShell />,
-        children: [{ path: '/', element: <HomePage /> }, ...moduleRoutes, ...placeholderRoutes],
+        element: <RequireAuth />,
+        children: [
+          { path: '/change-password', element: <ChangePasswordPage /> },
+          { path: '/not-linked', element: <NotLinkedPage /> },
+          {
+            element: <AppShell />,
+            // A page that crashes shows PageError inside the shell, so the menu stays usable.
+            children: [
+              {
+                errorElement: <PageError />,
+                children: [{ path: '/', element: <HomePage /> }, ...moduleRoutes, ...placeholderRoutes],
+              },
+            ],
+          },
+        ],
       },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
-  { path: '*', element: <NotFoundPage /> },
 ]

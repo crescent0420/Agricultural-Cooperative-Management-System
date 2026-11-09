@@ -1,0 +1,8 @@
+# End-to-end tests (frontend/e2e/README.md). Used together with compose.yaml:
+#   docker compose -f compose.yaml -f compose.e2e.yaml up -d --build
+# Only these values change, inside the container; .env stays as it is. Back to normal: docker compose up -d
+services:
+  app:
+    environment:
+      DB_NAME: acms_e2e          # the separate test database (scripts\create-demo-database.bat -Name acms_e2e)
+      APP_DEMO_SEED: "true"      # demo accounts on the first start; password = DEMO_SEED_PASSWORD from .env
