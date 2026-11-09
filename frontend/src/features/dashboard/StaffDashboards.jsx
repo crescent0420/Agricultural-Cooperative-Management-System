@@ -8,7 +8,6 @@ import {
   getOfferingCapacity,
   getOutstandingContributions,
 } from '../../api/reports'
-import { listSeasons } from '../../api/seasons'
 import { listUsers } from '../../api/users'
 import { useAuth } from '../../auth/useAuth'
 import { Badge } from '../../components/ui/Badge'
@@ -17,7 +16,8 @@ import { formatAmount, formatCount, formatDate, formatDateTime, formatPercent } 
 import { FarmerLink } from '../admin/AccountBadges'
 import { humanize } from '../admin/accountRules'
 import { CardList, DashboardCard, Figure, Figures } from './DashboardCard'
-import { ALL_SEASONS, NEWEST_OFFERINGS, OFFERING_LIMIT, useResultCounts } from './dashboardQueries'
+import { OpenSeasonsCard } from './OpenSeasonsCard'
+import { NEWEST_OFFERINGS, OFFERING_LIMIT, useResultCounts } from './dashboardQueries'
 
 /** Offerings with results of one status waiting, and their total (decision D1). */
 function WaitingResults({ title, offerings, status, linkLabel, empty, what }) {
@@ -143,7 +143,6 @@ export function AgronomistDashboard() {
 
 /** Union Registrar: open windows and the Union's headline figures from the reports. */
 export function RegistrarDashboard() {
-  const seasons = useQuery({ queryKey: ['seasons', 'options'], queryFn: () => listSeasons(ALL_SEASONS) })
   const farmers = useQuery({
     queryKey: ['reports', 'farmers-per-cooperative', undefined],
     queryFn: () => getFarmersPerCooperative({}),
@@ -158,22 +157,7 @@ export function RegistrarDashboard() {
   })
   return (
     <div className="grid gap-4 md:grid-cols-2">
-      <DashboardCard title="Enrolment windows" query={seasons} to="/seasons" linkLabel="Open seasons">
-        {(page) => (
-          <CardList
-            empty="No enrolment window is open."
-            rows={page.content
-              .filter((s) => s.enrolmentOpen)
-              .map((s) => ({
-                key: s.id,
-                main: s.name,
-                detail: `${formatDate(s.startsOn)} – ${formatDate(s.endsOn)}`,
-                to: `/seasons/${s.id}`,
-                side: <Badge tone="success">Enrolment open</Badge>,
-              }))}
-          />
-        )}
-      </DashboardCard>
+      <OpenSeasonsCard />
       <DashboardCard title="Farmers" query={farmers} to="/reports/farmers" linkLabel="Open the report">
         {({ totals: t }) => (
           <Figures>

@@ -8,6 +8,8 @@ import { useToast } from '../../components/toast/useToast'
 import { Button } from '../../components/ui/Button'
 import { DataTable } from '../../components/ui/DataTable'
 import { Pagination } from '../../components/ui/Pagination'
+import { Select } from '../../components/ui/Select'
+import { TextField } from '../../components/ui/TextField'
 import { usePagedList } from '../../hooks/usePagedList'
 import { formatDate } from '../../utils/format'
 import { SeasonDialog } from './SeasonDialog'
@@ -15,6 +17,9 @@ import { WindowBadge } from './WindowBadge'
 
 /** The fields GET /api/seasons can sort by (SeasonService.SEASON_SORT_FIELDS). */
 const SORTABLE = ['id', 'name', 'startsOn', 'endsOn', 'createdAt']
+
+/** ?enrolment=open|closed in the address → the backend's enrolmentOpen=true|false. */
+const WINDOW_FILTER = { open: true, closed: false }
 
 /** /seasons: every season with its dates, land limit and enrolment window (URD FR-SEA-01, FR-SEA-02). */
 export function SeasonsListPage() {
@@ -24,12 +29,25 @@ export function SeasonsListPage() {
   const queryClient = useQueryClient()
   const list = usePagedList({ sortBy: 'startsOn', direction: 'desc' }, SORTABLE)
   const [creating, setCreating] = useState(false)
+  const name = list.filter('name')
+  const enrolment = list.filter('enrolment')
+  const filters = { name, enrolmentOpen: WINDOW_FILTER[enrolment] }
+  const searching = Boolean(name || enrolment)
+  const [text, setText] = useState(name)
 
   const seasons = useQuery({
-    queryKey: ['seasons', 'list', list.params],
-    queryFn: () => listSeasons(list.params),
+    queryKey: ['seasons', 'list', list.params, filters],
+    queryFn: () => listSeasons(list.params, filters),
     placeholderData: keepPreviousData,
   })
+  const search = (event) => {
+    event.preventDefault()
+    list.setFilter('name', text.trim())
+  }
+  const clear = () => {
+    setText('')
+    list.setFilters({ name: '', enrolment: '' })
+  }
   const create = useMutation({
     mutationFn: (values) => createSeason(values),
     onSuccess: async (s) => {
@@ -45,6 +63,29 @@ export function SeasonsListPage() {
         description="Growing seasons, their land limit per farmer and their enrolment windows."
         actions={canManage && <Button onClick={() => setCreating(true)}>New season</Button>}
       />
+      <form
+        role="search"
+        aria-label="Search seasons"
+        onSubmit={search}
+        className="mb-4 grid gap-3 rounded-lg border border-line bg-white p-4 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        <TextField label="Season name" placeholder="e.g. 2026" value={text} onChange={(e) => setText(e.target.value)} />
+        <Select
+          label="Enrolment window"
+          value={enrolment}
+          onChange={(e) => list.setFilter('enrolment', e.target.value)}
+        >
+          <option value="">All seasons</option>
+          <option value="open">Open</option>
+          <option value="closed">Closed</option>
+        </Select>
+        <div className="flex items-end gap-2">
+          <Button type="submit">Search</Button>
+          <Button variant="secondary" onClick={clear}>
+            Clear
+          </Button>
+        </div>
+      </form>
       <DataTable
         caption="Seasons"
         columns={[
@@ -67,7 +108,7 @@ export function SeasonsListPage() {
         rowKey={(s) => s.id}
         loading={seasons.isPending}
         error={seasons.error}
-        emptyMessage="No seasons yet."
+        emptyMessage={searching ? 'No seasons match this search.' : 'No seasons yet.'}
         sort={list.params}
         onSort={list.toggleSort}
       />

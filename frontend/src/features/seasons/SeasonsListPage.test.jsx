@@ -30,6 +30,50 @@ describe('SeasonsListPage (FR-SEA-01, FR-SEA-02)', () => {
     vi.mocked(seasonsApi.listSeasons).mockResolvedValue(paged([season2027A, season2026B]))
   })
 
+  it('searches by name and filters by enrolment window, keeping both in the address', async () => {
+    logInAs(USERS.registrar)
+    const { router } = renderRoute('/seasons')
+    const user = userEvent.setup()
+    await screen.findByRole('link', { name: '2026B' })
+    await user.type(screen.getByLabelText('Season name'), '  2026 ')
+    await user.click(screen.getByRole('button', { name: 'Search' }))
+    await waitFor(() =>
+      expect(seasonsApi.listSeasons).toHaveBeenLastCalledWith(
+        { page: 0, size: 20, sortBy: 'startsOn', direction: 'desc' },
+        { name: '2026', enrolmentOpen: undefined },
+      ),
+    )
+
+    await user.selectOptions(screen.getByLabelText('Enrolment window'), 'Closed')
+    await waitFor(() =>
+      expect(seasonsApi.listSeasons).toHaveBeenLastCalledWith(expect.anything(), {
+        name: '2026',
+        enrolmentOpen: false,
+      }),
+    )
+    const query = new URLSearchParams(router.state.location.search)
+    expect(query.get('name')).toBe('2026')
+    expect(query.get('enrolment')).toBe('closed')
+
+    vi.mocked(seasonsApi.listSeasons).mockResolvedValue(paged([]))
+    await user.selectOptions(screen.getByLabelText('Enrolment window'), 'Open')
+    expect(await screen.findByText('No seasons match this search.')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Clear' }))
+    await waitFor(() => expect(new URLSearchParams(router.state.location.search).get('name')).toBeNull())
+    expect(new URLSearchParams(router.state.location.search).get('enrolment')).toBeNull()
+    expect(screen.getByLabelText('Season name')).toHaveValue('')
+  })
+
+  it('opens already filtered from the dashboard link', async () => {
+    logInAs(USERS.registrar)
+    renderRoute('/seasons?enrolment=open&name=2026')
+    await screen.findByRole('link', { name: '2026B' })
+    expect(seasonsApi.listSeasons).toHaveBeenCalledWith(expect.anything(), { name: '2026', enrolmentOpen: true })
+    expect(screen.getByLabelText('Enrolment window')).toHaveValue('open')
+    expect(screen.getByLabelText('Season name')).toHaveValue('2026')
+  })
+
   it('lists the seasons, newest first, with their enrolment status', async () => {
     logInAs(USERS.finance)
     renderRoute('/seasons')
@@ -37,7 +81,10 @@ describe('SeasonsListPage (FR-SEA-01, FR-SEA-02)', () => {
     expect(screen.getByText('Enrolment open')).toBeInTheDocument()
     expect(screen.getByText('Enrolment closed')).toBeInTheDocument()
     expect(screen.getByRole('cell', { name: '1 Feb 2027' })).toBeInTheDocument()
-    expect(seasonsApi.listSeasons).toHaveBeenCalledWith({ page: 0, size: 20, sortBy: 'startsOn', direction: 'desc' })
+    expect(seasonsApi.listSeasons).toHaveBeenCalledWith(
+      { page: 0, size: 20, sortBy: 'startsOn', direction: 'desc' },
+      { name: '', enrolmentOpen: undefined },
+    )
     expect(screen.queryByRole('button', { name: 'New season' })).not.toBeInTheDocument()
   })
 
