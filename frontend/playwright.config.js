@@ -27,5 +27,9 @@ export default defineConfig({
     url: 'http://localhost:4173',
     reuseExistingServer: false,
     timeout: 120_000,
+    // Show the server's own messages in the test output (lines start with [WebServer]), so that if it stops
+    // during a run, the reason is visible.
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 })

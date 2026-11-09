@@ -4,11 +4,13 @@ A real browser (Chromium, driven by Playwright) uses the frontend, which talks t
 Docker, on a **separate database `acms_e2e`** filled with the demo data. Your development database
 (`acms_db`) is never touched.
 
-| File                   | What it checks                                                                                                                                                                                                                          |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `access.spec.js` (T2)  | For every demo account: the menu shows exactly the allowed pages, each allowed page opens without a refused call, every other page says "Not available to you", and the backend answers **403** to calls the role has no permission for |
-| `session.spec.js` (T3) | Login required, wrong password, tampered token → "session expired", logout, unknown page, 401 without or with an edited token, a farmer cannot read another farmer's results (403)                                                      |
-| `support/`             | Logging in, calling the API, reading emails from Mailpit, the demo accounts, reading `.env`                                                                                                                                             |
+| File | What it checks |
+|---|---|
+| `access.spec.js` (T2) | For every demo account: the menu shows exactly the allowed pages, each allowed page opens without a refused call, every other page says "Not available to you", and the backend answers **403** to calls the role has no permission for |
+| `session.spec.js` (T3) | Login required, wrong password, tampered token → "session expired", logout, unknown page, 401 without or with an edited token, a farmer cannot read another farmer's results (403) |
+| `workflows.spec.js` (T1) | The demo-plan workflows through the screens, checked in the backend: 1 accounts (emailed one-time password, linking a self-registered account); 2 farmers (membership number, duplicate national ID, retired stays retired); 3 enrolment (window, 30% rule, payment recorded and confirmed, 409 twice); 4 a payment sent twice is stored once; 5 scores → approval → grade, another district refused, correction history; 6 permit only at 100%, same number again, verified at the store; 7 report totals and the Field Officer's scope |
+| `responsive.spec.js` (T4) | Phone (390 px), tablet (768 px) and desktop (1280 px): no page wider than the screen, the menu reachable; screenshots in `e2e-results/screens/` |
+| `support/` | Logging in, calling the API, test data (`data.js`), reading emails from Mailpit, the demo accounts, reading `.env` |
 
 ## One-time setup
 
