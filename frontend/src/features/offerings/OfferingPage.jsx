@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Link, NavLink, Outlet, useParams } from 'react-router'
+import { Link, NavLink, useParams } from 'react-router'
+import { LazyOutlet } from '../../components/layout/LazyOutlet'
 import { toApiError } from '../../api/errors'
 import { getOffering, updateOffering } from '../../api/offerings'
 import { useAuth } from '../../auth/useAuth'
@@ -87,7 +88,7 @@ export function OfferingPage() {
           </NavLink>
         ))}
       </nav>
-      <Outlet context={o} />
+      <LazyOutlet context={o} />
       {editing && <EditOfferingDialog offering={o} onSave={save.mutateAsync} onClose={() => setEditing(false)} />}
     </>
   )

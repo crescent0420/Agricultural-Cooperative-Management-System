@@ -28,7 +28,8 @@ describe('OfferingPage (FR-OFF-04, FR-OFF-05)', () => {
     logInAs(USERS.officer)
     renderRoute('/offerings/12')
     expect(await screen.findByRole('heading', { name: 'Maize, 2026B', level: 1 })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '2026B' })).toHaveAttribute('href', '/seasons/3')
+    // the Overview tab is downloaded on demand, after the page heading
+    expect(await screen.findByRole('link', { name: '2026B' })).toHaveAttribute('href', '/seasons/3')
     expect(screen.getByText('12 / 40')).toBeInTheDocument()
     expect(screen.getByText('0.5 ha')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
