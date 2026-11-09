@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link, NavLink, Outlet, useParams } from 'react-router'
+import { Link, NavLink, useParams } from 'react-router'
+import { LazyOutlet } from '../../components/layout/LazyOutlet'
 import { toApiError } from '../../api/errors'
 import { getFarmer } from '../../api/farmers'
 import { useAuth } from '../../auth/useAuth'
@@ -73,7 +74,7 @@ export function FarmerDetailPage() {
           </NavLink>
         ))}
       </nav>
-      <Outlet context={f} />
+      <LazyOutlet context={f} />
     </>
   )
 }

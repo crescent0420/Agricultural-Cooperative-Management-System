@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Outlet, useLocation } from 'react-router'
+import { useLocation } from 'react-router'
+import { LazyOutlet } from './LazyOutlet'
 import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 
@@ -54,7 +55,7 @@ export function AppShell() {
         )}
 
         <main id="main" className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
-          <Outlet />
+          <LazyOutlet />
         </main>
       </div>
     </div>

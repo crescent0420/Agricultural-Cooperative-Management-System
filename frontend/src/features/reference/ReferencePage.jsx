@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router'
+import { NavLink } from 'react-router'
+import { LazyOutlet } from '../../components/layout/LazyOutlet'
 import { PageHeader } from '../../components/layout/PageHeader'
 
 const TABS = [
@@ -31,7 +32,7 @@ export function ReferencePage() {
           </NavLink>
         ))}
       </nav>
-      <Outlet />
+      <LazyOutlet />
     </>
   )
 }

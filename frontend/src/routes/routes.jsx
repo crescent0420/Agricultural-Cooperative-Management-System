@@ -8,53 +8,55 @@ import { NotFoundPage } from '../features/errors/NotFoundPage'
 import { HomePage } from '../features/home/HomePage'
 import { ModulePlaceholder } from '../features/placeholder/ModulePlaceholder'
 import { MENU } from '../navigation/menu'
-import { CooperativesTab } from '../features/reference/CooperativesTab'
-import { DistrictsTab } from '../features/reference/DistrictsTab'
-import { GradingScalePage } from '../features/reference/GradingScalePage'
-import { ProgrammeDetailPage } from '../features/reference/ProgrammeDetailPage'
-import { ProgrammesTab } from '../features/reference/ProgrammesTab'
-import { ReferencePage } from '../features/reference/ReferencePage'
-import { TrainingsTab } from '../features/reference/TrainingsTab'
-import { FarmerDetailPage } from '../features/farmers/FarmerDetailPage'
-import { FarmerDetailsTab } from '../features/farmers/FarmerDetailsTab'
-import { FarmerResultsTab } from '../features/farmers/FarmerResultsTab'
-import { FarmersListPage } from '../features/farmers/FarmersListPage'
-import { FarmerStatusTab } from '../features/farmers/FarmerStatusTab'
-import { FarmerTrainingsTab } from '../features/farmers/FarmerTrainingsTab'
-import { MissingPrerequisitesTab } from '../features/farmers/MissingPrerequisitesTab'
-import { MyProfilePage } from '../features/farmers/MyProfilePage'
-import { RegisterFarmerPage } from '../features/farmers/RegisterFarmerPage'
-import { MyOfferingsPage } from '../features/offerings/MyOfferingsPage'
-import { NewOfferingPage } from '../features/offerings/NewOfferingPage'
-import { OfferingPage } from '../features/offerings/OfferingPage'
-import { OfferingsListPage } from '../features/offerings/OfferingsListPage'
-import { OfferingOverviewTab } from '../features/offerings/OfferingOverviewTab'
-import { EnrolmentPage } from '../features/enrolment/EnrolmentPage'
-import { MyEnrolmentsPage } from '../features/enrolment/MyEnrolmentsPage'
-import { OfferingEnrolmentsTab } from '../features/enrolment/OfferingEnrolmentsTab'
-import { OfferingsForMePage } from '../features/enrolment/OfferingsForMePage'
-import { ContributionPage } from '../features/contributions/ContributionPage'
-import { ContributionsListPage } from '../features/contributions/ContributionsListPage'
-import { MyContributionsPage } from '../features/contributions/MyContributionsPage'
-import { MyPermitsPage } from '../features/permits/MyPermitsPage'
-import { PermitAttemptsPage } from '../features/permits/PermitAttemptsPage'
-import { VerifyPermitPage } from '../features/permits/VerifyPermitPage'
-import { OfferingInspectionsTab } from '../features/inspections/OfferingInspectionsTab'
-import { MyResultsPage } from '../features/results/MyResultsPage'
-import { OfferingResultsTab } from '../features/results/OfferingResultsTab'
-import { ResultPage } from '../features/results/ResultPage'
-import { ScoreEntryPage } from '../features/results/ScoreEntryPage'
-import { SeasonPage } from '../features/seasons/SeasonPage'
-import { SeasonsListPage } from '../features/seasons/SeasonsListPage'
 import { REPORT_PERMISSIONS } from '../features/reports/reportTabs'
 import { LazyReportsPage } from '../features/reports/LazyReportsPage'
-import { AuditLogPage } from '../features/admin/AuditLogPage'
-import { NewUserPage } from '../features/admin/NewUserPage'
-import { PermissionMatrixPage } from '../features/admin/PermissionMatrixPage'
-import { UserPage } from '../features/admin/UserPage'
-import { UsersListPage } from '../features/admin/UsersListPage'
 import { RequireAuth } from './RequireAuth'
 import { RequirePermission } from './RequirePermission'
+import {
+  AuditLogPage,
+  ContributionPage,
+  ContributionsListPage,
+  CooperativesTab,
+  DistrictsTab,
+  EnrolmentPage,
+  FarmerDetailPage,
+  FarmerDetailsTab,
+  FarmerResultsTab,
+  FarmerStatusTab,
+  FarmerTrainingsTab,
+  FarmersListPage,
+  GradingScalePage,
+  MissingPrerequisitesTab,
+  MyContributionsPage,
+  MyEnrolmentsPage,
+  MyOfferingsPage,
+  MyPermitsPage,
+  MyProfilePage,
+  MyResultsPage,
+  NewOfferingPage,
+  NewUserPage,
+  OfferingEnrolmentsTab,
+  OfferingInspectionsTab,
+  OfferingOverviewTab,
+  OfferingPage,
+  OfferingResultsTab,
+  OfferingsForMePage,
+  OfferingsListPage,
+  PermissionMatrixPage,
+  PermitAttemptsPage,
+  ProgrammeDetailPage,
+  ProgrammesTab,
+  ReferencePage,
+  RegisterFarmerPage,
+  ResultPage,
+  ScoreEntryPage,
+  SeasonPage,
+  SeasonsListPage,
+  TrainingsTab,
+  UserPage,
+  UsersListPage,
+  VerifyPermitPage,
+} from './lazyPages'
 
 /** A page that opens only for users holding every listed permission (the backend still checks each call). */
 const guarded = (permissions, element) => (

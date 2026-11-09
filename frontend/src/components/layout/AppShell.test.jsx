@@ -67,7 +67,8 @@ describe('AppShell', () => {
     expect(within(nav).getByRole('link', { name: 'Seasons' })).toHaveAttribute('aria-current', 'page')
     expect(within(nav).getByRole('link', { name: 'My assigned offerings' })).toBeInTheDocument()
     expect(within(nav).queryByRole('link', { name: 'Users' })).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 1, name: 'Seasons' })).toBeInTheDocument()
+    // the page itself is downloaded on demand, after the shell
+    expect(await screen.findByRole('heading', { level: 1, name: 'Seasons' })).toBeInTheDocument()
   })
 
   it('shows "Not available to you" when a farmer types the address of a staff page', async () => {
