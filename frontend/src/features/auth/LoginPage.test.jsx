@@ -36,7 +36,7 @@ describe('LoginPage', () => {
 
     await logIn('demo.registrar', 'correct-password')
 
-    expect(await screen.findByRole('heading', { name: 'Welcome, demo.registrar' })).toBeInTheDocument()
+    expect(await screen.findByText('Welcome, demo.registrar · Union Registrar')).toBeInTheDocument()
     expect(screen.getByTestId('role-line')).toHaveTextContent('Union Registrar')
     expect(authApi.login).toHaveBeenCalledWith('demo.registrar', 'correct-password')
     expect(sessionStorage.getItem('acms.session')).toContain('test-token')
