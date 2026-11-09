@@ -3,9 +3,15 @@ import { apiGet, apiPost, apiPut } from './client'
 // Seasons and enrolment windows (URD FR-SEA-01..04). Reading needs SEASON_READ (every role);
 // creating, editing and opening or closing windows need SEASON_MANAGE (Union Registrar).
 
-/** sortBy: id, name, startsOn, endsOn, createdAt. */
-export function listSeasons(params) {
-  return apiGet('/seasons', { ...params })
+/**
+ * sortBy: id, name, startsOn, endsOn, createdAt.
+ * Optional filters: name (part of the name, any case) and enrolmentOpen (true = open window, false = none);
+ * empty values are not sent.
+ * @param {{ name?: string, enrolmentOpen?: boolean | '' }} [filters]
+ */
+export function listSeasons(params, filters = {}) {
+  const sent = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== '' && v != null))
+  return apiGet('/seasons', { ...params, ...sent })
 }
 
 export function getSeason(id) {

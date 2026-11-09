@@ -1,4 +1,5 @@
 import { screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import * as auditApi from '../../api/audit'
 import * as contributionsApi from '../../api/contributions'
@@ -210,14 +211,19 @@ describe('Dashboards (URD §17)', () => {
       vi.mocked(reportsApi.getOutstandingContributions).mockResolvedValue(contributionsReport)
     })
 
-    it('lists only the seasons with an open window and the Union figures', async () => {
+    it('asks the backend for the open seasons only, at most five, and shows the Union figures', async () => {
+      vi.mocked(seasonsApi.listSeasons).mockResolvedValue(paged([season2026B], 0, 5, 1))
       renderRoute('/')
       const windows = await card('Enrolment windows')
       expect(await within(windows).findByRole('link', { name: '2026B' })).toHaveAttribute(
         'href',
         `/seasons/${season2026B.id}`,
       )
-      expect(within(windows).queryByText('2027A')).not.toBeInTheDocument()
+      expect(within(windows).getByText('1 season has an open enrolment window')).toBeInTheDocument()
+      expect(seasonsApi.listSeasons).toHaveBeenCalledWith(
+        { page: 0, size: 5, sortBy: 'startsOn', direction: 'desc' },
+        { enrolmentOpen: true, name: '' },
+      )
       expect(await within(screen.getByRole('region', { name: 'Farmers' })).findByText('127')).toBeInTheDocument()
       expect(
         await within(screen.getByRole('region', { name: 'Offering capacity' })).findByText('74.29%'),
@@ -225,6 +231,29 @@ describe('Dashboards (URD §17)', () => {
       expect(
         await within(screen.getByRole('region', { name: 'Contributions' })).findByText('649,999.5'),
       ).toBeInTheDocument()
+    })
+
+    it('searches the open seasons by name and links to all of them on /seasons', async () => {
+      const many = Array.from({ length: 5 }, (_, i) => ({ ...season2026B, id: 100 + i, name: `2026-${i}` }))
+      vi.mocked(seasonsApi.listSeasons).mockResolvedValue(paged(many, 0, 5, 12))
+      renderRoute('/')
+      const user = userEvent.setup()
+      const windows = await card('Enrolment windows')
+      expect(await within(windows).findByText('12 seasons have an open enrolment window')).toBeInTheDocument()
+      expect(within(windows).getAllByText('Enrolment open')).toHaveLength(5)
+      expect(within(windows).getByRole('link', { name: 'See all 12 →' })).toHaveAttribute(
+        'href',
+        '/seasons?enrolment=open',
+      )
+
+      vi.mocked(seasonsApi.listSeasons).mockResolvedValue(paged([season2026B], 0, 5, 1))
+      await user.type(within(windows).getByLabelText('Season name'), ' 2026B ')
+      await user.click(within(windows).getByRole('button', { name: 'Search' }))
+      expect(await within(windows).findByText('1 open season matches “2026B”')).toBeInTheDocument()
+      expect(seasonsApi.listSeasons).toHaveBeenLastCalledWith(
+        { page: 0, size: 5, sortBy: 'startsOn', direction: 'desc' },
+        { enrolmentOpen: true, name: '2026B' },
+      )
     })
 
     it('shows one failing report in its own card only', async () => {
