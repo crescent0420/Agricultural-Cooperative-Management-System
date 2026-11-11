@@ -80,6 +80,18 @@ describe('MyPermitsPage (FR-PER-02)', () => {
     expect(print).toHaveBeenCalledOnce()
     print.mockRestore()
   })
+
+  it('prints the permit cards only: the page title and the Print button are left out of the print', async () => {
+    logInAs(USERS.farmer)
+    vi.mocked(permitsApi.listMyPermits).mockResolvedValue(paged([permit]))
+    renderRoute('/my/permits')
+    const card = await screen.findByRole('article', { name: 'Permit CP-AB2C-D3EF-GH4J' })
+    // Tailwind's print:hidden is the "leave out of the print" rule (jsdom does not lay out a print).
+    const leftOut = (element) => element.closest('.print\\:hidden') !== null
+    expect(leftOut(screen.getByRole('heading', { name: 'My permits', level: 1 }))).toBe(true)
+    expect(leftOut(screen.getByRole('button', { name: 'Print' }))).toBe(true)
+    expect(leftOut(card)).toBe(false)
+  })
 })
 
 describe('VerifyPermitPage (FR-PER-03)', () => {
