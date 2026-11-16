@@ -19,7 +19,7 @@ services:
       MAIL_PASSWORD: ""
       MAIL_SMTP_AUTH: "false"
       MAIL_SMTP_STARTTLS: "false"
-      APP_BASE_URL: http://localhost:${SERVER_PORT:-8081}
+      APP_BASE_URL: http://localhost:5173   # the web app (npm run dev); email links open its /verify-email page
     ports:
       - "${SERVER_PORT:-8081}:${SERVER_PORT:-8081}"
     extra_hosts:

@@ -14,7 +14,7 @@ export const apiClient = axios.create({
 let unauthorizedHandler = null
 
 /** Calls made without a session, whose 401 is an ordinary answer (e.g. wrong password), not an expiry. */
-const PUBLIC_CALLS = new Set(['/auth/login', '/auth/register'])
+const PUBLIC_CALLS = new Set(['/auth/login', '/auth/register', '/auth/verify-email'])
 
 /** AuthProvider registers what happens when a logged-in call answers 401 (the session has expired). */
 export function setUnauthorizedHandler(handler) {
@@ -80,5 +80,11 @@ export async function apiDelete(url) {
 /** POST and return the envelope's `message`, for answers that carry no data (e.g. register). */
 export async function apiPostForMessage(url, body) {
   const response = await apiClient.post(url, body)
+  return response.data.message
+}
+
+/** GET and return the envelope's `message`, for answers that carry no data (e.g. verify-email). */
+export async function apiGetForMessage(url, params) {
+  const response = await apiClient.get(url, { params })
   return response.data.message
 }

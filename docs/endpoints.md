@@ -15,7 +15,7 @@ Lists marked *(paged)* accept `page`, `size`, `sortBy`, `direction` and answer a
 | GET | `/api/audit-logs` | Security audit log (logins, refusals, changes) *(paged)* | Admin | 200 | — |
 | POST | `/api/auth/login` | Log in; returns the access token | anyone (no login) | 200 | 400, 401 wrong credentials, 422 email not verified |
 | POST | `/api/auth/register` | Self-registration; the very first user becomes System Admin | anyone (no login) | 201 | 400, 409 duplicate username/email |
-| GET | `/api/auth/verify-email` | Email verification link (from the email) | anyone (no login) | 200 | 400 invalid/expired token |
+| GET | `/api/auth/verify-email` | Confirms an email address; called once by the web app's `/verify-email` page, which the link in the email opens | anyone (no login) | 200 | 400 invalid/expired token |
 | GET | `/api/auth/me` | Who am I: account, role, district, permissions | any logged-in user | 200 | — |
 | GET | `/api/permissions` | The permission matrix (role → permissions) | all roles | 200 | — |
 | POST | `/api/users` | Create a staff or farmer account; emails a one-time password | Admin | 201 | 400 district/farmer does not fit the role, 409 duplicate username/email or farmer already has an account |
