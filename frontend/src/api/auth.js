@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiPostForMessage } from './client'
+import { apiGet, apiGetForMessage, apiPost, apiPostForMessage } from './client'
 
 /** POST /api/auth/login (public). 401 wrong credentials, 422 email not verified. */
 export function login(username, password) {
@@ -18,4 +18,12 @@ export function changePassword(currentPassword, newPassword) {
 /** POST /api/auth/register (public): returns the backend's confirmation message. */
 export function register(username, email) {
   return apiPostForMessage('/auth/register', { username, email })
+}
+
+/**
+ * GET /api/auth/verify-email (public): confirms the email address with the token from the email link. Works once;
+ * returns the backend's confirmation message, or fails with 400 for an invalid, used or expired link.
+ */
+export function verifyEmail(token) {
+  return apiGetForMessage('/auth/verify-email', { token })
 }

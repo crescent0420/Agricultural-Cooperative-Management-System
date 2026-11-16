@@ -36,6 +36,9 @@ class RegistrationFlowTest extends IntegrationTestBase {
         String oneTimePassword = oneTimePassword(welcome);
         String token = verificationToken(welcome);
         assertThat(oneTimePassword).hasSize(16);
+        // The link opens the web app's confirmation page (acms.app.base-url), not the bare API answer.
+        assertThat(welcome.getText()).contains("http://localhost/verify-email?token=" + token)
+                .doesNotContain("/api/auth/verify-email");
 
         // 3. Not verified yet: even the correct password is refused.
         mockMvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)

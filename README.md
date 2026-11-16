@@ -63,7 +63,7 @@ Copy-Item .env.example .env      # then edit .env
 | `ACMS_JWT_ISSUER` | no (`acms-api`) | Issuer written into the tokens |
 | `ACMS_JWT_TTL_MINUTES` | no (30) | How long a login token stays valid |
 | `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_SMTP_AUTH`, `MAIL_SMTP_STARTTLS`, `MAIL_FROM` | no | Outgoing email. Without them, mail goes to Mailpit on `localhost:1025`. For Gmail, use an app password. |
-| `APP_BASE_URL` | no | Start of the links inside emails (email verification), default `http://localhost:8081` |
+| `APP_BASE_URL` | no | Address of the web app; the email verification link opens its `/verify-email` page. Default `http://localhost:5173` (`npm run dev`) |
 | `APP_DEMO_SEED` | no (`false`) | `true` = add the demo accounts and data at start-up, **only on an empty system** (section 6) |
 | `DEMO_SEED_PASSWORD` | only with `APP_DEMO_SEED=true` | Password of every demo account, at least 12 characters. Never written to the log. |
 

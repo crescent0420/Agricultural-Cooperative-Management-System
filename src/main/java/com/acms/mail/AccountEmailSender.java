@@ -20,6 +20,7 @@ public class AccountEmailSender {
     @Value("${acms.mail.from}")
     private String from;
 
+    /** Where the web app runs; the verification link opens its /verify-email page, which calls the API. */
     @Value("${acms.app.base-url}")
     private String baseUrl;
 
@@ -57,7 +58,7 @@ public class AccountEmailSender {
         int step = 1;
         if (event.verificationToken() != null) {
             text.append("Step ").append(step++).append(" - Confirm your email address (the link works once, for 24 hours):\n");
-            text.append(baseUrl).append("/api/auth/verify-email?token=").append(event.verificationToken()).append("\n\n");
+            text.append(baseUrl).append("/verify-email?token=").append(event.verificationToken()).append("\n\n");
         }
         text.append("Step ").append(step).append(" - Log in with the one-time password. ")
             .append("You must choose your own password before you can use the system.\n\n");

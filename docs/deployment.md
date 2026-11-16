@@ -109,8 +109,8 @@ The system starts empty. The **first person who registers becomes the System Adm
 1. Open https://localhost/register and register with your own username and real email address.
 2. The email arrives within a minute (check spam). It contains your one-time password and a verification link.
 3. Open the verification link **on this laptop**: it points to `https://localhost`, which other devices cannot reach.
-   The page shows a short confirmation (`"success": true`).
-4. Open https://localhost/login, log in with the one-time password and choose your own password.
+   ACMS opens an **Email address confirmed** page with a **Go to log in** link.
+4. Log in with the one-time password and choose your own password.
 5. You are the System Administrator. Create the other accounts under **Users**; each person receives an email.
 
 ### New users on a laptop deployment
@@ -120,7 +120,7 @@ another computer, `localhost` means that device, so the link does not load. New 
 
 1. The administrator creates the account under **Users**; the person receives the email wherever they read mail.
 2. On the laptop, the person opens their own mailbox in the browser (e.g. Gmail on the web) and clicks the link
-   there, then logs in at https://localhost/login with the one-time password and chooses their own password.
+   there (the **Email address confirmed** page opens), then logs in with the one-time password and chooses their own password.
    Nobody else needs to see the email: the one-time password is only theirs.
 
 The link still proves what it should: only someone who received the email has it, and the account cannot log in

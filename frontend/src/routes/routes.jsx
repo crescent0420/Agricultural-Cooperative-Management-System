@@ -4,6 +4,7 @@ import { ChangePasswordPage } from '../features/auth/ChangePasswordPage'
 import { LoginPage } from '../features/auth/LoginPage'
 import { NotLinkedPage } from '../features/auth/NotLinkedPage'
 import { RegisterPage } from '../features/auth/RegisterPage'
+import { VerifyEmailPage } from '../features/auth/VerifyEmailPage'
 import { NotFoundPage } from '../features/errors/NotFoundPage'
 import { PageError } from '../features/errors/PageError'
 import { HomePage } from '../features/home/HomePage'
@@ -175,6 +176,7 @@ export const routes = [
     children: [
       { path: '/login', element: <LoginPage /> },
       { path: '/register', element: <RegisterPage /> },
+      { path: '/verify-email', element: <VerifyEmailPage /> },
       {
         element: <RequireAuth />,
         children: [
