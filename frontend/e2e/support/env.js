@@ -24,8 +24,11 @@ const setting = (name, fallback) => process.env[name] ?? dotEnv[name] ?? fallbac
 
 /** The password of every demo account (DEMO_SEED_PASSWORD). */
 export const DEMO_PASSWORD = setting('DEMO_SEED_PASSWORD', '')
-/** The backend, called directly by the tests to prepare data and check results. */
-export const API_URL = `http://localhost:${setting('SERVER_PORT', '8081')}/api`
+/**
+ * The backend, called directly by the tests to prepare data and check results. E2E_API_URL points the tests at
+ * a deployed system instead (docs/deployment.md, "Test the deployed build").
+ */
+export const API_URL = setting('E2E_API_URL', `http://localhost:${setting('SERVER_PORT', '8081')}/api`)
 /** Mailpit's web inbox and API (compose.yaml). */
 export const MAILPIT_URL = setting('E2E_MAILPIT_URL', 'http://localhost:8025')
 export const ENV_FILE = envFile

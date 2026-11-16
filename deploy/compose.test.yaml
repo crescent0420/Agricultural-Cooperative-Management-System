@@ -1,0 +1,40 @@
+# Test the deployed build (docs/deployment.md, section 7). Used ONLY together with compose.yaml:
+#   docker compose -f compose.yaml -f compose.test.yaml up -d
+# It starts a second, throw-away copy of production under its own name, so the real system and its data are never
+# touched: the SAME images that production runs (built by "docker compose up -d --build"), but
+#   - its own database volume, filled with the demo accounts (the end-to-end tests log in with them);
+#   - email caught by a Mailpit of its own (http://localhost:8026), so no test email leaves the laptop;
+#   - https://localhost:8443 instead of 443, so it can run beside production.
+name: acms-prodtest
+
+services:
+  web:
+    build: !reset null
+    image: acms-prod-web
+    pull_policy: never
+    ports: !override
+      - "8443:443"
+
+  app:
+    build: !reset null
+    image: acms-prod-app
+    pull_policy: never
+    environment:
+      APP_BASE_URL: https://localhost:8443
+      APP_DEMO_SEED: "true"
+      # Taken from the PowerShell session (the guide reads it from the development ..\.env).
+      DEMO_SEED_PASSWORD: ${DEMO_SEED_PASSWORD:?Set $$env:DEMO_SEED_PASSWORD first - see docs/deployment.md section 7}
+      MAIL_HOST: mailpit
+      MAIL_PORT: "1025"
+      MAIL_USERNAME: ""
+      MAIL_PASSWORD: ""
+      MAIL_SMTP_AUTH: "false"
+      MAIL_SMTP_STARTTLS: "false"
+    depends_on:
+      mailpit:
+        condition: service_started
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8026:8025"

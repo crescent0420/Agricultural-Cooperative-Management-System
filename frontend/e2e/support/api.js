@@ -14,7 +14,7 @@ export class Api {
 
   /** Logs in with the demo password (or the one given) and returns an Api for that user. */
   static async as(username, password = DEMO_PASSWORD) {
-    const context = await request.newContext()
+    const context = await request.newContext({ ignoreHTTPSErrors: true })
     const response = await context.post(`${API_URL}/auth/login`, { data: { username, password } })
     const body = await response.json().catch(() => ({}))
     if (!response.ok()) {
@@ -25,7 +25,7 @@ export class Api {
 
   /** Without a token, for the 401 checks. */
   static async anonymous() {
-    return new Api(await request.newContext(), null, null)
+    return new Api(await request.newContext({ ignoreHTTPSErrors: true }), null, null)
   }
 
   async call(method, path, { data, params } = {}) {
