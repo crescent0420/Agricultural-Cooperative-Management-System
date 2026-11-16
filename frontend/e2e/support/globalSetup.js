@@ -10,7 +10,7 @@ export default async function globalSetup() {
   if (!DEMO_PASSWORD) {
     throw new Error(`DEMO_SEED_PASSWORD is empty. Set it in ${ENV_FILE} (see e2e/README.md).`)
   }
-  const context = await request.newContext()
+  const context = await request.newContext({ ignoreHTTPSErrors: true })
   try {
     let response
     try {
@@ -22,8 +22,9 @@ export default async function globalSetup() {
     }
     if (!response.ok()) {
       throw new Error(
-        `Logging in as ${ACCOUNTS.admin} failed (${response.status()}). Is the backend using the acms_e2e ` +
-          'database with the demo data, and is DEMO_SEED_PASSWORD the one it was created with? See e2e/README.md.',
+        `Logging in as ${ACCOUNTS.admin} at ${API_URL} failed (${response.status()}). Is the backend running ` +
+          'with the demo data (acms_e2e, or the deployed test stack), and is DEMO_SEED_PASSWORD the one it was ' +
+          'created with? See e2e/README.md.',
       )
     }
   } finally {

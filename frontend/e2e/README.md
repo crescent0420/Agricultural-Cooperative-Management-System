@@ -57,3 +57,9 @@ docker compose down
 psql -U postgres -d postgres -c "DROP DATABASE acms_e2e"
 scripts\create-demo-database.bat -Name acms_e2e
 ```
+
+## Against the deployed build
+
+The same tests run against the production images (HTTPS, Caddy, PostgreSQL in Docker) on a throw-away copy of
+production: `docs/deployment.md`, section 7. They are pointed there with `E2E_BASE_URL`, `E2E_API_URL` and
+`E2E_MAILPIT_URL`; with `E2E_BASE_URL` set, no local build or preview server is started.

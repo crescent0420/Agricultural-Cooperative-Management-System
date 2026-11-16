@@ -1,5 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
 
+// E2E_BASE_URL set = test an already running deployment (docs/deployment.md, "Test the deployed build"): no local
+// build and no preview server; its HTTPS certificate comes from a test-only local authority, so it is not checked.
+const deployedUrl = process.env.E2E_BASE_URL
+
 // End-to-end tests (Phase 6, T1-T4): a real browser drives the frontend, which talks to the REAL backend
 // (Docker, database acms_e2e with the demo data). How to start everything: e2e/README.md.
 export default defineConfig({
@@ -14,7 +18,8 @@ export default defineConfig({
   outputDir: 'e2e-results',
   globalSetup: './e2e/support/globalSetup.js',
   use: {
-    baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:4173',
+    baseURL: deployedUrl ?? 'http://localhost:4173',
+    ignoreHTTPSErrors: Boolean(deployedUrl),
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
@@ -22,14 +27,16 @@ export default defineConfig({
   // Tests the production build (what will be deployed), served by "vite preview" on port 4173 with the same
   // /api proxy as "npm run dev". Built fresh for every run, so the tests always see the current code; and
   // no page has to be compiled on first use, which made the dev server too slow for the time limits.
-  webServer: {
-    command: 'npm run build && npx vite preview --port 4173 --strictPort',
-    url: 'http://localhost:4173',
-    reuseExistingServer: false,
-    timeout: 120_000,
-    // Show the server's own messages in the test output (lines start with [WebServer]), so that if it stops
-    // during a run, the reason is visible.
-    stdout: 'pipe',
-    stderr: 'pipe',
-  },
+  webServer: deployedUrl
+    ? undefined
+    : {
+        command: 'npm run build && npx vite preview --port 4173 --strictPort',
+        url: 'http://localhost:4173',
+        reuseExistingServer: false,
+        timeout: 120_000,
+        // Show the server's own messages in the test output (lines start with [WebServer]), so that if it stops
+        // during a run, the reason is visible.
+        stdout: 'pipe',
+        stderr: 'pipe',
+      },
 })

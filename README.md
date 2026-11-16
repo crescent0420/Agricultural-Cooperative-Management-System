@@ -295,3 +295,4 @@ database/                         database creation script and SQL exports
 * [`docs/permission-matrix.md`](docs/permission-matrix.md): which role holds which permission
 * [`docs/reports.md`](docs/reports.md): the data and the calculation behind each management report
 * [`README.Docker.md`](README.Docker.md): running with Docker
+* [`docs/deployment.md`](docs/deployment.md): production on one machine (React app, API, PostgreSQL, HTTPS, real email) with `deploy/compose.yaml`

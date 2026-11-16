@@ -1,0 +1,9 @@
+# Not needed to build the app (keeps the build fast and private)
+node_modules/
+dist/
+e2e-report/
+e2e-results/
+.env
+.env.*
+!.env.example
+*.log

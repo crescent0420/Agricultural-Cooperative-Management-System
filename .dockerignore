@@ -16,5 +16,6 @@ target/
 .idea/
 .vscode/
 *.iml
-# The React app is built separately
+# The React app is built separately (frontend/Dockerfile); production settings stay out of every image
 frontend/
+deploy/

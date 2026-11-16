@@ -1,0 +1,60 @@
+# ACMS in production on one machine (docs/deployment.md). Run from this folder:
+#   docker compose up -d --build        Stop:  docker compose down        (the data stays in the "db-data" volume)
+#   web  Caddy: the React app and HTTPS on https://<SITE_ADDRESS>, forwards /api/* to app
+#   app  the Spring Boot API, reachable only through web
+#   db   PostgreSQL 18, reachable only by app; its data lives in the db-data volume
+# Settings and secrets come from deploy/.env (git-ignored; copy deploy/.env.example). This stack is separate from
+# the development one in ../compose.yaml: other container names, its own database, no ports except 80 and 443.
+name: acms-prod
+
+services:
+  web:
+    build: ../frontend
+    ports:
+      - "80:80"     # only redirects to HTTPS
+      - "443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data        # Caddy's certificates (and its local certificate authority)
+      - caddy-config:/config
+    depends_on:
+      - app
+    restart: unless-stopped
+
+  app:
+    build: ..
+    env_file: .env
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      SERVER_PORT: "8081"
+      # Links in account emails point to the public address.
+      APP_BASE_URL: https://${SITE_ADDRESS:-localhost}
+      # Behind Caddy: take the visitor's address from X-Forwarded-For (audit log) and know the request was HTTPS.
+      SERVER_FORWARDHEADERSSTRATEGY: native   # = server.forward-headers-strategy
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql   # PostgreSQL 18 images keep their data under this folder
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:
